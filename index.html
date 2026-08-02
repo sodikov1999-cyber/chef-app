@@ -80,65 +80,24 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.refresh-btn {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: transform 0.2s;
-    margin-left: auto;
-}
+.refresh-btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: transform 0.2s; margin-left: auto; }
 .refresh-btn:active { transform: scale(0.95); }
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    background: rgba(255,255,255,0.05);
-    border: none;
-    color: var(--muted);
-    font-weight: 600;
-    border-radius: 8px;
-    margin-right: 4px;
-    cursor: pointer;
-}
-.tab-btn.on {
-    background: var(--accent);
-    color: #000;
-}
-.modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 20px;
-}
+.tab-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: none; color: var(--muted); font-weight: 600; border-radius: 8px; margin-right: 4px; cursor: pointer; }
+.tab-btn.on { background: var(--accent); color: #000; }
+.modal-body { flex: 1; overflow-y: auto; padding-bottom: 20px; }
 /* Стили для матрицы */
 .supplier-block { margin-bottom: 20px; }
-.supplier-header { 
-    background: rgba(255,138,61,0.1); 
-    border-left: 3px solid var(--accent); 
-    padding: 12px; 
-    border-radius: 8px; 
-    margin-bottom: 10px;
-}
+.supplier-header { background: rgba(255,138,61,0.1); border-left: 3px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 10px; position: relative; }
 .supplier-name { font-weight: 700; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
 .supplier-schedule { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.matrix-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 10px 0; 
-    border-bottom: 1px solid rgba(255,255,255,0.05); 
-}
+.matrix-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 .matrix-item:last-child { border-bottom: none; }
 .matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; }
 .matrix-meta { text-align: right; flex-shrink: 0; }
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
+.edit-supplier-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: var(--text); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.edit-supplier-btn:hover { background: var(--accent); color: #000; }
 </style>
 </head>
 <body>
@@ -179,8 +138,7 @@ const DEFAULT_TEAM = [
   {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
-// Матрица заявок
-const MATRIX_DATA = [
+const DEFAULT_MATRIX = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
@@ -417,6 +375,7 @@ const CHECKLISTS = {
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+let MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
@@ -425,6 +384,7 @@ function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
+    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
 }
 
 /* ============================================================
@@ -839,7 +799,6 @@ function toggleLoc(name) {
 }
 
 function renderChecklist(){
-  // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
@@ -865,7 +824,6 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
-  // Получаем сотрудников на сегодня для этой локации
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   let todayStaff = [];
   const dayIndex = new Date().getDate() - 1;
@@ -876,7 +834,6 @@ function renderChecklist(){
       todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
     }
   }
-  // Фильтруем только Су-шефов и ИО
   const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
@@ -953,81 +910,50 @@ function renderTeam(){
   `;
 }
 
-// Глобальная переменная для хранения запроса
-window._matrixQ = window._matrixQ || '';
-
 function renderMatrix(){
+  window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
   
-  // Фильтрация поставщиков и товаров
   const filteredSuppliers = MATRIX_DATA.map(sup => {
-    // Если ищем по названию поставщика - показываем его целиком
-    if (sup.supplier.toLowerCase().includes(q)) {
-      return sup;
-    }
-    // Иначе фильтруем товары внутри поставщика
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-    if(items.length > 0) {
-      return {...sup, items: items};
+    if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
+      if(q && !sup.supplier.toLowerCase().includes(q)) {
+         return {...sup, items: items};
+      }
+      return sup;
     }
     return null;
   }).filter(s => s !== null);
 
-  // Формируем HTML только для списка результатов, НЕ включая input
-  const resultsHTML = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
-    <div class="supplier-block">
-      <div class="supplier-header">
-        <div class="supplier-name">${sup.supplier}</div>
-        <div class="supplier-schedule">🕒 ${sup.schedule}</div>
-      </div>
-      <div class="card" style="padding:10px 14px">
-        ${sup.items.map(it => `
-          <div class="matrix-item">
-            <div class="matrix-name">${it.name}</div>
-            <div class="matrix-meta">
-              <span class="matrix-unit">${it.unit}</span>
-              ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Матрица заявок</h1>
+    <input type="search" placeholder="🔍 Поиск продукта или поставщика..." 
+           value="${window._matrixQ}" 
+           oninput="window._matrixQ=this.value;renderMatrix()"
+           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
+    
+    ${filteredSuppliers.length > 0 ? filteredSuppliers.map((sup, supIdx) => `
+      <div class="supplier-block">
+        <div class="supplier-header">
+          <div class="supplier-name">${sup.supplier}</div>
+          <div class="supplier-schedule">🕒 ${sup.schedule}</div>
+          <button class="edit-supplier-btn" onclick="editSupplier(${supIdx});haptic()">✏️</button>
+        </div>
+        <div class="card" style="padding:10px 14px">
+          ${sup.items.map(it => `
+            <div class="matrix-item">
+              <div class="matrix-name">${it.name}</div>
+              <div class="matrix-meta">
+                <span class="matrix-unit">${it.unit}</span>
+                ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+              </div>
             </div>
-          </div>
-        `).join('')}
+          `).join('')}
+        </div>
       </div>
-    </div>
-  `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
-
-  // Проверяем, отрендерена ли уже страница матрицы
-  const existingInput = document.getElementById('matrix-search-input');
-  const existingList = document.getElementById('matrix-results-list');
-
-  if (existingInput && existingList) {
-    // Если страница уже открыта, обновляем ТОЛЬКО список результатов
-    existingList.innerHTML = resultsHTML;
-  } else {
-    // Если страница открывается впервые, рендерим всё целиком
-    app.innerHTML = `
-      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>Матрица заявок</h1>
-      <input id="matrix-search-input" type="search" placeholder="🔍 Поиск продукта или поставщика..." 
-             value="${window._matrixQ}" 
-             style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
-      <div id="matrix-results-list">
-        ${resultsHTML}
-      </div>
-    `;
-    
-    // Навешиваем обработчик события отдельно, чтобы не пересоздавать input
-    const inputEl = document.getElementById('matrix-search-input');
-    inputEl.addEventListener('input', function(e) {
-      window._matrixQ = e.target.value;
-      renderMatrix(); // Теперь эта функция обновит только список
-    });
-    
-    // Возвращаем фокус, если он был (на случай микро-задержки)
-    inputEl.focus();
-    // Ставим курсор в конец строки
-    const val = inputEl.value;
-    inputEl.value = '';
-    inputEl.value = val;
-  }
+    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+  `;
 }
 
 /* ============================================================
@@ -1038,7 +964,6 @@ let adminTab = 'recipes';
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
-  // Удаляем старые модалки перед открытием новой
   const old = document.getElementById('admin-modal');
   if(old) old.remove();
 
@@ -1054,10 +979,11 @@ function showAdminModal(){
         <div class="modal-title">⚙️ Редактор</div>
         <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0;overflow-x:auto">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
+        <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';showAdminModal()">Матрица</button>
       </div>
       <div id="admin-content" class="modal-body"></div>
     </div>
@@ -1123,196 +1049,154 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
+  } else if(adminTab === 'matrix'){
+    c.innerHTML = `
+      <button class="btn" onclick="editSupplier(-1)">+ Добавить поставщика</button>
+      ${MATRIX_DATA.map((sup, i) => `
+        <div class="item-card">
+          <div class="item-card-head">
+            <div>
+              <div class="item-card-title">${sup.supplier}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">${sup.items.length} товаров</div>
+            </div>
+            <div>
+              <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
+              <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    `;
   }
 }
 
-function editRecipe(id){
+// --- Recipe Functions (unchanged) ---
+function editRecipe(id){ /* ... same as before ... */ 
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
+  const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal';
+  modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div><div class="form-field"><label class="form-label">Категория</label><select class="form-select" id="r-cat">${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}</select></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div><div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div><div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div></div><div class="form-field"><label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label><div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div></div><div class="form-field"><label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label><div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div></div><div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div><button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button></div></div>`;
+  document.body.appendChild(modal);
+}
+function ingrRow(i, idx){ return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px"><input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}"><input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}"><input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}"><button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button></div></div>`; }
+function stepRow(s, idx){ return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start"><textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea><button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button></div>`; }
+window.addIngr = function(){ const list = document.getElementById('ingr-list'); const idx = list.querySelectorAll('.ing-editor').length; list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx)); };
+window.addStep = function(){ const list = document.getElementById('steps-list'); const idx = list.querySelectorAll('[data-step]').length; list.insertAdjacentHTML('beforeend', stepRow('', idx)); };
+window.saveRecipe = function(editId){ const r = { id: editId || Date.now(), name: $('#r-name').value, cat: $('#r-cat').value, time: $('#r-time').value, yield: $('#r-yield').value, kcal: parseInt($('#r-kcal').value) || 0, note: $('#r-note').value, ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{ const idx = el.dataset.ing; const f = el.dataset.f; acc[idx] = acc[idx] || []; const val = f==='name' ? el.value : parseFloat(el.value)||0; const pos = f==='name'?0:f==='brutto'?1:2; acc[idx][pos] = val; return acc; }, []).filter(x=>x && x[0]), steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim()) }; if(!r.name){ toast('Введите название', 'error'); return; } if(editId){ const idx = RECIPES.findIndex(x=>x.id===editId); RECIPES[idx] = r; } else { RECIPES.push(r); } saveData(); document.getElementById('edit-modal').remove(); toast('Сохранено ✓', 'success'); renderAdminContent(); };
+window.deleteRecipe = function(id){ if(!confirm('Удалить техкарту?')) return; const idx = RECIPES.findIndex(r=>r.id===id); if(idx>=0) RECIPES.splice(idx,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
+
+// --- News Functions (unchanged) ---
+function editNews(i){ const isEdit = i !== undefined; const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'}; const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal'; modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div><div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div><div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div><div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div><button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button></div></div>`; document.body.appendChild(modal); }
+window.saveNews = function(i){ const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value}; if(!n.title){ toast('Введите заголовок', 'error'); return; } if(i !== null) NEWS[i] = n; else NEWS.unshift(n); saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success'); };
+window.deleteNews = function(i){ if(!confirm('Удалить новость?')) return; NEWS.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
+
+// --- Team Functions (unchanged) ---
+function editTeamMember(i){ const isEdit = i !== undefined; const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'}; const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal'; modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div><div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div><div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div><button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button></div></div>`; document.body.appendChild(modal); }
+window.saveTeamMember = function(i){ const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()}; if(!u.name){ toast('Введите имя', 'error'); return; } if(i !== null) TEAM[i] = u; else TEAM.push(u); saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success'); };
+window.deleteTeamMember = function(i){ if(!confirm('Удалить сотрудника?')) return; TEAM.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
+
+// --- Matrix Supplier Editor Functions ---
+function editSupplier(idx){
+  const isEdit = idx !== -1;
+  const sup = isEdit ? MATRIX_DATA[idx] : {supplier: '', schedule: '', items: []};
+  
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
+  
+  let itemsHtml = sup.items.map((it, i) => `
+    <div class="item-card" style="margin-bottom:8px; padding:10px;">
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:6px; margin-bottom:6px;">
+        <input class="form-input" placeholder="Название" value="${it.name}" id="mi-name-${i}">
+        <input class="form-input" placeholder="Ед." value="${it.unit}" id="mi-unit-${i}">
+        <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" id="mi-limit-${i}">
+        <button class="icon-btn danger" onclick="document.getElementById('mi-row-${i}').remove()">✕</button>
+      </div>
+    </div>
+  `).join('');
+
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
+        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новый'} поставщик</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
       <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
-        <div class="form-field"><label class="form-label">Категория</label>
-          <select class="form-select" id="r-cat">
-            ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
-          </select>
+        <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="ms-name" value="${sup.supplier}"></div>
+        <div class="form-field"><label class="form-label">График доставки / Заявки</label><input class="form-input" id="ms-schedule" value="${sup.schedule}"></div>
+        
+        <div style="margin: 15px 0; display:flex; justify-content:space-between; align-items:center;">
+          <label class="form-label" style="margin:0">Товары</label>
+          <button class="btn btn-sm btn-sec" onclick="addMatrixItem()">+ Товар</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
-          <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
-          <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
-          <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
-          <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
-        </div>
-        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
-        <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
+        <div id="matrix-items-list">${itemsHtml}</div>
+        
+        <button class="btn" style="margin-top:20px" onclick="saveSupplier(${isEdit?idx:'null'})">💾 Сохранить</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
-function ingrRow(i, idx){
-  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
-    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
-    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
-    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-  </div></div>`;
-}
-
-function stepRow(s, idx){
-  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
-    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
-  </div>`;
-}
-
-window.addIngr = function(){
-  const list = document.getElementById('ingr-list');
-  const idx = list.querySelectorAll('.ing-editor').length;
-  list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
-};
-window.addStep = function(){
-  const list = document.getElementById('steps-list');
-  const idx = list.querySelectorAll('[data-step]').length;
-  list.insertAdjacentHTML('beforeend', stepRow('', idx));
+window.addMatrixItem = function(){
+  const list = document.getElementById('matrix-items-list');
+  const idx = list.querySelectorAll('.item-card').length;
+  const div = document.createElement('div');
+  div.className = 'item-card';
+  div.style.marginBottom = '8px';
+  div.style.padding = '10px';
+  div.id = `mi-row-new-${idx}`;
+  div.innerHTML = `
+    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:6px; margin-bottom:6px;">
+      <input class="form-input" placeholder="Название" id="mi-name-new-${idx}">
+      <input class="form-input" placeholder="Ед." id="mi-unit-new-${idx}">
+      <input class="form-input" placeholder="Лимит" type="number" id="mi-limit-new-${idx}">
+      <button class="icon-btn danger" onclick="this.closest('.item-card').remove()">✕</button>
+    </div>
+  `;
+  list.appendChild(div);
 };
 
-window.saveRecipe = function(editId){
-  const r = {
-    id: editId || Date.now(),
-    name: $('#r-name').value,
-    cat: $('#r-cat').value,
-    time: $('#r-time').value,
-    yield: $('#r-yield').value,
-    kcal: parseInt($('#r-kcal').value) || 0,
-    note: $('#r-note').value,
-    ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
-      const idx = el.dataset.ing;
-      const f = el.dataset.f;
-      acc[idx] = acc[idx] || [];
-      const val = f==='name' ? el.value : parseFloat(el.value)||0;
-      const pos = f==='name'?0:f==='brutto'?1:2;
-      acc[idx][pos] = val;
-      return acc;
-    }, []).filter(x=>x && x[0]),
-    steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
-  };
-  if(!r.name){ toast('Введите название', 'error'); return; }
-  if(editId){
-    const idx = RECIPES.findIndex(x=>x.id===editId);
-    RECIPES[idx] = r;
+window.saveSupplier = function(idx){
+  const name = $('#ms-name').value;
+  const schedule = $('#ms-schedule').value;
+  if(!name){ toast('Введите название поставщика', 'error'); return; }
+  
+  const itemCards = document.querySelectorAll('#matrix-items-list .item-card');
+  const newItems = [];
+  
+  itemCards.forEach(card => {
+    // Ищем инпуты внутри карточки (они могут быть с суффиксом -new-X или просто по индексу)
+    const inputs = card.querySelectorAll('input');
+    if(inputs.length >= 3) {
+      const iName = inputs[0].value;
+      const iUnit = inputs[1].value;
+      const iLimitRaw = inputs[2].value;
+      const iLimit = iLimitRaw === '' ? null : (parseFloat(iLimitRaw) || 0);
+      
+      if(iName) {
+        newItems.push({ name: iName, unit: iUnit || 'шт', limit: iLimit });
+      }
+    }
+  });
+  
+  const newSupplier = { supplier: name, schedule: schedule, items: newItems };
+  
+  if(idx !== null) {
+    MATRIX_DATA[idx] = newSupplier;
   } else {
-    RECIPES.push(r);
+    MATRIX_DATA.push(newSupplier);
   }
+  
   saveData();
   document.getElementById('edit-modal').remove();
   toast('Сохранено ✓', 'success');
   renderAdminContent();
 };
 
-window.deleteRecipe = function(id){
-  if(!confirm('Удалить техкарту?')) return;
-  const idx = RECIPES.findIndex(r=>r.id===id);
-  if(idx>=0) RECIPES.splice(idx,1);
-  saveData();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-function editNews(i){
-  const isEdit = i !== undefined;
-  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
-        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
-        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
-        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
-        <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveNews = function(i){
-  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
-  if(!n.title){ toast('Введите заголовок', 'error'); return; }
-  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
-  saveData();
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
-window.deleteNews = function(i){
-  if(!confirm('Удалить новость?')) return;
-  NEWS.splice(i,1);
-  saveData();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-function editTeamMember(i){
-  const isEdit = i !== undefined;
-  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
-        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
-        <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
-        <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveTeamMember = function(i){
-  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
-  if(!u.name){ toast('Введите имя', 'error'); return; }
-  if(i !== null) TEAM[i] = u; else TEAM.push(u);
-  saveData();
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
-window.deleteTeamMember = function(i){
-  if(!confirm('Удалить сотрудника?')) return;
-  TEAM.splice(i,1);
+window.deleteSupplier = function(idx){
+  if(!confirm('Удалить этого поставщика и все его товары?')) return;
+  MATRIX_DATA.splice(idx, 1);
   saveData();
   renderAdminContent();
   toast('Удалено', 'success');
