@@ -24,7 +24,11 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .btn:active{transform:scale(.98)}
 .btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1)}
 .btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px}
-.back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.06);border-radius:10px;color:var(--text);margin-bottom:16px;cursor:pointer;border:none;font-size:14px;font-weight:600}
+.back-btn-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.06);border-radius:10px;color:var(--text);cursor:pointer;border:none;font-size:14px;font-weight:600}
+.refresh-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+.refresh-btn:active { transform: scale(0.95); }
+.refresh-btn svg { width: 16px; height: 16px; fill: currentColor; }
 .recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
 .recipe:active{background:rgba(255,255,255,.07)}
 .recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
@@ -78,11 +82,8 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .fade{animation:fade .3s ease-out}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.loader-inline{border:4px solid rgba(255,255,255,.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px}
-.tab-btn{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;padding:6px 12px;border-radius:8px}
-.tab-btn.on{background:var(--accent);color:#000}
+.loader-inline { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -94,14 +95,11 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 /* ============================================================
    🔗 НАСТРОЙКИ ПОДКЛЮЧЕНИЯ
    ============================================================ */
-// URL для Google Apps Script (если есть). Если пустой — будут локальные данные.
-const APPS_SCRIPT_URL = ''; 
-
-// ID вашей таблицы для прямой ссылки
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHXjN1V5b883RkDdfavRpG0Ork0EmRmKm3NYwx0zNfFHPQnuxvuHCmaP7PK_0sEF7dTw/exe';
 const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 
 /* ============================================================
-   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (резервные)
+   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
    ============================================================ */
 const LOCAL_DATA = {
   month: 'Август 2026',
@@ -395,34 +393,102 @@ function renderRecipe(){
   `;
 }
 
+// Функция загрузки данных с сервера
+async function fetchScheduleData(forceRefresh = false) {
+  if (!APPS_SCRIPT_URL) {
+    throw new Error("URL скрипта не настроен");
+  }
+
+  // Добавляем случайный параметр для сброса кэша при принудительном обновлении
+  const url = forceRefresh 
+    ? `${APPS_SCRIPT_URL}?t=${Date.now()}` 
+    : APPS_SCRIPT_URL;
+
+  const response = await fetch(url, {
+    cache: forceRefresh ? 'no-cache' : 'default'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка сети: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 async function renderSchedule(){
+  // Показываем экран загрузки сразу
   app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>График</h1>
-    <div class="card" style="text-align:center;padding:30px">
+    <div class="back-btn-container">
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <button class="refresh-btn" onclick="forceRefreshSchedule();haptic()">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Обновить
+      </button>
+    </div>
+    <h1>Загрузка...</h1>
+    <div class="card" style="text-align:center;padding:40px">
       <div class="loader-inline"></div>
-      <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
+      <div style="margin-top:14px;color:var(--muted)">Связь с таблицей</div>
     </div>
   `;
 
-  // Пытаемся загрузить из Apps Script (если URL задан)
+  let dataLoaded = false;
+
+  // Пытаемся загрузить из Apps Script
   if (APPS_SCRIPT_URL && !useLocalSchedule) {
     try {
-      const ts = Date.now();
-      const res = await fetch(APPS_SCRIPT_URL + '?t=' + ts, { cache: 'no-store' });
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      scheduleData = await res.json();
+      scheduleData = await fetchScheduleData(false);
       useLocalSchedule = false;
+      dataLoaded = true;
     } catch(e) {
       console.warn('Apps Script error, using local data:', e);
       scheduleData = LOCAL_DATA;
       useLocalSchedule = true;
+      dataLoaded = true; // Данные есть (локальные), просто не с сервера
     }
   } else {
     scheduleData = LOCAL_DATA;
     useLocalSchedule = true;
+    dataLoaded = true;
   }
 
+  if(!dataLoaded) return;
+  drawScheduleContent();
+}
+
+// Принудительное обновление
+async function forceRefreshSchedule() {
+  haptic('hard');
+  app.innerHTML = `
+    <div class="back-btn-container">
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <button class="refresh-btn" style="opacity:0.5;cursor:default">
+        <svg viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Обновление...
+      </button>
+    </div>
+    <h1>Обновление</h1>
+    <div class="card" style="text-align:center;padding:40px">
+      <div class="loader-inline"></div>
+      <div style="margin-top:14px;color:var(--muted)">Скачиваем новый график</div>
+    </div>
+  `;
+
+  try {
+    scheduleData = await fetchScheduleData(true);
+    useLocalSchedule = false;
+    toast('График обновлен!', 'success');
+  } catch(e) {
+    console.error(e);
+    scheduleData = LOCAL_DATA;
+    useLocalSchedule = true;
+    toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+  }
+  
+  drawScheduleContent();
+}
+
+function drawScheduleContent() {
   const today = new Date();
   const currentDay = today.getDate();
   const dayIndex = currentDay - 1;
@@ -458,18 +524,24 @@ async function renderSchedule(){
   }
 
   app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>${scheduleData.month}</h1>
+    <div class="back-btn-container">
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <button class="refresh-btn" onclick="forceRefreshSchedule();haptic()">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Обновить
+      </button>
+    </div>
+    <h1>${scheduleData.month || 'График смен'}</h1>
     
     ${useLocalSchedule ? `
       <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
         ⚠️ <b>Локальные данные</b><br>
-        <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
+        <span style="color:var(--muted)">Сервер недоступен. Показан резервный график. Нажмите "Обновить", чтобы попробовать снова.</span>
       </div>
     ` : `
       <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-         <b>Данные из Google Таблицы</b><br>
-        <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
+         <b>Онлайн данные</b><br>
+        <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}. Данные актуальны.</span>
       </div>
     `}
     
@@ -541,7 +613,7 @@ async function renderSchedule(){
     }).join('')}
     
     <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
-      📝 Открыть таблицу
+      📝 Открыть таблицу в браузере
     </a>
   `;
 }
@@ -549,7 +621,7 @@ async function renderSchedule(){
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
   else expandedLocations.add(name);
-  renderSchedule();
+  drawScheduleContent();
 }
 
 function renderChecklist(){
@@ -844,7 +916,7 @@ function editNews(i){
       <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
       <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
       <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
-      <button class="btn" onclick="saveNews(${isEdit?i:'null'})"> Сохранить</button>
+      <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
