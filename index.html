@@ -108,10 +108,11 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
    🔗 НАСТРОЙКИ
    ============================================================ */
 const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+// Используем gviz для надежного чтения без CORS ошибок
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
-   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (резерв)
+   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
    ============================================================ */
 const LOCAL_DATA = {
   month: 'Август 2026',
@@ -122,12 +123,60 @@ const LOCAL_DATA = {
         {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
         {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
         {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16},
+        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16}, // Исправлено 15->16 по таблице
         {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
         {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
       ]
     },
-    // ... остальные локации для резерва можно добавить при необходимости
+    {
+      name: 'Сибирь',
+      staff: [
+        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
+        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
+        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
+        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
+      ]
+    },
+    {
+      name: 'Пионер',
+      staff: [
+        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
+        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4}, // Исправлено 3->4 по таблице (1,5,6)
+        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
+        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    },
+    {
+      name: 'Европа',
+      staff: [
+        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
+        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
+        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
+        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
+        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
+        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
+        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
+      ]
+    },
+    {
+      name: 'Лазурная',
+      staff: [
+        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}, // Исправлено по таблице
+        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
+        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
+        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    }
   ]
 };
 
@@ -199,6 +248,7 @@ let currentMult = 1;
 let expandedLocations = new Set();
 let scheduleData = null;
 let useLocalSchedule = false;
+let isLoading = false;
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -233,18 +283,18 @@ function render(){
 
 function renderHome(){
   const user = tg?.initDataUnsafe?.user;
-  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍';
+  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
   
   const today = new Date();
   const currentDay = today.getDate();
   const dayIndex = currentDay - 1;
   
   let todayShifts = [];
-  // Используем загруженные данные или локальные
-  const dataSrc = scheduleData || LOCAL_DATA;
+  // Берем данные из активного источника (онлайн или локаль)
+  const source = scheduleData || LOCAL_DATA;
   
-  if(dataSrc.locations) {
-      dataSrc.locations.forEach(loc => {
+  if(source && source.locations) {
+      source.locations.forEach(loc => {
         loc.staff.forEach(p => {
           // Защита от выхода за границы массива
           if(p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0){
@@ -363,50 +413,48 @@ function renderRecipe(){
   `;
 }
 
-// --- НОВАЯ ФУНКЦИЯ ЗАГРУЗКИ И ПАРСИНГА ПОД ВАШ ФОРМАТ ---
-async function loadScheduleData(force = false) {
-    const container = document.getElementById('schedule-content');
-    if(!container) return;
+// === ГЛАВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ===
+async function fetchScheduleData(force = false) {
+    if (isLoading) return;
+    isLoading = true;
 
-    // Показываем индикатор загрузки только если данных еще нет
-    if (!scheduleData && !force) {
-        container.innerHTML = `<div class="card" style="text-align:center;padding:30px"><div class="loader-inline"></div><div style="margin-top:14px;color:var(--muted)">Загрузка графика...</div></div>`;
+    // Если не форсируем и данные уже есть - не грузим
+    if (!force && scheduleData) {
+        isLoading = false;
+        return;
     }
 
     try {
-        const response = await fetch(CSV_URL + '&t=' + Date.now(), { cache: 'no-store' });
+        // Добавляем случайный параметр, чтобы избежать кэширования
+        const response = await fetch(SHEET_URL + '&t=' + Date.now());
         if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
         
-        const csvText = await response.text();
-        const parsedData = parseCustomCSV(csvText);
+        const text = await response.text();
+        const parsed = parseComplexCSV(text);
         
-        if (!parsedData.locations || parsedData.locations.length === 0) {
-            throw new Error('Таблица пуста или неверный формат');
+        if (parsed && parsed.locations && parsed.locations.length > 0) {
+            scheduleData = parsed;
+            useLocalSchedule = false;
+            toast('Данные обновлены', 'success');
+        } else {
+            throw new Error('Неверный формат данных');
         }
-
-        scheduleData = parsedData;
-        useLocalSchedule = false;
-        renderSchedule(); // Перерисовка с новыми данными
-        toast('Данные обновлены', 'success');
-
-    } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        // Если ошибка и данных нет вообще - берем локальные
+    } catch (e) {
+        console.warn('Онлайн загрузка не удалась:', e);
         if (!scheduleData) {
             scheduleData = LOCAL_DATA;
             useLocalSchedule = true;
-            toast('Нет связи с сервером. Показаны локальные данные.', 'error');
-        } else {
-            toast('Не удалось обновить. Показаны старые данные.', 'error');
         }
-        renderSchedule();
+        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+    } finally {
+        isLoading = false;
     }
 }
 
-// Специальный парсер под вашу таблицу
-function parseCustomCSV(csvText) {
+// === УМНЫЙ ПАРСЕР ДЛЯ ВАШЕЙ ТАБЛИЦЫ ===
+function parseComplexCSV(csvText) {
     const rows = csvText.split('\n').map(row => {
-        // Простой разбор CSV с учетом кавычек
+        // Обработка кавычек и запятых внутри ячеек
         const result = [];
         let cell = '';
         let inQuotes = false;
@@ -423,100 +471,105 @@ function parseCustomCSV(csvText) {
         }
         result.push(cell.trim());
         return result;
-    }).filter(r => r.length > 1); // Убираем совсем пустые
+    }).filter(r => r.length > 2); // Отсекаем совсем пустые
+
+    if (rows.length < 5) return null;
 
     const locations = [];
-    let currentLocationName = '';
-    let daysStartIndex = -1; // Индекс колонки, где начинаются дни (обычно 3)
-
-    // 1. Находим строку с заголовками дней (1, 2, 3...)
-    // Обычно это 3-я строка (индекс 2), но поищем надежнее
-    for (let i = 0; i < Math.min(rows.length, 10); i++) {
-        const row = rows[i];
-        // Проверяем, есть ли в строке число "1" во второй или третьей колонке после текста
-        // В вашем файле: Локация, Должность, Дата-дни... -> 1, 2, 3... начинаются с индекса 2
-        if (row[2] === '1' || row[2] === 'сб') { 
-            // Нашли строку заголовков дней. Дни начинаются с индекса 2 (3-я колонка)
-            // Но в данных сотрудников значения дней тоже начинаются с индекса 2
-            daysStartIndex = 2;
-            break;
-        }
-    }
-
-    if (daysStartIndex === -1) daysStartIndex = 2; // fallback
-
-    // 2. Проходим по строкам и собираем сотрудников
+    let currentLoc = null;
+    
+    // Проходим по строкам, игнорируя заголовки и "итого"
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        const col0 = row[0].trim();
-        const col1 = row[1].trim();
+        const firstCell = (row[0] || '').trim().toLowerCase();
         
-        // Пропускаем строки-заголовки и итоги
-        if (col0.includes('Дата') || col0.includes('итого') || col0 === '') continue;
-        if (col1 === 'Должность') continue; // Строка заголовка внутри блока
-        
-        // Проверка: является ли строка названием локации?
-        // В вашем формате: "Галактика", "", "сб"... (пустая вторая колонка или специфичные дни)
-        // Или просто строка, где нет имени сотрудника, а есть название группы
-        const isLocationRow = (col1 === '' || col1.includes('Должность')) && col0 !== '';
-        
-        if (isLocationRow) {
-            currentLocationName = col0;
-            // Создаем новую локацию, если её еще нет
-            if (!locations.find(l => l.name === currentLocationName)) {
-                locations.push({ name: currentLocationName, staff: [] });
-            }
+        // Пропускаем заголовки, даты, итоги и пустые строки
+        if (firstCell.includes('итого') || firstCell.includes('дата') || 
+            firstCell.includes('локация') || firstCell === '' || 
+            !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
             continue;
         }
 
-        // Если есть имя и текущая локация известна - это сотрудник
-        if (col0 && currentLocationName) {
-            const name = col0;
-            const role = col1 || 'Сотрудник';
+        // Проверка: это новая локация? (Вторая колонка содержит "Должность" или похожее, а первая - название)
+        // В вашей таблице структура: Название локации, Должность, 1, 2...
+        // Но иногда вторая колонка пустая у сотрудников.
+        // Эвристика: если во второй колонке написано "Должность" или она пустая, но первая длинная и не похожа на имя?
+        // Лучше: если вторая колонка == "Должность", это заголовок локации.
+        // Если вторая колонка != "Должность" и не пустая - это сотрудник.
+        
+        const secondCell = (row[1] || '').trim();
+        
+        if (secondCell === 'Должность' || secondCell === '') {
+             // Это заголовок новой локации (или повтор заголовка)
+             // Проверяем, есть ли там имя локации в первой ячейке
+             if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
+                 currentLoc = { name: row[0].trim(), staff: [] };
+                 locations.push(currentLoc);
+             }
+        } else if (currentLoc) {
+            // Это сотрудник
+            const name = row[0].trim();
+            const role = secondCell;
             
-            // Извлекаем смены (дни с 3 по 33 колонку, индексы 2..32)
-            // Всего 31 день.
+            // Берем дни с 3-й колонки (индекс 2) до конца (минус последние 2 колонки "Итого" и "Норма")
+            // В вашей таблице данные идут до предпоследней колонки
             const shifts = [];
-            for (let d = 0; d < 31; d++) {
-                const cellIndex = daysStartIndex + d;
-                let val = 0;
-                if (cellIndex < row.length) {
-                    const raw = row[cellIndex];
-                    // Обработка "0,5" или других форматов
-                    if (raw === '1' || raw === '0,5' || raw === '0.5' || raw === '+') {
-                        val = 1; // Считаем как смену
-                    } else if (raw === '0' || raw === '' || raw === '-') {
-                        val = 0;
-                    } else {
-                        // Пробуем распарсить число
-                        const num = parseFloat(raw.replace(',', '.'));
-                        if (!isNaN(num) && num > 0) val = 1;
-                    }
-                }
-                shifts.push(val);
+            // Начинаем с индекса 2 (третья колонка - день 1)
+            // Берем максимум 31 день
+            for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
+                let val = row[d];
+                // Замена запятой на точку для дробных чисел (0,5 -> 0.5)
+                if (val && val.includes(',')) val = val.replace(',', '.');
+                
+                let num = parseFloat(val);
+                if (isNaN(num)) num = 0;
+                shifts.push(num);
             }
+            
+            // Подсчет общего количества смен (сумма)
+            const total = shifts.reduce((a, b) => a + b, 0);
 
-            // Добавляем в последнюю созданную локацию
-            const loc = locations[locations.length - 1];
-            loc.staff.push({
+            currentLoc.staff.push({
                 name: name,
                 role: role,
                 shifts: shifts,
-                total: shifts.reduce((a,b)=>a+b, 0)
+                total: total
             });
         }
     }
 
+    if (locations.length === 0) return null;
     return { month: 'Август 2026', locations: locations };
 }
 
 async function renderSchedule(){
-    // Если данных нет, запускаем загрузку
-    if (!scheduleData) {
-        await loadScheduleData();
-        return;
-    }
+    // Сначала показываем заглушку
+    app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h1 style="margin:0">График</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Обновить
+        </button>
+    </div>
+    <div class="card" style="text-align:center;padding:30px">
+      <div class="loader-inline"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
+    </div>
+  `;
 
+    await fetchScheduleData(true); // Принудительная загрузка
+    
+    // После загрузки перерисовываем контент
+    renderScheduleContent();
+}
+
+function handleRefresh() {
+    renderSchedule();
+}
+
+function renderScheduleContent() {
     const today = new Date();
     const currentDay = today.getDate();
     const dayIndex = currentDay - 1;
@@ -533,125 +586,128 @@ async function renderSchedule(){
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const dayNum = d.getDate();
-        // Защита от выхода за пределы месяца (если день > 31)
-        const idx = (dayNum > 31 || dayNum < 1) ? 0 : dayNum - 1;
+        // Защита от выхода за пределы месяца (если день > 31, берем последний индекс)
+        const idx = Math.min(dayNum - 1, 30); 
         const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
         
         let count = 0;
-        scheduleData.locations.forEach(loc => {
+        if(scheduleData && scheduleData.locations) {
+            scheduleData.locations.forEach(loc => {
             loc.staff.forEach(p => {
-                if(p.shifts && p.shifts[idx] && p.shifts[idx] > 0) count++;
+                if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
             });
-        });
+            });
+        }
         
         weekDays.push({
-            dayNum,
-            isToday,
-            count,
-            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
+        dayNum,
+        isToday,
+        count,
+        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
         });
     }
 
     app.innerHTML = `
-        <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <h1>${scheduleData.month}</h1>
-            <button class="refresh-btn" onclick="loadScheduleData(true)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            </button>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h1 style="margin:0">${scheduleData ? scheduleData.month : 'Август 2026'}</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+    </div>
+    
+    ${useLocalSchedule ? `
+      <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+        ⚠️ <b>Локальные данные</b><br>
+        <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
+      </div>
+    ` : `
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+         <b>Данные из Google Таблицы</b><br>
+        <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
+      </div>
+    `}
+    
+    <h2>Эта неделя</h2>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      ${weekDays.map(d => `
+        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
+          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
+          <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
+          <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
         </div>
-        
-        ${useLocalSchedule ? `
-        <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-            ⚠️ <b>Локальные данные</b><br>
-            <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
-        </div>
-        ` : `
-        <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-            <b>Данные из Google Таблицы</b><br>
-            <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
-        </div>
-        `}
-        
-        <h2>Эта неделя</h2>
-        <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
-        ${weekDays.map(d => `
-            <div style="flex:1;min-width:50px;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
-            <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
-            <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
-            <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
+      `).join('')}
+    </div>
+    
+    ${scheduleData && scheduleData.locations ? scheduleData.locations.map(loc => {
+      if(!loc.staff || loc.staff.length === 0) return '';
+      
+      const isOpen = expandedLocations.has(loc.name);
+      // Защита от отсутствия массива shifts
+      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
+      
+      return `
+        <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+          <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+              <div style="font-size:12px;color:var(--muted)">
+                👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+              </div>
             </div>
-        `).join('')}
-        </div>
-        
-        ${scheduleData.locations.map(loc => {
-        const isOpen = expandedLocations.has(loc.name);
-        // Защита от отсутствия массива staff
-        const staffList = loc.staff || [];
-        const workingToday = staffList.filter(p => p.shifts && p.shifts[dayIndex] && p.shifts[dayIndex] > 0);
-        const staffStats = [...staffList].sort((a,b) => b.total - a.total);
-        
-        return `
-            <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-            <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-                <div style="flex:1;min-width:0">
-                <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
-                <div style="font-size:12px;color:var(--muted)">
-                    👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${staffList.length}
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </button>
+          
+          <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+            <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+              
+              <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
+              ${workingToday.length > 0 ? workingToday.map(p => `
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
+                  </div>
                 </div>
-                </div>
-                <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-                </div>
-            </button>
-            
-            <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-                <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-                
-                <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
-                ${workingToday.length > 0 ? workingToday.map(p => `
-                    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+              `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
+              
+              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
+              ${staffStats.map(s => {
+                let workDays = 0;
+                if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
+                return `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                     <div style="flex:1;min-width:0">
-                        <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                        <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
+                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
                     </div>
+                    <div style="text-align:right;margin-left:10px">
+                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
                     </div>
-                `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-                
-                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
-                ${staffStats.map(s => {
-                    let workDays = 0;
-                    if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
-                    return `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                        <div style="flex:1;min-width:0">
-                        <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
-                        </div>
-                        <div style="text-align:right;margin-left:10px">
-                        <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
-                        </div>
-                    </div>
-                    `;
-                }).join('')}
-                
-                </div>
+                  </div>
+                `;
+              }).join('')}
+              
             </div>
-            </div>
-        `;
-        }).join('')}
-        
-        <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
-        📝 Открыть таблицу
-        </a>
-    `;
+          </div>
+        </div>
+      `;
+    }).join('') : '<div class="card">Нет данных о локациях</div>'}
+    
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      📝 Открыть таблицу
+    </a>
+  `;
 }
 
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
   else expandedLocations.add(name);
-  renderSchedule();
+  renderScheduleContent();
 }
 
 function renderChecklist(){
@@ -721,7 +777,7 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (упрощена для примера, работает с локальными данными)
+   🔐 АДМИНКА (Упрощенная, только для локальных данных)
    ============================================================ */
 let adminTab = 'recipes';
 
@@ -815,13 +871,195 @@ function renderAdminContent(){
   }
 }
 
-// Функции редактирования (упрощенно, без полной реализации форм для краткости)
-function editRecipe(id){ toast('Редактирование ТТК (демо)', 'info'); }
-function deleteRecipe(id){ if(confirm('Удалить?')) { toast('Удалено', 'success'); } }
-function editNews(i){ toast('Редактирование новости (демо)', 'info'); }
-function deleteNews(i){ if(confirm('Удалить?')) { toast('Удалено', 'success'); } }
-function editTeamMember(i){ toast('Редактирование сотрудника (демо)', 'info'); }
-function deleteTeamMember(i){ if(confirm('Удалить?')) { toast('Удалено', 'success'); } }
+function editRecipe(id){
+  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
+  const isEdit = !!id;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
+      </div>
+      <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
+      <div class="form-field"><label class="form-label">Категория</label>
+        <select class="form-select" id="r-cat">
+          ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
+        <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
+        <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
+        <div id="ingr-list">
+          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
+        </div>
+      </div>
+      
+      <div class="form-field">
+        <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
+        <div id="steps-list">
+          ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
+        </div>
+      </div>
+      
+      <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
+      
+      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function ingrRow(i, idx){
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
+    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
+    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
+    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
+    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
+  </div></div>`;
+}
+
+function stepRow(s, idx){
+  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
+    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+window.addIngr = function(){
+  const list = document.getElementById('ingr-list');
+  const idx = list.querySelectorAll('.ing-editor').length;
+  list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
+};
+
+window.addStep = function(){
+  const list = document.getElementById('steps-list');
+  const idx = list.querySelectorAll('[data-step]').length;
+  list.insertAdjacentHTML('beforeend', stepRow('', idx));
+};
+
+window.saveRecipe = function(editId){
+  const r = {
+    id: editId || Date.now(),
+    name: $('#r-name').value,
+    cat: $('#r-cat').value,
+    time: $('#r-time').value,
+    yield: $('#r-yield').value,
+    kcal: parseInt($('#r-kcal').value) || 0,
+    note: $('#r-note').value,
+    ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
+      const idx = el.dataset.ing;
+      const f = el.dataset.f;
+      acc[idx] = acc[idx] || [];
+      const val = f==='name' ? el.value : parseFloat(el.value)||0;
+      const pos = f==='name'?0:f==='brutto'?1:2;
+      acc[idx][pos] = val;
+      return acc;
+    }, []).filter(x=>x && x[0]),
+    steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
+  };
+  if(!r.name){ toast('Введите название', 'error'); return; }
+  if(editId){
+    const idx = RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx] = r;
+  } else {
+    RECIPES.push(r);
+  }
+  document.getElementById('edit-modal').remove();
+  toast('Сохранено ✓', 'success');
+  renderAdminContent();
+};
+
+window.deleteRecipe = function(id){
+  if(!confirm('Удалить техкарту?')) return;
+  const idx = RECIPES.findIndex(r=>r.id===id);
+  if(idx>=0) RECIPES.splice(idx,1);
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
+function editNews(i){
+  const isEdit = i !== undefined;
+  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
+      <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
+      <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
+      <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
+      <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
+      <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.saveNews = function(i){
+  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
+  if(!n.title){ toast('Введите заголовок', 'error'); return; }
+  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
+};
+
+window.deleteNews = function(i){
+  if(!confirm('Удалить новость?')) return;
+  NEWS.splice(i,1);
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
+function editTeamMember(i){
+  const isEdit = i !== undefined;
+  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
+      <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
+      <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
+      <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
+      <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.saveTeamMember = function(i){
+  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
+  if(!u.name){ toast('Введите имя', 'error'); return; }
+  if(i !== null) TEAM[i] = u; else TEAM.push(u);
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
+};
+
+window.deleteTeamMember = function(i){
+  if(!confirm('Удалить сотрудника?')) return;
+  TEAM.splice(i,1);
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
 
 /* ============================================================
    🚀 СТАРТ
