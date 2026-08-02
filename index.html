@@ -345,7 +345,7 @@ function renderRecipe(){
   `;
 }
 
-let currentLocation = 'Галактика';
+let expandedLocations = new Set();
 
 async function renderSchedule(){
   app.innerHTML = `
@@ -384,52 +384,16 @@ async function renderSchedule(){
     }
 
     rows = rows.filter(r => r.length > 0);
-
     const monthTitle = rows[0]?.[0] || 'График';
 
-    // Ищем локации: строки, где в колонке 1 написано "Должность"
+    // Ищем локации
     const locations = [];
     rows.forEach((row, idx) => {
       if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
-        locations.push({
-          name: row[0],
-          startIdx: idx,
-          dowRow: rows[idx + 1] || [],
-        });
+        locations.push({ name: row[0], startIdx: idx });
       }
     });
-
-    // Если локаций не нашли — считаем всё одной локацией
-    if (locations.length === 0) {
-      locations.push({ name: 'Все', startIdx: 0, dowRow: rows[3] || [] });
-    }
-
-    // Если текущая локация не найдена — берём первую
-    if (!locations.find(l => l.name === currentLocation)) {
-      currentLocation = locations[0].name;
-    }
-
-    // Определяем границы локации
-    const locIdx = locations.findIndex(l => l.name === currentLocation);
-    const loc = locations[locIdx];
-    const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
-    const locRows = rows.slice(loc.startIdx, nextStart);
-
-    // Сотрудники: строки где есть имя (колонка 0) и есть роль (колонка 1), но не "Итого" и не "итого"
-    const staffRows = locRows.slice(2).filter(r => {
-      if (!r[0] || !r[1]) return false;
-      const name = String(r[0]).trim().toLowerCase();
-      if (name.includes('итого') || name === '') return false;
-      if (String(r[1]).trim().toLowerCase() === 'должность') return false;
-      return true;
-    });
-
-    // Итоги в смену
-    const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
-    
-    const today = new Date();
-    const currentDay = today.getDate();
-    const dayColIndex = currentDay + 2;
+    if (locations.length === 0) locations.push({ name: 'Все', startIdx: 0 });
 
     const isWorking = (v) => {
       if (!v) return false;
@@ -437,61 +401,67 @@ async function renderSchedule(){
       return s !== '' && s !== 'в' && s !== 'от' && s !== 'б' && s !== 'о' && s !== '0';
     };
 
-    const workingToday = staffRows.filter(r => isWorking(r[dayColIndex])).map(r => ({
-      name: r[0],
-      role: r[1],
-      shift: r[dayColIndex]
-    }));
-
-    const staffStats = staffRows.map(r => {
-      let workDays = 0;
-      let totalHours = 0;
-      for(let d=2; d<=32; d++){
-        const v = r[d];
-        if (isWorking(v)) {
-          workDays++;
-          const num = parseFloat(String(v).replace(',', '.'));
-          if (!isNaN(num)) totalHours += num;
-        }
-      }
-      return { name: r[0], role: r[1], workDays, totalHours, monthTotal: r[32] || workDays };
-    }).sort((a,b) => (parseFloat(String(b.monthTotal).replace(',','.')) || 0) - (parseFloat(String(a.monthTotal).replace(',','.')) || 0));
-
-    // Неделя
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset);
-
-    let weekHtml = '';
-    for(let i=0; i<7; i++){
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const dayNum = d.getDate();
-      const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-      const colIdx = dayNum + 2;
-      
-      // Берём количество из строки "итого в смену", если есть, иначе считаем
-      let working = 0;
-      if (totalRow && totalRow[colIdx]) {
-        working = parseFloat(String(totalRow[colIdx]).replace(',','.')) || 0;
-      } else {
-        working = staffRows.filter(r => isWorking(r[colIdx])).length;
-      }
-      
-      const dowNames = ['пн','вт','ср','чт','пт','сб','вск'];
-      weekHtml += `
-        <div style="flex:1;text-align:center;padding:8px 4px;background:${isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${isToday?'#000':'var(--text)'}">
-          <div style="font-size:10px;font-weight:700;color:${isToday?'#000':'var(--muted)'};text-transform:uppercase">${dowNames[i]}</div>
-          <div style="font-weight:800;font-size:17px;margin:3px 0">${dayNum}</div>
-          <div style="font-size:11px;color:${isToday?'#000':'var(--muted)'}">${working} чел</div>
-        </div>
-      `;
-    }
-
+    const today = new Date();
+    const currentDay = today.getDate();
+    const dayColIndex = currentDay + 2;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
 
+    // Обрабатываем каждую локацию
+    const locData = locations.map((loc, locIdx) => {
+      const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
+      const locRows = rows.slice(loc.startIdx, nextStart);
+      
+      const staffRows = locRows.slice(2).filter(r => {
+        if (!r[0] || !r[1]) return false;
+        const name = String(r[0]).trim().toLowerCase();
+        if (name.includes('итого') || name === '') return false;
+        if (String(r[1]).trim().toLowerCase() === 'должность') return false;
+        return true;
+      });
+      
+      const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
+      
+      // Неделя
+      const dayOfWeek = today.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + mondayOffset);
+      
+      const weekDays = [];
+      for(let i=0; i<7; i++){
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dayNum = d.getDate();
+        const colIdx = dayNum + 2;
+        let count = 0;
+        if (totalRow && totalRow[colIdx]) {
+          count = parseFloat(String(totalRow[colIdx]).replace(',','.')) || 0;
+        } else {
+          count = staffRows.filter(r => isWorking(r[colIdx])).length;
+        }
+        weekDays.push({
+          dayNum,
+          isToday: dayNum === currentDay && d.getMonth() === today.getMonth(),
+          count,
+          dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
+        });
+      }
+      
+      const workingToday = staffRows
+        .filter(r => isWorking(r[dayColIndex]))
+        .map(r => ({ name: r[0], role: r[1], shift: r[dayColIndex] }));
+      
+      const staffStats = staffRows.map(r => {
+        let workDays = 0;
+        for(let d=2; d<=32; d++) if (isWorking(r[d])) workDays++;
+        return { name: r[0], role: r[1], monthTotal: r[32] || workDays };
+      }).sort((a,b) => (parseFloat(String(b.monthTotal).replace(',','.')) || 0) - (parseFloat(String(a.monthTotal).replace(',','.')) || 0));
+      
+      return { name: loc.name, weekDays, workingToday, staffStats, totalStaff: staffRows.length };
+    });
+
+    // Рендер
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
       <h1>${monthTitle}</h1>
@@ -501,44 +471,70 @@ async function renderSchedule(){
         <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
       </div>
       
-      <!-- Переключатель локаций -->
-      <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
-        ${locations.map(l => `
-          <button class="mult ${l.name===currentLocation?'on':''}" onclick="currentLocation='${l.name}';renderSchedule()" style="white-space:nowrap">
-            ${l.name}
-          </button>
-        `).join('')}
-      </div>
-      
-      <h2>Эта неделя</h2>
-      <div style="display:flex;gap:6px;margin-bottom:16px">${weekHtml}</div>
-      
-      <h2>Сегодня на смене <span style="color:var(--accent)">${workingToday.length}</span></h2>
-      ${workingToday.length > 0 ? workingToday.map(p => `
-        <div class="user" style="margin-bottom:8px">
-          <div class="avatar">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-          <div class="user-info">
-            <b>${p.name}</b>
-            <span>${p.role}${p.shift && p.shift !== '1' ? ' · смена '+p.shift : ''}</span>
+      ${locData.map(loc => {
+        const isOpen = expandedLocations.has(loc.name);
+        return `
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+            <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+                <div style="font-size:12px;color:var(--muted)">
+                  👥 Сегодня: <span style="color:var(--accent);font-weight:700">${loc.workingToday.length}</span> из ${loc.totalStaff}
+                </div>
+              </div>
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </button>
+            
+            <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+              <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+                
+                <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Эта неделя</div>
+                <div style="display:flex;gap:5px;margin-bottom:16px">
+                  ${loc.weekDays.map(d => `
+                    <div style="flex:1;text-align:center;padding:8px 2px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
+                      <div style="font-size:9px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
+                      <div style="font-weight:800;font-size:15px;margin:2px 0">${d.dayNum}</div>
+                      <div style="font-size:10px;color:${d.isToday?'#000':'var(--muted)'}">${d.count}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                
+                <div style="margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">
+                  Сегодня на смене (${loc.workingToday.length})
+                </div>
+                ${loc.workingToday.length > 0 ? loc.workingToday.map(p => `
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                      <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
+                    </div>
+                  </div>
+                `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
+                
+                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
+                ${loc.staffStats.slice(0, 10).map(s => `
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role}</div>
+                    </div>
+                    <div style="text-align:right;margin-left:10px">
+                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.monthTotal}</div>
+                    </div>
+                  </div>
+                `).join('')}
+                ${loc.staffStats.length > 10 ? `<div style="text-align:center;padding:8px;color:var(--muted);font-size:12px">и ещё ${loc.staffStats.length - 10} чел</div>` : ''}
+                
+              </div>
+            </div>
           </div>
-        </div>
-      `).join('') : '<div class="card" style="text-align:center;padding:24px;color:var(--muted)">🎉 Сегодня все отдыхают</div>'}
+        `;
+      }).join('')}
       
-      <h2>Команда за месяц</h2>
-      ${staffStats.map(s => `
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px">
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role}</div>
-          </div>
-          <div style="text-align:right;margin-left:10px">
-            <div style="font-weight:800;font-size:20px;color:var(--accent)">${s.monthTotal}</div>
-            <div style="font-size:11px;color:var(--muted)">смен</div>
-          </div>
-        </div>
-      `).join('')}
-      
-      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:20px;text-decoration:none;text-align:center">
+      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
         📝 Открыть таблицу
       </a>
     `;
@@ -551,11 +547,17 @@ async function renderSchedule(){
       <div class="card" style="text-align:center;padding:30px">
         <div style="font-size:40px;margin-bottom:12px">⚠️</div>
         <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;word-break:break-all">${e.message}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.message}</div>
         <button class="btn btn-sm" onclick="renderSchedule()">🔄 Повторить</button>
       </div>
     `;
   }
+}
+
+function toggleLoc(name) {
+  if (expandedLocations.has(name)) expandedLocations.delete(name);
+  else expandedLocations.add(name);
+  renderSchedule();
 }
 
 function renderChecklist(){
