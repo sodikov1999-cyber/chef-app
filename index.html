@@ -78,9 +78,39 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .fade{animation:fade .3s ease-out}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:2px}
-.tab-btn{background:none;border:none;color:var(--muted);font-size:14px;font-weight:600;padding:8px 12px;cursor:pointer}
-.tab-btn.on{color:var(--accent);border-bottom:2px solid var(--accent)}
+.loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refresh-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s;
+    margin-left: auto;
+}
+.refresh-btn:active { transform: scale(0.95); }
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: var(--muted);
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+.tab-btn.on {
+    background: rgba(255,138,61,0.1);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -90,51 +120,136 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 
 <script>
 /* ============================================================
-   🔗 НАСТРОЙКИ ТАБЛИЦЫ
+   🔗 НАСТРОЙКИ
    ============================================================ */
 const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
-   📦 ДАННЫЕ (Загружаются из LocalStorage или дефолтные)
+   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
    ============================================================ */
-const DEFAULT_DATA = {
+const LOCAL_DATA = {
   month: 'Август 2026',
   locations: [
-    {name:'Галактика', staff:[{name:'Бочаров Вадим', role:'Су-шеф', shifts:Array(31).fill(0), total:0}]}, // Заглушка
-  ],
-  recipes: [
-    {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'', ingr:[['Говядина',100,80]], steps:['Сварить бульон.']},
-  ],
-  news: [{tag:'Инфо', title:'Добро пожаловать', text:'Приложение готово к работе.', date:'Сегодня'}],
-  team: [{name:'Администратор', role:'Управление', init:'АД'}]
+    {
+      name: 'Галактика',
+      staff: [
+        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
+        {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16},
+        {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
+        {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
+      ]
+    },
+    {
+      name: 'Сибирь',
+      staff: [
+        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
+        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
+        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
+        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
+      ]
+    },
+    {
+      name: 'Пионер',
+      staff: [
+        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
+        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4},
+        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
+        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    },
+    {
+      name: 'Европа',
+      staff: [
+        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
+        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
+        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
+        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
+        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
+        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
+        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
+      ]
+    },
+    {
+      name: 'Лазурная',
+      staff: [
+        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15},
+        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
+        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
+        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    }
+  ]
 };
 
-// Глобальное состояние
-let AppState = {
-  recipes: [],
-  news: [],
-  team: [],
-  scheduleData: null, // Данные графика (из сети или локальные)
-  useLocalSchedule: false
+const RECIPES = [
+  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
+   note:'Срок хранения основы — 12 ч при +2…+6 °C.',
+   ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
+   steps:['Сварить бульон 1,5 часа.','Добавить овощи, варить 15 мин.','Тушить свёклу 25 мин.','Пассеровать лук и морковь.','Довести до вкуса.']},
+  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
+   note:'Собирается при госте.',
+   ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус Цезарь',40,40],['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
+   steps:['Филе обжарить, нарезать.','Айсберг порвать.','Сухарики подсушить 4 мин.','Собрать салат, финиш — пармезан.']},
+  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
+   note:'Классика на желтке, без сливок.',
+   ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20]],
+   steps:['Спагетти al dente.','Вытопить гуанчале.','Смешать желтки с пармезаном.','Эмульгировать всё вместе.']},
+  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
+   note:'Тесто — 24 ч при +2…+6 °C.',
+   ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
+   steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.','Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
+  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
+   note:'Созревание не менее 4 часов.',
+   ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
+   steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.','Чередовать слои.','4 часа в холоде, какао перед подачей.']},
+  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
+   note:'Нарезка — заготовка смены, 6 часов.',
+   ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
+   steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
+  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
+   note:'Не кипятить! Нагрев строго до 70 °C.',
+   ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
+   steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
+  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
+   note:'Заготовка горячего цеха. Срок — 12 ч.',
+   ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
+   steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
+];
+
+const NEWS = [
+  {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
+  {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
+  {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
+];
+
+const TEAM = [
+  {name:'Марина К.', role:'Су-шеф', init:'МК'},
+  {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
+  {name:'Даша П.', role:'Кондитер', init:'ДП'},
+  {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
+  {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
+];
+
+const CHECKLISTS = {
+  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
+  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
 };
-
-// Инициализация данных
-function initData() {
-  const savedRecipes = localStorage.getItem('sb_recipes');
-  const savedNews = localStorage.getItem('sb_news');
-  const savedTeam = localStorage.getItem('sb_team');
-
-  AppState.recipes = savedRecipes ? JSON.parse(savedRecipes) : DEFAULT_DATA.recipes;
-  AppState.news = savedNews ? JSON.parse(savedNews) : DEFAULT_DATA.news;
-  AppState.team = savedTeam ? JSON.parse(savedTeam) : DEFAULT_DATA.team;
-  
-  // Для графика пока используем заглушку, реальная загрузка асинхронна
-  AppState.scheduleData = DEFAULT_DATA.locations; 
-}
 
 /* ============================================================
-   ⚙️ СИСТЕМНЫЕ ФУНКЦИИ
+   ⚙️ ЛОГИКА
    ============================================================ */
 const tg = window.Telegram?.WebApp;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
@@ -145,6 +260,9 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
+let scheduleData = null;
+let useLocalSchedule = false;
+let isLoading = false;
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -159,12 +277,6 @@ function toast(msg, type='info'){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
 }
 
-function saveData(key) {
-  if(key === 'recipes') localStorage.setItem('sb_recipes', JSON.stringify(AppState.recipes));
-  if(key === 'news') localStorage.setItem('sb_news', JSON.stringify(AppState.news));
-  if(key === 'team') localStorage.setItem('sb_team', JSON.stringify(AppState.team));
-}
-
 function navigate(view, data){
   currentView = view;
   if(data !== undefined) currentRecipeId = data;
@@ -172,83 +284,6 @@ function navigate(view, data){
   window.scrollTo(0,0);
 }
 
-/* ============================================================
-   📡 ЗАГРУЗКА ГРАФИКА (CSV)
-   ============================================================ */
-async function loadScheduleData(force = false) {
-  if (!force && AppState.scheduleData && !AppState.useLocalSchedule) return;
-
-  try {
-    const res = await fetch(SHEET_URL + '&t=' + Date.now());
-    if(!res.ok) throw new Error('Network error');
-    const text = await res.text();
-    parseScheduleCSV(text);
-    AppState.useLocalSchedule = false;
-  } catch (e) {
-    console.warn('Schedule load failed, using local/default', e);
-    AppState.scheduleData = DEFAULT_DATA.locations;
-    AppState.useLocalSchedule = true;
-  }
-}
-
-function parseScheduleCSV(text) {
-  // Простой парсер для структуры: Локация, Должность, Дата...
-  const rows = text.split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
-  const newLocations = [];
-  let currentLoc = null;
-
-  rows.forEach(row => {
-    if(row.length < 3) return;
-    // Пропускаем заголовки и итоги
-    if(row[0].includes('Дата') || row[0].includes('итого') || row[0] === '') return;
-    
-    // Проверка: если во второй колонке есть слово "Должность", значит это заголовок локации
-    if(row[1] && row[1].includes('Должность')) {
-      // Новая локация началась в предыдущей строке или это заголовок
-      // В данном CSV структура: Название локации в первой ячейке перед строкой заголовков? 
-      // Судя по вашему CSV: Строка "Галактика,,сб,вск..." идет ПЕРЕД заголовком "Локация,Должность..."
-      // Но в вашем примере "Галактика" стоит в отдельной строке перед заголовками столбцов дней?
-      // Давайте искать строку, где есть имя сотрудника.
-      return; 
-    }
-
-    // Если первая ячейка не пуста и не число, и вторая ячейка содержит роль (Су-шеф, Повар...)
-    // Это сотрудник
-    if(row[0] && !row[0].includes('итого') && (row[1].includes('шеф') || row[1].includes('Повар') || row[1].includes('Универсал') || row[1].includes('ИО') || row[1].includes('цех') || row[1].includes('Мангал') || row[1].includes('Италия') || row[1].includes('раб'))) {
-       if(!currentLoc) return; // Ошибка структуры
-       
-       const name = row[0];
-       const role = row[1];
-       // Дни начинаются с 3-й колонки (индекс 2), но в вашем CSV там могут быть дни недели "сб, вск..."
-       // Реальные данные (1/0) идут после строки с днями недели.
-       // Упрощение: берем все ячейки с 2 по 32, пытаемся превратить в число.
-       const shifts = [];
-       for(let i=2; i<33; i++) {
-         let val = row[i];
-         // Обработка "0,5"
-         if(val && val.includes(',')) val = val.replace(',', '.');
-         shifts.push(parseFloat(val) || 0);
-       }
-       
-       currentLoc.staff.push({name, role, shifts, total: shifts.reduce((a,b)=>a+b, 0)});
-    }
-    
-    // Определение локации: строка, где первая ячейка - название, а вторая пустая или "Должность"
-    if(row[1] === '' || row[1] === 'Должность') {
-       // Проверяем, не является ли это строкой итогов
-       if(!row[0].includes('итого')) {
-         currentLoc = { name: row[0], staff: [] };
-         newLocations.push(currentLoc);
-       }
-    }
-  });
-
-  if(newLocations.length > 0) AppState.scheduleData = newLocations;
-}
-
-/* ============================================================
-   🎨 ОТРИСОВКА (RENDER)
-   ============================================================ */
 function render(){
   if(currentView === 'home') renderHome();
   else if(currentView === 'ttk') renderTTK();
@@ -262,33 +297,40 @@ function render(){
 
 function renderHome(){
   const user = tg?.initDataUnsafe?.user;
-  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍';
+  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
+  
   const today = new Date();
   const currentDay = today.getDate();
   const dayIndex = currentDay - 1;
   
-  let todayShifts = 0;
-  if(AppState.scheduleData) {
-    AppState.scheduleData.forEach(loc => {
-      loc.staff.forEach(p => {
-        if(p.shifts[dayIndex] && p.shifts[dayIndex] > 0) todayShifts++;
+  let todayShifts = [];
+  const source = scheduleData || LOCAL_DATA;
+  
+  if(source && source.locations) {
+      source.locations.forEach(loc => {
+        loc.staff.forEach(p => {
+          if(p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0){
+            todayShifts.push({...p, location: loc.name});
+          }
+        });
       });
-    });
   }
 
   app.innerHTML = `
     <h1>${greet}</h1>
+    
     <div class="card">
       <span class="pulse"></span>Сегодня ${currentDay} августа
       <div style="margin-top:10px;font-size:13px;color:var(--muted)">
-         На смене: <span style="color:var(--accent);font-weight:700">${todayShifts}</span> человек
+         На смене: <span style="color:var(--accent);font-weight:700">${todayShifts.length}</span> человек
       </div>
     </div>
+    
     <div class="grid">
       <button class="tile" onclick="navigate('ttk');haptic()">
         <div class="tile-emoji">📖</div>
         <div class="tile-title">ТТК</div>
-        <div class="tile-desc">${AppState.recipes.length} техкарт</div>
+        <div class="tile-desc">${RECIPES.length} техкарт</div>
       </button>
       <button class="tile" onclick="navigate('schedule');haptic()">
         <div class="tile-emoji">🗓</div>
@@ -303,11 +345,12 @@ function renderHome(){
       <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
         <div class="tile-title">Команда</div>
-        <div class="tile-desc">${AppState.team.length} чел</div>
+        <div class="tile-desc">${TEAM.length} чел</div>
       </button>
     </div>
+
     <h2>Объявления</h2>
-    ${AppState.news.map(n => `
+    ${NEWS.map(n => `
       <div class="news">
         <div class="news-title">${n.tag}: ${n.title}</div>
         <div class="news-text">${n.text}</div>
@@ -318,11 +361,11 @@ function renderHome(){
 }
 
 function renderTTK(){
-  const cats = ['Все', ...new Set(AppState.recipes.map(r=>r.cat))];
+  const cats = ['Все', ...new Set(RECIPES.map(r=>r.cat))];
   window._ttkCat = window._ttkCat || 'Все';
   window._ttkQ = window._ttkQ || '';
   const q = window._ttkQ.toLowerCase();
-  const items = AppState.recipes.filter(r => 
+  const items = RECIPES.filter(r => 
     (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
     (!q || r.name.toLowerCase().includes(q))
   );
@@ -347,17 +390,19 @@ function renderTTK(){
 }
 
 function renderRecipe(){
-  const r = AppState.recipes.find(x => x.id === currentRecipeId);
+  const r = RECIPES.find(x => x.id === currentRecipeId);
   if(!r){ navigate('ttk'); return; }
 
   app.innerHTML = `
     <button class="back" onclick="navigate('ttk');haptic()">← Назад</button>
     <h1>${r.name}</h1>
+    
     <div class="kpi">
       <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${r.time}</div></div>
       <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${r.yield}</div></div>
       <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
     </div>
+
     <h2>Ингредиенты</h2>
     <div class="mults">
       ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
@@ -366,70 +411,200 @@ function renderRecipe(){
       ${r.ingr.map(i => `
         <div class="ingredient">
           <span>${i[0]}</span>
-          <b>${Math.round((parseFloat(i[2])||0)*currentMult)} г</b>
+          <b>${Math.round(i[2]*currentMult)} г</b>
         </div>
       `).join('')}
     </div>
+
     <h2>Приготовление</h2>
     ${r.steps.map((s,i) => `
       <div class="step"><span class="step-num">${i+1}</span>${s}</div>
     `).join('')}
+
     ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
   `;
 }
 
+async function fetchScheduleData(force = false) {
+    if (isLoading) return;
+    isLoading = true;
+
+    if (!force && scheduleData) {
+        isLoading = false;
+        return;
+    }
+
+    try {
+        const response = await fetch(SHEET_URL + '&t=' + Date.now());
+        if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
+        
+        const text = await response.text();
+        const parsed = parseComplexCSV(text);
+        
+        if (parsed && parsed.locations && parsed.locations.length > 0) {
+            scheduleData = parsed;
+            useLocalSchedule = false;
+            toast('Данные обновлены', 'success');
+        } else {
+            throw new Error('Неверный формат данных');
+        }
+    } catch (e) {
+        console.warn('Онлайн загрузка не удалась:', e);
+        if (!scheduleData) {
+            scheduleData = LOCAL_DATA;
+            useLocalSchedule = true;
+        }
+        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+    } finally {
+        isLoading = false;
+    }
+}
+
+function parseComplexCSV(csvText) {
+    const rows = csvText.split('\n').map(row => {
+        const result = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(cell.trim());
+                cell = '';
+            } else {
+                cell += char;
+            }
+        }
+        result.push(cell.trim());
+        return result;
+    }).filter(r => r.length > 2);
+
+    if (rows.length < 5) return null;
+
+    const locations = [];
+    let currentLoc = null;
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const firstCell = (row[0] || '').trim().toLowerCase();
+        
+        if (firstCell.includes('итого') || firstCell.includes('дата') || 
+            firstCell.includes('локация') || firstCell === '' || 
+            !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
+            continue;
+        }
+
+        const secondCell = (row[1] || '').trim();
+        
+        if (secondCell === 'Должность' || secondCell === '') {
+             if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
+                 currentLoc = { name: row[0].trim(), staff: [] };
+                 locations.push(currentLoc);
+             }
+        } else if (currentLoc) {
+            const name = row[0].trim();
+            const role = secondCell;
+            
+            const shifts = [];
+            for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
+                let val = row[d];
+                if (val && val.includes(',')) val = val.replace(',', '.');
+                
+                let num = parseFloat(val);
+                if (isNaN(num)) num = 0;
+                shifts.push(num);
+            }
+            
+            const total = shifts.reduce((a, b) => a + b, 0);
+
+            currentLoc.staff.push({
+                name: name,
+                role: role,
+                shifts: shifts,
+                total: total
+            });
+        }
+    }
+
+    if (locations.length === 0) return null;
+    return { month: 'Август 2026', locations: locations };
+}
+
 async function renderSchedule(){
-  app.innerHTML = `
+    app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1>График</h1>
-        <button class="btn btn-sm" onclick="loadScheduleData(true); renderSchedule(); haptic()">↻ Обновить</button>
+        <h1 style="margin:0">График</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Обновить
+        </button>
     </div>
     <div class="card" style="text-align:center;padding:30px">
-      <div class="loader-inline" style="width:30px;height:30px;border:3px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite"></div>
-      <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
+      <div class="loader-inline"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
     </div>
   `;
-  
-  await loadScheduleData(false);
 
-  const today = new Date();
-  const currentDay = today.getDate();
-  const dayIndex = currentDay - 1;
-  const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
-  const currentDow = dowShort[today.getDay()];
+    await fetchScheduleData(true);
+    renderScheduleContent();
+}
 
-  // Генерация дней недели
-  const weekDays = [];
-  for(let i=0; i<7; i++){
-     // Упрощенно: просто текущая неделя от текущего дня
-     // Для точности нужно считать mondayOffset, но для примера оставим просто дни
-     let dNum = currentDay - 3 + i; 
-     if(dNum < 1) dNum = 1; 
-     if(dNum > 31) dNum = 31;
-     
-     let count = 0;
-     if(AppState.scheduleData) {
-        AppState.scheduleData.forEach(loc => {
+function handleRefresh() {
+    renderSchedule();
+}
+
+function renderScheduleContent() {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const dayIndex = currentDay - 1;
+    const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
+    const currentDow = dowShort[today.getDay()];
+
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+
+    const weekDays = [];
+    for(let i=0; i<7; i++){
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dayNum = d.getDate();
+        const idx = Math.min(dayNum - 1, 30); 
+        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+        
+        let count = 0;
+        if(scheduleData && scheduleData.locations) {
+            scheduleData.locations.forEach(loc => {
             loc.staff.forEach(p => {
-                if(p.shifts[dNum-1] && p.shifts[dNum-1] > 0) count++;
+                if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
             });
+            });
+        }
+        
+        weekDays.push({
+        dayNum,
+        isToday,
+        count,
+        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
         });
-     }
-     weekDays.push({dayNum: dNum, isToday: dNum===currentDay, count});
-  }
+    }
 
-  app.innerHTML = `
+    app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1>${AppState.useLocalSchedule ? 'График (Локально)' : 'График'}</h1>
-        <button class="btn btn-sm" onclick="loadScheduleData(true); renderSchedule(); haptic()">↻ Обновить</button>
+        <h1 style="margin:0">${scheduleData ? scheduleData.month : 'Август 2026'}</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
     </div>
     
-    ${AppState.useLocalSchedule ? `
+    ${useLocalSchedule ? `
       <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-        ⚠️ <b>Нет связи с сервером</b><br>
-        <span style="color:var(--muted)">Показаны локальные данные</span>
+        ⚠️ <b>Локальные данные</b><br>
+        <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
       </div>
     ` : `
       <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
@@ -442,16 +617,18 @@ async function renderSchedule(){
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
         <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
-          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${dowShort[(today.getDay()+d.dayNum-currentDay+7)%7]}</div>
+          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
           <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
           <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
         </div>
       `).join('')}
     </div>
     
-    ${AppState.scheduleData ? AppState.scheduleData.map(loc => {
+    ${scheduleData && scheduleData.locations ? scheduleData.locations.map(loc => {
+      if(!loc.staff || loc.staff.length === 0) return '';
+      
       const isOpen = expandedLocations.has(loc.name);
-      const workingToday = loc.staff.filter(p => p.shifts[dayIndex] && p.shifts[dayIndex] > 0);
+      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
       
       return `
@@ -470,6 +647,7 @@ async function renderSchedule(){
           
           <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
             <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+              
               <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
               ${workingToday.length > 0 ? workingToday.map(p => `
                 <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
@@ -482,32 +660,39 @@ async function renderSchedule(){
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
               
               <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
-              ${staffStats.map(s => `
+              ${staffStats.map(s => {
+                let workDays = 0;
+                if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
+                return `
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                     <div style="flex:1;min-width:0">
                       <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${s.total} дн</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
                     </div>
                     <div style="text-align:right;margin-left:10px">
                       <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
                     </div>
                   </div>
-                `).join('')}
+                `;
+              }).join('')}
+              
             </div>
           </div>
         </div>
       `;
-    }).join('') : '<div class="card">Нет данных</div>'}
+    }).join('') : '<div class="card">Нет данных о локациях</div>'}
+    
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      📝 Открыть таблицу
+    </a>
   `;
 }
 
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
   else expandedLocations.add(name);
-  renderSchedule();
+  renderScheduleContent();
 }
-
-const CHECKLISTS = { open: ['Включить вентиляцию','Проверить холодильники','Принять поставку'], close: ['Убрать заготовки','Санобработка','Вынести мусор'] };
 
 function renderChecklist(){
   window._clTab = window._clTab || 'open';
@@ -516,12 +701,13 @@ function renderChecklist(){
   const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
   const items = CHECKLISTS[key];
   const done = saved.length;
+  const total = items.length;
 
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Чек-листы</h1>
     <div class="mults">
-      <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие</button>
+      <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${done}/${total})</button>
       <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие</button>
     </div>
     <div class="card">
@@ -532,6 +718,8 @@ function renderChecklist(){
         </div>
       `).join('')}
     </div>
+    ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
+    <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist();haptic()">↺ Сбросить</button>
   `;
 }
 
@@ -545,11 +733,25 @@ window.toggleCheck = function(i){
   renderChecklist();
 };
 
+window.resetChecklist = function(){
+  const key = window._clTab;
+  const today = new Date().toISOString().slice(0,10);
+  localStorage.removeItem('cl_'+today+'_'+key);
+  renderChecklist();
+};
+
 function renderTeam(){
+  const user = tg?.initDataUnsafe?.user;
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
-    ${AppState.team.map(u => `
+    ${user ? `
+      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
+        <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
+      </div>
+    ` : ''}
+    ${TEAM.map(u => `
       <div class="user">
         <div class="avatar">${u.init}</div>
         <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
@@ -559,7 +761,7 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (СТАБИЛЬНАЯ)
+   🔐 АДМИНКА
    ============================================================ */
 let adminTab = 'recipes';
 
@@ -580,7 +782,7 @@ function showAdminModal(){
         <div class="modal-title">⚙️ Редактор</div>
         <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-      <div class="tabs">
+      <div style="display:flex;gap:4px;margin-bottom:16px">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
@@ -599,12 +801,12 @@ function renderAdminContent(){
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
-      ${AppState.recipes.map(r => `
+      ${RECIPES.map(r => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
               <div class="item-card-title">${r.name}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.cat}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.cat} · ${r.time}</div>
             </div>
             <div>
               <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
@@ -617,11 +819,11 @@ function renderAdminContent(){
   } else if(adminTab === 'news'){
     c.innerHTML = `
       <button class="btn" onclick="editNews()">+ Добавить новость</button>
-      ${AppState.news.map((n,i) => `
+      ${NEWS.map((n,i) => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
-              <div class="item-card-title">${n.title}</div>
+              <div class="item-card-title">${n.tag}: ${n.title}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:3px">${n.date}</div>
             </div>
             <div>
@@ -634,8 +836,8 @@ function renderAdminContent(){
     `;
   } else if(adminTab === 'team'){
     c.innerHTML = `
-      <button class="btn" onclick="editTeamMember()">+ Сотрудник</button>
-      ${AppState.team.map((u,i) => `
+      <button class="btn" onclick="editTeamMember()">+ Добавить сотрудника</button>
+      ${TEAM.map((u,i) => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
@@ -653,9 +855,9 @@ function renderAdminContent(){
   }
 }
 
-// --- Редактирование Рецептов ---
 function editRecipe(id){
-  const r = id ? AppState.recipes.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
+  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
+  const isEdit = !!id;
   
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
@@ -663,8 +865,8 @@ function editRecipe(id){
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">${id?'✏️ Редактировать':'✨ Новая'} техкарта</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
       </div>
       <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
       <div class="form-field"><label class="form-label">Категория</label>
@@ -677,170 +879,177 @@ function editRecipe(id){
         <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
         <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
       </div>
-      <div class="form-field"><label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngrRow()">+</button></label>
-        <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRowHTML(i,idx)).join('')}</div>
+      
+      <div class="form-field">
+        <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
+        <div id="ingr-list">
+          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
+        </div>
       </div>
-      <div class="form-field"><label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStepRow()">+</button></label>
-        <div id="steps-list">${r.steps.map((s,idx)=>stepRowHTML(s,idx)).join('')}</div>
+      
+      <div class="form-field">
+        <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
+        <div id="steps-list">
+          ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
+        </div>
       </div>
+      
       <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
-      <button class="btn" onclick="saveRecipe(${id||'null'})">💾 Сохранить</button>
+      
+      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
-function ingrRowHTML(i, idx){
-  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px;display:flex;gap:6px;align-items:center">
-    <input class="form-input" placeholder="Продукт" value="${i[0]||''}" data-ing="${idx}" data-f="0" style="flex:2">
-    <input class="form-input" placeholder="Бр" type="number" value="${i[1]||0}" data-ing="${idx}" data-f="1" style="flex:1">
-    <input class="form-input" placeholder="Нет" type="number" value="${i[2]||0}" data-ing="${idx}" data-f="2" style="flex:1">
+function ingrRow(i, idx){
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
+    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
+    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
+    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
     <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-  </div>`;
+  </div></div>`;
 }
 
-function stepRowHTML(s, idx){
+function stepRow(s, idx){
   return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
-    <textarea class="form-textarea" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}" data-step="${idx}"></textarea>
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
     <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
 }
 
-window.addIngrRow = function(){
+window.addIngr = function(){
   const list = document.getElementById('ingr-list');
   const idx = list.querySelectorAll('.ing-editor').length;
-  list.insertAdjacentHTML('beforeend', ingrRowHTML(['',0,0], idx));
+  list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
 };
-window.addStepRow = function(){
+
+window.addStep = function(){
   const list = document.getElementById('steps-list');
   const idx = list.querySelectorAll('[data-step]').length;
-  list.insertAdjacentHTML('beforeend', stepRowHTML('', idx));
+  list.insertAdjacentHTML('beforeend', stepRow('', idx));
 };
 
 window.saveRecipe = function(editId){
-  const name = $('#r-name').value.trim();
-  if(!name){ toast('Введите название!', 'error'); return; }
-  
-  const newIngr = Array.from(document.querySelectorAll('[data-ing]')).map(el => {
-     const idx = el.dataset.ing;
-     const f = el.dataset.f;
-     const val = f==='0' ? el.value : (parseFloat(el.value)||0);
-     // Группировка по индексам сложна в одном map, упростим сбор:
-     return {idx, f, val}; 
-  }).reduce((acc, curr) => {
-     if(!acc[curr.idx]) acc[curr.idx] = [0,0,0];
-     acc[curr.idx][curr.f] = curr.val;
-     return acc;
-  }, []).filter(arr => arr[0]); // Убрать пустые
-
-  const newSteps = Array.from(document.querySelectorAll('[data-step]')).map(el => el.value).filter(v => v.trim());
-
   const r = {
     id: editId || Date.now(),
-    name: name,
+    name: $('#r-name').value,
     cat: $('#r-cat').value,
     time: $('#r-time').value,
     yield: $('#r-yield').value,
     kcal: parseInt($('#r-kcal').value) || 0,
     note: $('#r-note').value,
-    ingr: newIngr,
-    steps: newSteps
+    ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
+      const idx = el.dataset.ing;
+      const f = el.dataset.f;
+      acc[idx] = acc[idx] || [];
+      const val = f==='name' ? el.value : parseFloat(el.value)||0;
+      const pos = f==='name'?0:f==='brutto'?1:2;
+      acc[idx][pos] = val;
+      return acc;
+    }, []).filter(x=>x && x[0]),
+    steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
   };
-
+  if(!r.name){ toast('Введите название', 'error'); return; }
   if(editId){
-    const idx = AppState.recipes.findIndex(x=>x.id===editId);
-    AppState.recipes[idx] = r;
+    const idx = RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx] = r;
   } else {
-    AppState.recipes.push(r);
+    RECIPES.push(r);
   }
-  saveData('recipes');
   document.getElementById('edit-modal').remove();
   toast('Сохранено ✓', 'success');
   renderAdminContent();
 };
 
 window.deleteRecipe = function(id){
-  if(!confirm('Удалить?')) return;
-  AppState.recipes = AppState.recipes.filter(x=>x.id!==id);
-  saveData('recipes');
+  if(!confirm('Удалить техкарту?')) return;
+  const idx = RECIPES.findIndex(r=>r.id===id);
+  if(idx>=0) RECIPES.splice(idx,1);
   renderAdminContent();
   toast('Удалено', 'success');
 };
 
-// --- Редактирование Новостей ---
 function editNews(i){
-  const n = i!==undefined ? AppState.news[i] : {tag:'Инфо', title:'', text:'', date:'Сегодня'};
+  const isEdit = i !== undefined;
+  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
   modal.innerHTML = `
     <div class="modal">
-      <div class="modal-header"><div class="modal-title">${i!==undefined?'Ред':'Нов'} новость</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div>
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
       <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
       <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
       <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
       <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
-      <button class="btn" onclick="saveNews(${i!==undefined?i:'null'})">💾 Сохранить</button>
-    </div>`;
+      <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
+    </div>
+  `;
   document.body.appendChild(modal);
 }
 
 window.saveNews = function(i){
-  const title = $('#n-title').value.trim();
-  if(!title){ toast('Введите заголовок!', 'error'); return; }
-  const n = {tag:$('#n-tag').value, title:title, text:$('#n-text').value, date:$('#n-date').value};
-  if(i!==null) AppState.news[i] = n; else AppState.news.unshift(n);
-  saveData('news');
+  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
+  if(!n.title){ toast('Введите заголовок', 'error'); return; }
+  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
   document.getElementById('edit-modal').remove();
-  toast('Сохранено ✓', 'success');
   renderAdminContent();
-};
-window.deleteNews = function(i){
-  if(!confirm('Удалить?')) return;
-  AppState.news.splice(i,1);
-  saveData('news');
-  renderAdminContent();
+  toast('Сохранено', 'success');
 };
 
-// --- Редактирование Команды ---
+window.deleteNews = function(i){
+  if(!confirm('Удалить новость?')) return;
+  NEWS.splice(i,1);
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
 function editTeamMember(i){
-  const u = i!==undefined ? AppState.team[i] : {name:'', role:'', init:'??'};
+  const isEdit = i !== undefined;
+  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
   modal.innerHTML = `
     <div class="modal">
-      <div class="modal-header"><div class="modal-title">${i!==undefined?'Ред':'Нов'} сотрудник</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div>
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
       <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
       <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
       <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
-      <button class="btn" onclick="saveTeamMember(${i!==undefined?i:'null'})">💾 Сохранить</button>
-    </div>`;
+      <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
+    </div>
+  `;
   document.body.appendChild(modal);
 }
 
 window.saveTeamMember = function(i){
-  const name = $('#u-name').value.trim();
-  if(!name){ toast('Введите имя!', 'error'); return; }
-  const u = {name:name, role:$('#u-role').value, init:$('#u-init').value.toUpperCase()};
-  if(i!==null) AppState.team[i] = u; else AppState.team.push(u);
-  saveData('team');
+  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
+  if(!u.name){ toast('Введите имя', 'error'); return; }
+  if(i !== null) TEAM[i] = u; else TEAM.push(u);
   document.getElementById('edit-modal').remove();
-  toast('Сохранено ✓', 'success');
   renderAdminContent();
+  toast('Сохранено', 'success');
 };
+
 window.deleteTeamMember = function(i){
-  if(!confirm('Удалить?')) return;
-  AppState.team.splice(i,1);
-  saveData('team');
+  if(!confirm('Удалить сотрудника?')) return;
+  TEAM.splice(i,1);
   renderAdminContent();
+  toast('Удалено', 'success');
 };
 
 /* ============================================================
    🚀 СТАРТ
    ============================================================ */
-initData();
 render();
 </script>
+
 </body>
 </html>
