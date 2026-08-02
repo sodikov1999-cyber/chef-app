@@ -346,29 +346,39 @@ function renderRecipe(){
 }
 
 let expandedLocations = new Set();
+let lastUpdateTime = null;
 
-async function renderSchedule(){
+async function renderSchedule(forceRefresh = false){
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>График</h1>
     <div class="card" style="text-align:center;padding:30px">
       <div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div>
-      <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
+      <div style="margin-top:14px;color:var(--muted)">${forceRefresh ? 'Обновляю данные...' : 'Загрузка...'}</div>
     </div>
   `;
 
   try {
+    // Уникальный timestamp чтобы обойти кэш Google
+    const ts = Date.now();
     let rows;
+    
     try {
-      const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&gid=${SHEETS_GID}`;
-      const res = await fetch(gvizUrl);
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&gid=${SHEETS_GID}&t=${ts}`;
+      const res = await fetch(gvizUrl, { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
       const text = await res.text();
       const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
       const data = JSON.parse(jsonStr);
       rows = data.table.rows.map(row => row.c ? row.c.map(cell => (!cell || cell.v === null || cell.v === undefined) ? '' : String(cell.f || cell.v)) : []);
     } catch(e1) {
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}`;
-      const res = await fetch(csvUrl);
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}&t=${ts}`;
+      const res = await fetch(csvUrl, { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+      });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const csv = await res.text();
       rows = csv.split('\n').map(row => {
@@ -383,10 +393,11 @@ async function renderSchedule(){
       });
     }
 
+    lastUpdateTime = new Date();
+
     rows = rows.filter(r => r.length > 0);
     const monthTitle = rows[0]?.[0] || 'График';
 
-    // Ищем локации
     const locations = [];
     rows.forEach((row, idx) => {
       if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
@@ -407,7 +418,6 @@ async function renderSchedule(){
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
 
-    // Обрабатываем каждую локацию
     const locData = locations.map((loc, locIdx) => {
       const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
       const locRows = rows.slice(loc.startIdx, nextStart);
@@ -422,7 +432,6 @@ async function renderSchedule(){
       
       const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
       
-      // Неделя
       const dayOfWeek = today.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
       const monday = new Date(today);
@@ -461,14 +470,24 @@ async function renderSchedule(){
       return { name: loc.name, weekDays, workingToday, staffStats, totalStaff: staffRows.length };
     });
 
-    // Рендер
+    const timeStr = lastUpdateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
       <h1>${monthTitle}</h1>
       
-      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:10px;font-size:13px;line-height:1.5">
         📊 <b>Данные из Google Таблицы</b><br>
         <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
+      </div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px">
+        <div style="font-size:11px;color:var(--muted)">
+          🔄 Обновлено: <b style="color:var(--text)">${timeStr}</b>
+        </div>
+        <button class="btn btn-sm" onclick="renderSchedule(true);haptic()" style="padding:8px 14px;font-size:12px">
+          ↻ Обновить
+        </button>
       </div>
       
       ${locData.map(loc => {
@@ -534,7 +553,12 @@ async function renderSchedule(){
         `;
       }).join('')}
       
-      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6">
+        💡 Изменил таблицу? Нажми "↻ Обновить"<br>
+        или закрой и открой приложение заново
+      </div>
+      
+      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:12px;text-decoration:none;text-align:center">
         📝 Открыть таблицу
       </a>
     `;
@@ -548,7 +572,7 @@ async function renderSchedule(){
         <div style="font-size:40px;margin-bottom:12px">⚠️</div>
         <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.message}</div>
-        <button class="btn btn-sm" onclick="renderSchedule()">🔄 Повторить</button>
+        <button class="btn btn-sm" onclick="renderSchedule(true)">🔄 Повторить</button>
       </div>
     `;
   }
