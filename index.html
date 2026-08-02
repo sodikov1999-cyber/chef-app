@@ -111,12 +111,26 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     background: var(--accent);
     color: #000;
 }
-/* Контейнер для скролла внутри модалки */
 .modal-body {
     flex: 1;
     overflow-y: auto;
     padding-bottom: 20px;
 }
+.loc-card {
+    padding: 16px;
+    background: var(--card);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,.06);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.loc-card:active { transform: scale(0.98); }
+.loc-name { font-weight: 700; font-size: 16px; }
+.loc-status { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.chef-select-container { margin-bottom: 16px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -183,13 +197,14 @@ const DEFAULT_TEAM = [
   {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
 ];
 
-// Чеклисты теперь тоже загружаются из памяти или дефолтные
-const DEFAULT_CHECKLISTS = {
-  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
-  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+// Базовые чеклисты по умолчанию (если нет в памяти)
+const DEFAULT_CHECKLISTS_CONFIG = {
+  'Галактика': { open: ['Включить вентиляцию','Проверить холодильники','Принять поставку'], close: ['Убрать заготовки','Санобработка цеха','Вынести мусор'] },
+  'Сибирь': { open: ['Включить свет','Проверить гриль'], close: ['Выключить гриль','Закрыть кассу'] },
+  'Пионер': { open: ['Проверить кофемашину'], close: ['Промыть группу'] },
+  'Европа': { open: ['Проверить бар'], close: ['Инвентаризация бара'] },
+  'Лазурная': { open: ['Открыть террасу'], close: ['Закрыть террасу'] }
 };
-
-let CHECKLISTS = JSON.parse(localStorage.getItem('chef_checklists')) || DEFAULT_CHECKLISTS;
 
 const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
@@ -210,13 +225,13 @@ const DEFAULT_LOCAL_DATA = {
       staff: [
         {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
         {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
         {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
         {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
         {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
         {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
-        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
+        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16}
       ]
     },
     {
@@ -226,7 +241,7 @@ const DEFAULT_LOCAL_DATA = {
         {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4},
         {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
         {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
-        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
         {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
         {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
       ]
@@ -261,16 +276,19 @@ const DEFAULT_LOCAL_DATA = {
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+// Загружаем конфигурацию чеклистов или берем дефолт
+let CHECKLISTS_CONFIG = JSON.parse(localStorage.getItem('chef_checklists_config')) || DEFAULT_CHECKLISTS_CONFIG;
+
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
 
-// Функция сохранения ВСЕХ данных
+// Функция сохранения общих данных
 function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_checklists', JSON.stringify(CHECKLISTS));
+    localStorage.setItem('chef_checklists_config', JSON.stringify(CHECKLISTS_CONFIG));
 }
 
 /* ============================================================
@@ -285,6 +303,9 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
+// Переменные для чеклистов
+let selectedLocation = null;
+let currentChecklistType = 'open'; // 'open' or 'close'
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -301,7 +322,13 @@ function toast(msg, type='info'){
 
 function navigate(view, data){
   currentView = view;
-  if(data !== undefined) currentRecipeId = data;
+  if(data !== undefined) {
+      if(view === 'checklist') {
+          selectedLocation = data; // data содержит имя локации
+      } else if (view === 'recipe') {
+          currentRecipeId = data;
+      }
+  }
   render();
   window.scrollTo(0,0);
 }
@@ -362,7 +389,7 @@ function renderHome(){
       <button class="tile" onclick="navigate('checklist');haptic()">
         <div class="tile-emoji">✅</div>
         <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">Открытие/закрытие</div>
+        <div class="tile-desc">По локациям</div>
       </button>
       <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
@@ -678,49 +705,112 @@ function toggleLoc(name) {
   renderScheduleContent();
 }
 
+// === РЕНДЕР ЧЕК-ЛИСТОВ ПО ЛОКАЦИЯМ ===
 function renderChecklist(){
-  window._clTab = window._clTab || 'open';
-  const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const items = CHECKLISTS[key] || []; // Защита от отсутствия ключа
-  const done = saved.length;
-  const total = items.length;
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Чек-листы</h1>
-    <div class="mults">
-      <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${done}/${total})</button>
-      <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие</button>
-    </div>
-    <div class="card">
-      ${items.length > 0 ? items.map((item,i) => `
-        <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck(${i});haptic()">
-          <div class="check-box">✓</div>
-          <span>${item}</span>
+    const today = new Date().toISOString().slice(0,10);
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
+    
+    // Если локация не выбрана, показываем список локаций
+    if (!selectedLocation) {
+        let html = `
+            <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+            <h1>Чек-листы</h1>
+            <div style="margin-bottom:14px;font-size:13px;color:var(--muted)">Выберите локацию для работы:</div>
+        `;
+        
+        source.locations.forEach(loc => {
+            // Проверяем, есть ли сегодня смена в этой локации
+            const dayIdx = new Date().getDate() - 1;
+            const staffToday = loc.staff.filter(p => p.shifts && p.shifts[dayIdx] && Number(p.shifts[dayIdx]) > 0);
+            const chefsToday = staffToday.filter(p => p.role.toLowerCase().includes('шеф') || p.role.toLowerCase().includes('су'));
+            
+            html += `
+                <div class="loc-card" onclick="navigate('checklist', '${loc.name}'); haptic()">
+                    <div>
+                        <div class="loc-name">${loc.name}</div>
+                        <div class="loc-status">На смене: ${staffToday.length} чел ${chefsToday.length > 0 ? '· Су-шеф: '+chefsToday[0].name : ''}</div>
+                    </div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+            `;
+        });
+        app.innerHTML = html;
+        return;
+    }
+
+    // Если локация выбрана, рендерим чек-лист
+    const locName = selectedLocation;
+    const locConfig = CHECKLISTS_CONFIG[locName] || { open: [], close: [] };
+    
+    // Ключи для localStorage: cl_2023-10-25_Галактика_open
+    const keyOpen = `cl_${today}_${locName}_open`;
+    const keyClose = `cl_${today}_${locName}_close`;
+    
+    const savedOpen = JSON.parse(localStorage.getItem(keyOpen) || '[]');
+    const savedClose = JSON.parse(localStorage.getItem(keyClose) || '[]');
+    
+    const items = currentChecklistType === 'open' ? locConfig.open : locConfig.close;
+    const saved = currentChecklistType === 'open' ? savedOpen : savedClose;
+    const done = saved.length;
+    const total = items.length;
+
+    // Получаем су-шефов сегодня в этой локации
+    const dayIdx = new Date().getDate() - 1;
+    const sourceData = scheduleData || DEFAULT_LOCAL_DATA;
+    const currentLocData = sourceData.locations.find(l => l.name === locName);
+    const chefsToday = currentLocData ? currentLocData.staff.filter(p => p.shifts && p.shifts[dayIdx] && Number(p.shifts[dayIdx]) > 0 && (p.role.toLowerCase().includes('шеф') || p.role.toLowerCase().includes('су'))) : [];
+    
+    // Сохраненный су-шеф
+    const savedChefKey = `chef_${today}_${locName}`;
+    const savedChef = localStorage.getItem(savedChefKey) || '';
+
+    app.innerHTML = `
+        <button class="back" onclick="selectedLocation=null; renderChecklist(); haptic()">← Назад к локациям</button>
+        <h1>${locName}</h1>
+        
+        <div class="chef-select-container">
+            <label class="form-label">Су-шеф на смене:</label>
+            <select class="form-select" onchange="saveChef(this.value, '${savedChefKey}')">
+                <option value="">-- Не назначен --</option>
+                ${chefsToday.map(c => `<option value="${c.name}" ${c.name === savedChef ? 'selected' : ''}>${c.name}</option>`).join('')}
+            </select>
         </div>
-      `).join('') : '<div style="text-align:center;padding:20px;color:var(--muted)">Список пуст. Добавьте пункты в редакторе.</div>'}
-    </div>
-    ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
-    <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist();haptic()">↺ Сбросить</button>
-  `;
+
+        <div class="mults">
+            <button class="mult ${currentChecklistType==='open'?'on':''}" onclick="currentChecklistType='open';renderChecklist()">Открытие (${done}/${total})</button>
+            <button class="mult ${currentChecklistType==='close'?'on':''}" onclick="currentChecklistType='close';renderChecklist()">Закрытие</button>
+        </div>
+        <div class="card">
+            ${items.length > 0 ? items.map((item,i) => `
+                <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck(${i}, '${keyOpen}', '${keyClose}')"; haptic()>
+                    <div class="check-box">✓</div>
+                    <span>${item}</span>
+                </div>
+            `).join('') : '<div style="padding:20px;text-align:center;color:var(--muted)">Список пуст. Добавьте пункты в редакторе.</div>'}
+        </div>
+        ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
+        <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist('${keyOpen}', '${keyClose}');haptic()">↺ Сбросить</button>
+    `;
 }
 
-window.toggleCheck = function(i){
-  const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const idx = saved.indexOf(i);
-  if(idx>=0) saved.splice(idx,1); else saved.push(i);
-  localStorage.setItem('cl_'+today+'_'+key, JSON.stringify(saved));
-  renderChecklist();
+window.saveChef = function(name, key) {
+    localStorage.setItem(key, name);
+    toast('Су-шеф сохранен', 'success');
 };
 
-window.resetChecklist = function(){
-  const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  localStorage.removeItem('cl_'+today+'_'+key);
-  renderChecklist();
+window.toggleCheck = function(i, keyOpen, keyClose){
+    const key = currentChecklistType === 'open' ? keyOpen : keyClose;
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
+    const idx = saved.indexOf(i);
+    if(idx>=0) saved.splice(idx,1); else saved.push(i);
+    localStorage.setItem(key, JSON.stringify(saved));
+    renderChecklist();
+};
+
+window.resetChecklist = function(keyOpen, keyClose){
+    const key = currentChecklistType === 'open' ? keyOpen : keyClose;
+    localStorage.removeItem(key);
+    renderChecklist();
 };
 
 function renderTeam(){
@@ -744,16 +834,17 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (С РЕДАКТИРОВАНИЕМ ЧЕК-ЛИСТОВ)
+   🔐 АДМИНКА (С СОХРАНЕНИЕМ И ФИКСОМ СКРОЛЛА)
    ============================================================ */
 let adminTab = 'recipes';
 
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
-  // Сначала закрываем все открытые модалки, чтобы не наслаивались
-  document.querySelectorAll('.modal-bg').forEach(el => el.remove());
-  
+  // Сначала удаляем старые модалки если вдруг остались
+  const old = document.getElementById('admin-modal');
+  if(old) old.remove();
+
   adminTab = adminTab || 'recipes';
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
@@ -769,8 +860,8 @@ function showAdminModal(){
       <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
-        <button class="tab-btn ${adminTab==='checklist'?'on':''}" onclick="adminTab='checklist';showAdminModal()">Чек-лист</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
+        <button class="tab-btn ${adminTab==='checklists'?'on':''}" onclick="adminTab='checklists';showAdminModal()">Чек-листы</button>
       </div>
       <div id="admin-content" class="modal-body"></div>
     </div>
@@ -819,39 +910,6 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if(adminTab === 'checklist'){
-    c.innerHTML = `
-      <div style="margin-bottom:16px">
-        <button class="btn" onclick="editChecklistItem('open')">+ Пункт открытия</button>
-        <button class="btn btn-sec" onclick="editChecklistItem('close')" style="margin-top:8px">+ Пункт закрытия</button>
-      </div>
-      
-      <h3 style="margin:16px 0 8px;font-size:14px;color:var(--muted)">ОТКРЫТИЕ</h3>
-      ${(CHECKLISTS.open || []).map((item,i) => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div class="item-card-title">${item}</div>
-            <div>
-              <button class="icon-btn" onclick="editChecklistItem('open', ${i})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteChecklistItem('open', ${i})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-      
-      <h3 style="margin:16px 0 8px;font-size:14px;color:var(--muted)">ЗАКРЫТИЕ</h3>
-      ${(CHECKLISTS.close || []).map((item,i) => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div class="item-card-title">${item}</div>
-            <div>
-              <button class="icon-btn" onclick="editChecklistItem('close', ${i})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteChecklistItem('close', ${i})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    `;
   } else if(adminTab === 'team'){
     c.innerHTML = `
       <button class="btn" onclick="editTeamMember()">+ Добавить сотрудника</button>
@@ -870,58 +928,26 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
+  } else if (adminTab === 'checklists') {
+      // Редактирование чеклистов по локациям
+      const locs = Object.keys(CHECKLISTS_CONFIG);
+      let html = `<div style="margin-bottom:10px;font-size:13px;color:var(--muted)">Выберите локацию для редактирования:</div>`;
+      
+      locs.forEach(loc => {
+          html += `
+            <div class="item-card" onclick="editChecklistLoc('${loc}')" style="cursor:pointer">
+                <div class="item-card-head">
+                    <div class="item-card-title">${loc}</div>
+                    <div style="font-size:12px;color:var(--muted)">Открытие: ${CHECKLISTS_CONFIG[loc].open.length} · Закрытие: ${CHECKLISTS_CONFIG[loc].close.length}</div>
+                </div>
+            </div>
+          `;
+      });
+      c.innerHTML = html;
   }
 }
 
-// --- ФУНКЦИИ ДЛЯ ЧЕК-ЛИСТОВ ---
-window.editChecklistItem = function(type, index){
-  const isEdit = index !== undefined;
-  const currentVal = isEdit ? CHECKLISTS[type][index] : '';
-  
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новый'} пункт</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Текст пункта</label><input class="form-input" id="cl-text" value="${currentVal}" placeholder="Например: Проверить кассу"></div>
-        <button class="btn" onclick="saveChecklistItem('${type}', ${isEdit?index:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-};
-
-window.saveChecklistItem = function(type, index){
-  const text = $('#cl-text').value.trim();
-  if(!text){ toast('Введите текст', 'error'); return; }
-  
-  if(index !== null){
-    CHECKLISTS[type][index] = text;
-  } else {
-    if(!CHECKLISTS[type]) CHECKLISTS[type] = [];
-    CHECKLISTS[type].push(text);
-  }
-  
-  saveData();
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
-window.deleteChecklistItem = function(type, index){
-  if(!confirm('Удалить этот пункт?')) return;
-  CHECKLISTS[type].splice(index, 1);
-  saveData();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-// --- ОСТАЛЬНЫЕ ФУНКЦИИ АДМИНКИ (без изменений) ---
+// Функции для рецептов, новостей, команды (без изменений)
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
@@ -1112,6 +1138,71 @@ window.deleteTeamMember = function(i){
   saveData();
   renderAdminContent();
   toast('Удалено', 'success');
+};
+
+// === РЕДАКТИРОВАНИЕ ЧЕК-ЛИСТОВ ПО ЛОКАЦИЯМ ===
+window.editChecklistLoc = function(locName) {
+    const config = CHECKLISTS_CONFIG[locName] || { open: [], close: [] };
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'edit-checklist-modal';
+    
+    let openHtml = config.open.map((item, i) => `
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input class="form-input" value="${item}" onchange="updateChecklistItem('${locName}', 'open', ${i}, this.value)">
+            <button class="icon-btn danger" onclick="removeChecklistItem('${locName}', 'open', ${i})">✕</button>
+        </div>
+    `).join('');
+    
+    let closeHtml = config.close.map((item, i) => `
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input class="form-input" value="${item}" onchange="updateChecklistItem('${locName}', 'close', ${i}, this.value)">
+            <button class="icon-btn danger" onclick="removeChecklistItem('${locName}', 'close', ${i})">✕</button>
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Чек-лист: ${locName}</div>
+                <button class="modal-close" onclick="document.getElementById('edit-checklist-modal').remove()">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0 20px">
+                <h3 style="margin:10px 0">Открытие</h3>
+                ${openHtml}
+                <button class="btn btn-sm btn-sec" onclick="addChecklistItem('${locName}', 'open')">+ Добавить пункт</button>
+                
+                <h3 style="margin:20px 0 10px">Закрытие</h3>
+                ${closeHtml}
+                <button class="btn btn-sm btn-sec" onclick="addChecklistItem('${locName}', 'close')">+ Добавить пункт</button>
+                
+                <button class="btn" style="margin-top:20px" onclick="saveChecklistConfig(); document.getElementById('edit-checklist-modal').remove()">💾 Сохранить изменения</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.updateChecklistItem = function(loc, type, index, value) {
+    CHECKLISTS_CONFIG[loc][type][index] = value;
+};
+
+window.removeChecklistItem = function(loc, type, index) {
+    CHECKLISTS_CONFIG[loc][type].splice(index, 1);
+    // Перерисовать модалку для актуальности
+    document.getElementById('edit-checklist-modal').remove();
+    editChecklistLoc(loc);
+};
+
+window.addChecklistItem = function(loc, type) {
+    CHECKLISTS_CONFIG[loc][type].push('Новый пункт');
+    document.getElementById('edit-checklist-modal').remove();
+    editChecklistLoc(loc);
+};
+
+window.saveChecklistConfig = function() {
+    saveData();
+    toast('Чек-листы сохранены', 'success');
 };
 
 /* ============================================================
