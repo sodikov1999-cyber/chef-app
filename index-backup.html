@@ -58,9 +58,9 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
 .admin-btn:active{transform:scale(.9)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:40px;animation:slideUp .3s ease-out}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
 .modal-title{font-weight:800;font-size:18px}
 .modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
 .form-field{margin-bottom:14px}
@@ -96,6 +96,40 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     margin-left: auto;
 }
 .refresh-btn:active { transform: scale(0.95); }
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: var(--muted);
+    font-weight: 600;
+    border-radius: 8px;
+    margin-right: 4px;
+    cursor: pointer;
+}
+.tab-btn.on {
+    background: var(--accent);
+    color: #000;
+}
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+.loc-tile {
+    padding: 16px;
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.06);
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.loc-tile:active { transform: scale(.98); }
+.loc-name { font-weight: 700; font-size: 16px; }
+.loc-status { font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -108,79 +142,12 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
    🔗 НАСТРОЙКИ
    ============================================================ */
 const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
-// Используем gviz для надежного чтения без CORS ошибок
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
-   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
+   📦 ДАННЫЕ (С ЗАГРУЗКОЙ ИЗ ПАМЯТИ)
    ============================================================ */
-const LOCAL_DATA = {
-  month: 'Август 2026',
-  locations: [
-    {
-      name: 'Галактика',
-      staff: [
-        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
-        {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16}, // Исправлено 15->16 по таблице
-        {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
-        {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
-      ]
-    },
-    {
-      name: 'Сибирь',
-      staff: [
-        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
-        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
-        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
-        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
-        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
-        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
-        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
-      ]
-    },
-    {
-      name: 'Пионер',
-      staff: [
-        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
-        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4}, // Исправлено 3->4 по таблице (1,5,6)
-        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
-        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
-        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
-        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
-      ]
-    },
-    {
-      name: 'Европа',
-      staff: [
-        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
-        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
-        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
-        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
-        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
-        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
-        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
-      ]
-    },
-    {
-      name: 'Лазурная',
-      staff: [
-        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}, // Исправлено по таблице
-        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
-        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
-        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
-      ]
-    }
-  ]
-};
-
-const RECIPES = [
+const DEFAULT_RECIPES = [
   {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
    note:'Срок хранения основы — 12 ч при +2…+6 °C.',
    ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
@@ -215,13 +182,13 @@ const RECIPES = [
    steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
 ];
 
-const NEWS = [
+const DEFAULT_NEWS = [
   {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
   {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
   {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
 ];
 
-const TEAM = [
+const DEFAULT_TEAM = [
   {name:'Марина К.', role:'Су-шеф', init:'МК'},
   {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
   {name:'Даша П.', role:'Кондитер', init:'ДП'},
@@ -229,10 +196,113 @@ const TEAM = [
   {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
 ];
 
-const CHECKLISTS = {
-  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
-  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+// Чек-листы по умолчанию для каждой локации
+const DEFAULT_CHECKLISTS = {
+  'Галактика': {
+    open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу'],
+    close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет']
+  },
+  'Сибирь': {
+    open: ['Включить свет','Проверить температуру','Принять доставку','Подготовить мангал'],
+    close: ['Затушить угли','Вымыть полы','Закрыть краны','Сигнализация']
+  },
+  'Пионер': {
+    open: ['Открыть окна','Включить музыку','Проверить чистоту'],
+    close: ['Закрыть окна','Выключить музыку','Убраться']
+  },
+  'Европа': {
+    open: ['Проверка оборудования','Заказ продуктов','Брифинг'],
+    close: ['Инвентаризация','Отчет','Закрытие смены']
+  },
+  'Лазурная': {
+    open: ['Проверка моря (шутка)','Включить кондиционеры','Подготовка зала'],
+    close: ['Выключить все','Запереть двери']
+  }
 };
+
+const DEFAULT_LOCAL_DATA = {
+  month: 'Август 2026',
+  locations: [
+    {
+      name: 'Галактика',
+      staff: [
+        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
+        {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16},
+        {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
+        {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
+      ]
+    },
+    {
+      name: 'Сибирь',
+      staff: [
+        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
+        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
+        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
+        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16}
+      ]
+    },
+    {
+      name: 'Пионер',
+      staff: [
+        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
+        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4},
+        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
+        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    },
+    {
+      name: 'Европа',
+      staff: [
+        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
+        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
+        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
+        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
+        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
+        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
+        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
+      ]
+    },
+    {
+      name: 'Лазурная',
+      staff: [
+        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15},
+        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
+        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
+        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    }
+  ]
+};
+
+// === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
+let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+// Чек-листы храним как объект { 'Галактика': {...}, 'Сибирь': {...} }
+let LOCATION_CHECKLISTS = JSON.parse(localStorage.getItem('chef_loc_checklists')) || DEFAULT_CHECKLISTS;
+let scheduleData = null;
+let useLocalSchedule = false;
+let isLoading = false;
+
+// Функция сохранения
+function saveData() {
+    localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
+    localStorage.setItem('chef_news', JSON.stringify(NEWS));
+    localStorage.setItem('chef_team', JSON.stringify(TEAM));
+    localStorage.setItem('chef_loc_checklists', JSON.stringify(LOCATION_CHECKLISTS));
+}
 
 /* ============================================================
    ⚙️ ЛОГИКА
@@ -246,9 +316,7 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
-let scheduleData = null;
-let useLocalSchedule = false;
-let isLoading = false;
+let currentLocForChecklist = null; // Для хранения выбранной локации в чек-листах
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -275,7 +343,7 @@ function render(){
   else if(currentView === 'ttk') renderTTK();
   else if(currentView === 'recipe') renderRecipe();
   else if(currentView === 'schedule') renderSchedule();
-  else if(currentView === 'checklist') renderChecklist();
+  else if(currentView === 'checklist') renderChecklistLocations();
   else if(currentView === 'team') renderTeam();
   app.classList.add('fade');
   setTimeout(()=>app.classList.remove('fade'), 300);
@@ -290,13 +358,11 @@ function renderHome(){
   const dayIndex = currentDay - 1;
   
   let todayShifts = [];
-  // Берем данные из активного источника (онлайн или локаль)
-  const source = scheduleData || LOCAL_DATA;
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
   
   if(source && source.locations) {
       source.locations.forEach(loc => {
         loc.staff.forEach(p => {
-          // Защита от выхода за границы массива
           if(p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0){
             todayShifts.push({...p, location: loc.name});
           }
@@ -328,7 +394,7 @@ function renderHome(){
       <button class="tile" onclick="navigate('checklist');haptic()">
         <div class="tile-emoji">✅</div>
         <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">Открытие/закрытие</div>
+        <div class="tile-desc">По локациям</div>
       </button>
       <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
@@ -413,25 +479,18 @@ function renderRecipe(){
   `;
 }
 
-// === ГЛАВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ===
 async function fetchScheduleData(force = false) {
     if (isLoading) return;
     isLoading = true;
-
-    // Если не форсируем и данные уже есть - не грузим
     if (!force && scheduleData) {
         isLoading = false;
         return;
     }
-
     try {
-        // Добавляем случайный параметр, чтобы избежать кэширования
         const response = await fetch(SHEET_URL + '&t=' + Date.now());
         if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
-        
         const text = await response.text();
         const parsed = parseComplexCSV(text);
-        
         if (parsed && parsed.locations && parsed.locations.length > 0) {
             scheduleData = parsed;
             useLocalSchedule = false;
@@ -442,7 +501,7 @@ async function fetchScheduleData(force = false) {
     } catch (e) {
         console.warn('Онлайн загрузка не удалась:', e);
         if (!scheduleData) {
-            scheduleData = LOCAL_DATA;
+            scheduleData = DEFAULT_LOCAL_DATA;
             useLocalSchedule = true;
         }
         toast('Нет связи с сервером. Показаны локальные данные.', 'error');
@@ -451,10 +510,8 @@ async function fetchScheduleData(force = false) {
     }
 }
 
-// === УМНЫЙ ПАРСЕР ДЛЯ ВАШЕЙ ТАБЛИЦЫ ===
 function parseComplexCSV(csvText) {
     const rows = csvText.split('\n').map(row => {
-        // Обработка кавычек и запятых внутри ячеек
         const result = [];
         let cell = '';
         let inQuotes = false;
@@ -471,79 +528,48 @@ function parseComplexCSV(csvText) {
         }
         result.push(cell.trim());
         return result;
-    }).filter(r => r.length > 2); // Отсекаем совсем пустые
+    }).filter(r => r.length > 2);
 
     if (rows.length < 5) return null;
-
     const locations = [];
     let currentLoc = null;
     
-    // Проходим по строкам, игнорируя заголовки и "итого"
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const firstCell = (row[0] || '').trim().toLowerCase();
         
-        // Пропускаем заголовки, даты, итоги и пустые строки
         if (firstCell.includes('итого') || firstCell.includes('дата') || 
             firstCell.includes('локация') || firstCell === '' || 
             !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
             continue;
         }
 
-        // Проверка: это новая локация? (Вторая колонка содержит "Должность" или похожее, а первая - название)
-        // В вашей таблице структура: Название локации, Должность, 1, 2...
-        // Но иногда вторая колонка пустая у сотрудников.
-        // Эвристика: если во второй колонке написано "Должность" или она пустая, но первая длинная и не похожа на имя?
-        // Лучше: если вторая колонка == "Должность", это заголовок локации.
-        // Если вторая колонка != "Должность" и не пустая - это сотрудник.
-        
         const secondCell = (row[1] || '').trim();
-        
         if (secondCell === 'Должность' || secondCell === '') {
-             // Это заголовок новой локации (или повтор заголовка)
-             // Проверяем, есть ли там имя локации в первой ячейке
              if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
                  currentLoc = { name: row[0].trim(), staff: [] };
                  locations.push(currentLoc);
              }
         } else if (currentLoc) {
-            // Это сотрудник
             const name = row[0].trim();
             const role = secondCell;
-            
-            // Берем дни с 3-й колонки (индекс 2) до конца (минус последние 2 колонки "Итого" и "Норма")
-            // В вашей таблице данные идут до предпоследней колонки
             const shifts = [];
-            // Начинаем с индекса 2 (третья колонка - день 1)
-            // Берем максимум 31 день
             for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
                 let val = row[d];
-                // Замена запятой на точку для дробных чисел (0,5 -> 0.5)
                 if (val && val.includes(',')) val = val.replace(',', '.');
-                
                 let num = parseFloat(val);
                 if (isNaN(num)) num = 0;
                 shifts.push(num);
             }
-            
-            // Подсчет общего количества смен (сумма)
             const total = shifts.reduce((a, b) => a + b, 0);
-
-            currentLoc.staff.push({
-                name: name,
-                role: role,
-                shifts: shifts,
-                total: total
-            });
+            currentLoc.staff.push({ name, role, shifts, total });
         }
     }
-
     if (locations.length === 0) return null;
     return { month: 'Август 2026', locations: locations };
 }
 
 async function renderSchedule(){
-    // Сначала показываем заглушку
     app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -558,16 +584,11 @@ async function renderSchedule(){
       <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
     </div>
   `;
-
-    await fetchScheduleData(true); // Принудительная загрузка
-    
-    // После загрузки перерисовываем контент
+    await fetchScheduleData(true);
     renderScheduleContent();
 }
 
-function handleRefresh() {
-    renderSchedule();
-}
+function handleRefresh() { renderSchedule(); }
 
 function renderScheduleContent() {
     const today = new Date();
@@ -575,21 +596,17 @@ function renderScheduleContent() {
     const dayIndex = currentDay - 1;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
-
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const monday = new Date(today);
     monday.setDate(today.getDate() + mondayOffset);
-
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const dayNum = d.getDate();
-        // Защита от выхода за пределы месяца (если день > 31, берем последний индекс)
         const idx = Math.min(dayNum - 1, 30); 
         const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        
         let count = 0;
         if(scheduleData && scheduleData.locations) {
             scheduleData.locations.forEach(loc => {
@@ -598,13 +615,7 @@ function renderScheduleContent() {
             });
             });
         }
-        
-        weekDays.push({
-        dayNum,
-        isToday,
-        count,
-        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
-        });
+        weekDays.push({ dayNum, isToday, count, dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] });
     }
 
     app.innerHTML = `
@@ -615,7 +626,6 @@ function renderScheduleContent() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
     </div>
-    
     ${useLocalSchedule ? `
       <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
         ⚠️ <b>Локальные данные</b><br>
@@ -627,7 +637,6 @@ function renderScheduleContent() {
         <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
       </div>
     `}
-    
     <h2>Эта неделя</h2>
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
@@ -638,15 +647,11 @@ function renderScheduleContent() {
         </div>
       `).join('')}
     </div>
-    
     ${scheduleData && scheduleData.locations ? scheduleData.locations.map(loc => {
       if(!loc.staff || loc.staff.length === 0) return '';
-      
       const isOpen = expandedLocations.has(loc.name);
-      // Защита от отсутствия массива shifts
       const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
-      
       return `
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
           <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -660,10 +665,8 @@ function renderScheduleContent() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </button>
-          
           <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
             <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-              
               <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
               ${workingToday.length > 0 ? workingToday.map(p => `
                 <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
@@ -674,7 +677,6 @@ function renderScheduleContent() {
                   </div>
                 </div>
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-              
               <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
               ${staffStats.map(s => {
                 let workDays = 0;
@@ -691,13 +693,11 @@ function renderScheduleContent() {
                   </div>
                 `;
               }).join('')}
-              
             </div>
           </div>
         </div>
       `;
     }).join('') : '<div class="card">Нет данных о локациях</div>'}
-    
     <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
       📝 Открыть таблицу
     </a>
@@ -710,50 +710,119 @@ function toggleLoc(name) {
   renderScheduleContent();
 }
 
-function renderChecklist(){
-  window._clTab = window._clTab || 'open';
-  const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const items = CHECKLISTS[key];
-  const done = saved.length;
-  const total = items.length;
+// === ЧЕК-ЛИСТЫ ПО ЛОКАЦИЯМ ===
 
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Чек-листы</h1>
-    <div class="mults">
-      <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${done}/${total})</button>
-      <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие</button>
-    </div>
-    <div class="card">
-      ${items.map((item,i) => `
-        <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck(${i});haptic()">
-          <div class="check-box">✓</div>
-          <span>${item}</span>
-        </div>
-      `).join('')}
-    </div>
-    ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
-    <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist();haptic()">↺ Сбросить</button>
-  `;
+function renderChecklistLocations() {
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
+    const today = new Date();
+    const dayIndex = today.getDate() - 1;
+    
+    app.innerHTML = `
+        <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+        <h1>Чек-листы</h1>
+        <div style="margin-bottom:16px;font-size:13px;color:var(--muted)">Выберите локацию:</div>
+        ${source.locations.map(loc => {
+            // Проверяем, кто из руководства на смене сегодня
+            const leaders = loc.staff.filter(p => 
+                p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0 && 
+                (p.role.includes('Су-шеф') || p.role.includes('ИО'))
+            );
+            const leaderNames = leaders.map(l => l.name).join(', ') || 'Нет руководителя';
+            
+            return `
+            <div class="loc-tile" onclick="openLocationChecklist('${loc.name}');haptic()">
+                <div>
+                    <div class="loc-name">${loc.name}</div>
+                    <div class="loc-status">Ответственные: ${leaderNames}</div>
+                </div>
+                <div style="font-size:20px">➡️</div>
+            </div>
+            `;
+        }).join('')}
+    `;
 }
 
-window.toggleCheck = function(i){
-  const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const idx = saved.indexOf(i);
-  if(idx>=0) saved.splice(idx,1); else saved.push(i);
-  localStorage.setItem('cl_'+today+'_'+key, JSON.stringify(saved));
-  renderChecklist();
+function openLocationChecklist(locName) {
+    currentLocForChecklist = locName;
+    renderChecklistContent(locName);
+}
+
+function renderChecklistContent(locName) {
+    window._clTab = window._clTab || 'open';
+    const key = window._clTab;
+    const todayStr = new Date().toISOString().slice(0,10);
+    const storageKey = `cl_${todayStr}_${locName}_${key}`;
+    const managerKey = `cl_mgr_${todayStr}_${locName}`;
+    
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const savedManager = localStorage.getItem(managerKey) || '';
+    
+    const lists = LOCATION_CHECKLISTS[locName] || { open: [], close: [] };
+    const items = lists[key] || [];
+    
+    // Получаем список руководителей на сегодня для этой локации
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
+    const dayIndex = new Date().getDate() - 1;
+    const locData = source.locations.find(l => l.name === locName);
+    const leaders = locData ? locData.staff.filter(p => 
+        p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0 && 
+        (p.role.includes('Су-шеф') || p.role.includes('ИО'))
+    ) : [];
+
+    const done = saved.length;
+    const total = items.length;
+
+    app.innerHTML = `
+        <button class="back" onclick="renderChecklistLocations();haptic()">← Назад</button>
+        <h1>${locName}</h1>
+        <div class="mults">
+          <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklistContent('${locName}')">Открытие</button>
+          <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklistContent('${locName}')">Закрытие</button>
+        </div>
+        
+        <div class="card" style="margin-bottom:16px">
+            <div class="form-label">Ответственный сегодня (Су-шеф / ИО)</div>
+            <select class="form-select" onchange="saveManager('${locName}', this.value)">
+                <option value="">-- Не выбран --</option>
+                ${leaders.map(l => `<option value="${l.name}" ${savedManager === l.name ? 'selected' : ''}>${l.name} (${l.role})</option>`).join('')}
+            </select>
+        </div>
+
+        <div class="card">
+          ${items.length > 0 ? items.map((item,i) => `
+            <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck('${locName}', ${i});haptic()">
+              <div class="check-box">✓</div>
+              <span>${item}</span>
+            </div>
+          `).join('') : '<div style="text-align:center;color:var(--muted);padding:20px">Список пуст</div>'}
+        </div>
+        ${done===total && total>0 ? '<div class="note" style="text-align:center">Все пункты выполнены!</div>' : ''}
+        <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist('${locName}');haptic()">↺ Сбросить</button>
+    `;
+}
+
+window.saveManager = function(loc, name) {
+    const todayStr = new Date().toISOString().slice(0,10);
+    localStorage.setItem(`cl_mgr_${todayStr}_${loc}`, name);
+    toast('Ответственный сохранен', 'success');
 };
 
-window.resetChecklist = function(){
+window.toggleCheck = function(loc, i){
   const key = window._clTab;
-  const today = new Date().toISOString().slice(0,10);
-  localStorage.removeItem('cl_'+today+'_'+key);
-  renderChecklist();
+  const todayStr = new Date().toISOString().slice(0,10);
+  const storageKey = `cl_${todayStr}_${loc}_${key}`;
+  const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+  const idx = saved.indexOf(i);
+  if(idx>=0) saved.splice(idx,1); else saved.push(i);
+  localStorage.setItem(storageKey, JSON.stringify(saved));
+  renderChecklistContent(loc);
+};
+
+window.resetChecklist = function(loc){
+  const key = window._clTab;
+  const todayStr = new Date().toISOString().slice(0,10);
+  localStorage.removeItem(`cl_${todayStr}_${loc}_${key}`);
+  renderChecklistContent(loc);
 };
 
 function renderTeam(){
@@ -777,12 +846,15 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (Упрощенная, только для локальных данных)
+   🔐 АДМИНКА
    ============================================================ */
 let adminTab = 'recipes';
 
-function openAdmin(){
-  showAdminModal();
+function openAdmin(){ 
+    // Удаляем старые модалки если есть
+    const old = document.getElementById('admin-modal');
+    if(old) old.remove();
+    showAdminModal(); 
 }
 
 function showAdminModal(){
@@ -798,12 +870,13 @@ function showAdminModal(){
         <div class="modal-title">⚙️ Редактор</div>
         <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-      <div class="tabs">
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0;overflow-x:auto;padding:0 20px">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
+        <button class="tab-btn ${adminTab==='checklists'?'on':''}" onclick="adminTab='checklists';showAdminModal()">Чек-листы</button>
       </div>
-      <div id="admin-content"></div>
+      <div id="admin-content" class="modal-body"></div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -868,13 +941,70 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
+  } else if(adminTab === 'checklists'){
+      c.innerHTML = `
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Редактирование списков по локациям:</div>
+        ${Object.keys(LOCATION_CHECKLISTS).map(loc => `
+            <div class="item-card">
+                <div class="item-card-head">
+                    <div class="item-card-title">${loc}</div>
+                    <button class="icon-btn" onclick="editLocationChecklist('${loc}')">✏️</button>
+                </div>
+            </div>
+        `).join('')}
+      `;
   }
 }
 
+// Редактирование чек-листов локации
+window.editLocationChecklist = function(loc) {
+    const lists = LOCATION_CHECKLISTS[loc] || { open: [], close: [] };
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'edit-cl-modal';
+    
+    // Простая реализация: два текстовых поля, разделенных запятой
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Чек-листы: ${loc}</div>
+                <button class="modal-close" onclick="document.getElementById('edit-cl-modal').remove()">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0 20px">
+                <div class="form-field">
+                    <label class="form-label">Открытие (через запятую)</label>
+                    <textarea class="form-textarea" id="cl-open" style="min-height:100px">${lists.open.join(', ')}</textarea>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Закрытие (через запятую)</label>
+                    <textarea class="form-textarea" id="cl-close" style="min-height:100px">${lists.close.join(', ')}</textarea>
+                </div>
+                <button class="btn" onclick="saveLocationChecklist('${loc}')">💾 Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.saveLocationChecklist = function(loc) {
+    const openVal = document.getElementById('cl-open').value;
+    const closeVal = document.getElementById('cl-close').value;
+    
+    LOCATION_CHECKLISTS[loc] = {
+        open: openVal.split(',').map(s => s.trim()).filter(s => s),
+        close: closeVal.split(',').map(s => s.trim()).filter(s => s)
+    };
+    
+    saveData();
+    document.getElementById('edit-cl-modal').remove();
+    toast('Чек-листы обновлены', 'success');
+    renderAdminContent();
+};
+
+// Остальные функции редактирования (ТТК, Новости, Команда)
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
-  
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
@@ -884,35 +1014,29 @@ function editRecipe(id){
         <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
       </div>
-      <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
-      <div class="form-field"><label class="form-label">Категория</label>
-        <select class="form-select" id="r-cat">
-          ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
-        <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
-        <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
-      </div>
-      
-      <div class="form-field">
-        <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
-        <div id="ingr-list">
-          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
+        <div class="form-field"><label class="form-label">Категория</label>
+          <select class="form-select" id="r-cat">
+            ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+          </select>
         </div>
-      </div>
-      
-      <div class="form-field">
-        <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
-        <div id="steps-list">
-          ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
+          <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
+          <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
         </div>
+        <div class="form-field">
+          <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
+          <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
+          <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
+        </div>
+        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
+        <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
       </div>
-      
-      <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
-      
-      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -939,7 +1063,6 @@ window.addIngr = function(){
   const idx = list.querySelectorAll('.ing-editor').length;
   list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
 };
-
 window.addStep = function(){
   const list = document.getElementById('steps-list');
   const idx = list.querySelectorAll('[data-step]').length;
@@ -973,6 +1096,7 @@ window.saveRecipe = function(editId){
   } else {
     RECIPES.push(r);
   }
+  saveData();
   document.getElementById('edit-modal').remove();
   toast('Сохранено ✓', 'success');
   renderAdminContent();
@@ -982,6 +1106,7 @@ window.deleteRecipe = function(id){
   if(!confirm('Удалить техкарту?')) return;
   const idx = RECIPES.findIndex(r=>r.id===id);
   if(idx>=0) RECIPES.splice(idx,1);
+  saveData();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -998,11 +1123,13 @@ function editNews(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
-      <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
-      <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
-      <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
-      <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
+        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
+        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
+        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
+        <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -1012,6 +1139,7 @@ window.saveNews = function(i){
   const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
   if(!n.title){ toast('Введите заголовок', 'error'); return; }
   if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
+  saveData();
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1020,6 +1148,7 @@ window.saveNews = function(i){
 window.deleteNews = function(i){
   if(!confirm('Удалить новость?')) return;
   NEWS.splice(i,1);
+  saveData();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1036,10 +1165,12 @@ function editTeamMember(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
-      <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
-      <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
-      <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
+        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
+        <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
+        <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -1049,6 +1180,7 @@ window.saveTeamMember = function(i){
   const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
   if(!u.name){ toast('Введите имя', 'error'); return; }
   if(i !== null) TEAM[i] = u; else TEAM.push(u);
+  saveData();
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1057,6 +1189,7 @@ window.saveTeamMember = function(i){
 window.deleteTeamMember = function(i){
   if(!confirm('Удалить сотрудника?')) return;
   TEAM.splice(i,1);
+  saveData();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1066,6 +1199,5 @@ window.deleteTeamMember = function(i){
    ============================================================ */
 render();
 </script>
-
 </body>
 </html>
