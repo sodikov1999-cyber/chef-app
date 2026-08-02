@@ -369,17 +369,25 @@ async function renderSchedule(forceRefresh = false){
       const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
       const data = JSON.parse(jsonStr);
       
-      // ПРАВИЛЬНЫЙ парсинг gviz формата
+      // ПРАВИЛЬНЫЙ парсинг gviz: учитываем ВСЕ колонки, даже пустые
       rows = data.table.rows.map(row => {
         if (!row.c) return [];
-        return row.c.map(cell => {
-          if (!cell || cell.v === null || cell.v === undefined) return '';
-          // Если есть форматированное значение (f), используем его
-          if (cell.f !== null && cell.f !== undefined) return String(cell.f);
-          return String(cell.v);
+        // Создаём массив фиксированной длины (как в заголовках)
+        const result = new Array(data.table.cols.length).fill('');
+        row.c.forEach((cell, idx) => {
+          if (cell && cell.v !== null && cell.v !== undefined) {
+            result[idx] = cell.f !== null && cell.f !== undefined ? String(cell.f) : String(cell.v);
+          }
         });
+        return result;
       });
+      
+      // ОТЛАДКА: выводим первые 3 строки в консоль
+      console.log('📊 Первые строки данных:', rows.slice(0, 3));
+      console.log('📊 Количество колонок:', data.table.cols.length);
+      
     } catch(e1) {
+      console.error('gviz error:', e1);
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}&t=${ts}`;
       const res = await fetch(csvUrl, { cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
@@ -400,6 +408,7 @@ async function renderSchedule(forceRefresh = false){
     rows = rows.filter(r => r.length > 0);
     const monthTitle = rows[0]?.[0] || 'График';
 
+    // Ищем локации
     const locations = [];
     rows.forEach((row, idx) => {
       if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
@@ -420,9 +429,11 @@ async function renderSchedule(forceRefresh = false){
 
     const today = new Date();
     const currentDay = today.getDate();
-    const dayColIndex = currentDay + 1;
+    const dayColIndex = currentDay + 1; // день 1 = индекс 2, день 2 = индекс 3
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
+
+    console.log(`📅 Сегодня: ${currentDay} число, индекс колонки: ${dayColIndex}`);
 
     const locData = locations.map((loc, locIdx) => {
       const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
@@ -472,12 +483,13 @@ async function renderSchedule(forceRefresh = false){
           shift: r[dayColIndex]
         }));
       
-      // ИСПРАВЛЕНО: правильный подсчёт смен
+      // ОТЛАДКА: выводим кто работает сегодня
+      console.log(`👥 ${loc.name} - сегодня работают:`, workingToday.map(p => p.name));
+      
       const staffStats = staffRows.map(r => {
         let workShifts = 0;
         let workDays = 0;
         
-        // Проходим по всем колонкам начиная с индекса 2 (день 1)
         for(let colIdx = 2; colIdx < r.length; colIdx++){
           const val = getShiftValue(r[colIdx]);
           if (val > 0) {
@@ -486,7 +498,6 @@ async function renderSchedule(forceRefresh = false){
           }
         }
         
-        // Ищем "Итого" в последней колонке
         let monthTotal = null;
         for(let i = r.length - 1; i >= 32; i--){
           const v = String(r[i] || '').trim();
