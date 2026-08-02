@@ -257,6 +257,7 @@
 
     <header>
         <h1 id="page-title">Главная</h1>
+        <!-- Кнопка обновления добавлена только для графика через JS, но заголовок здесь -->
     </header>
 
     <main>
@@ -312,9 +313,10 @@
 
     <script>
         // ==========================================
-        // НАСТРОЙКИ (ID ТАБЛИЦЫ УЖЕ ВСТАВЛЕН)
+        // НАСТРОЙКИ
         // ==========================================
-        const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
+        // ВСТАВЬ СЮДА ID СВОЕЙ ТАБЛИЦЫ (длинная строка из URL между /d/ и /edit)
+        const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk'; 
         // ==========================================
 
         let appData = {
@@ -359,14 +361,14 @@
             await loadData(true);
         }
 
-        // Загрузка данных (ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ ПК И ТЕЛЕФОНА)
+        // Загрузка данных (ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ ПК)
         async function loadData(force = false) {
-            if (!SHEET_ID) {
-                showError('Ошибка: не указан ID таблицы.');
+            if (!SHEET_ID || SHEET_ID === '1kC9...') {
+                showError('Не настроен ID таблицы! Откройте код и вставьте SHEET_ID.');
                 return;
             }
 
-            // Используем CSV экспорт через gviz - это работает надежнее всего
+            // Используем CSV экспорт через gviz - это работает надежнее на ПК
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
             try {
@@ -383,7 +385,7 @@
                 
             } catch (error) {
                 console.error('Ошибка загрузки:', error);
-                showError('Не удалось загрузить данные.<br>1. Проверьте интернет.<br>2. Убедитесь, что таблица открыта по ссылке ("Доступно всем").<br><br>Ошибка: ' + error.message);
+                showError('Не удалось загрузить данные. Проверьте интернет и доступ к таблице.<br>' + error.message);
             }
         }
 
@@ -412,7 +414,7 @@
                     }
                 }
                 result.push(cell.trim());
-                return result.filter(c => c !== ''); 
+                return result.filter(c => c !== ''); // Убираем пустые если строка кончилась запятой
             }).filter(r => r.length > 0);
 
             if (rows.length < 2) {
@@ -423,8 +425,11 @@
             const headers = rows[0].map(h => h.toLowerCase().trim());
             const dataRows = rows.slice(1);
 
-            // Определяем тип данных по заголовкам
-            const isSchedule = headers.includes('день') || headers.includes('day') || headers.includes('date');
+            // Разделяем данные на Расписание и Рецепты по наличию колонок
+            // Предполагаем, что если есть колонка "день" или "date" - это расписание
+            // Если есть "ингредиенты" или "steps" - это рецепты
+            
+            const isSchedule = headers.includes('день') || headers.includes('date') || headers.includes('day');
             
             if (isSchedule) {
                 appData.schedule = dataRows.map(row => {
@@ -434,12 +439,14 @@
                 });
                 renderSchedule();
             } else {
-                // Если не похоже на расписание, считаем рецептами (для примера)
+                // Если структура не подходит под расписание, считаем рецептами (для примера)
+                // В реальном проекте лучше иметь два разных листа или четкую структуру
                 appData.recipes = dataRows.map(row => {
                     let obj = {};
                     headers.forEach((h, i) => obj[h] = row[i]);
                     return obj;
                 });
+                // Если мы в разделе рецептов, рендерим их
                 if(document.getElementById('recipes').classList.contains('active')) {
                     renderRecipes();
                 }
@@ -453,6 +460,7 @@
             // Группировка по дням
             const grouped = {};
             appData.schedule.forEach(item => {
+                // Ищем колонку с днем (варианты названий)
                 const day = item['день'] || item['day'] || item['date'] || 'Без даты';
                 if (!grouped[day]) grouped[day] = [];
                 grouped[day].push(item);
@@ -464,6 +472,7 @@
                 html += `<div class="day-title">${day}</div>`;
                 
                 meals.forEach(meal => {
+                    // Ищем колонки с едой
                     const type = meal['прием'] || meal['type'] || meal['meal'] || 'Еда';
                     const name = meal['блюдо'] || meal['name'] || meal['dish'] || 'Нет названия';
                     
@@ -485,8 +494,9 @@
             const container = document.getElementById('recipes-content');
             if (!container) return;
             
+            // Заглушка, если рецептов нет
             if (appData.recipes.length === 0) {
-                container.innerHTML = '<div class="card">Рецепты пока не загружены.</div>';
+                container.innerHTML = '<div class="card">Рецепты пока не загружены. Проверьте таблицу.</div>';
                 return;
             }
 
