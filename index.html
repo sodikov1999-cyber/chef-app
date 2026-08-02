@@ -179,79 +179,53 @@ const DEFAULT_TEAM = [
   {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
-// Матрица заявок (Данные из вашего списка)
+// Матрица заявок
 const MATRIX_DATA = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
-    items: [
-      {name: "Лаваш традиционный", unit: "шт", limit: 40}
-    ]
+    items: [ {name: "Лаваш традиционный", unit: "шт", limit: 40} ]
   },
   {
     supplier: "Булочная Пирогов",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Панини", unit: "шт", limit: 10},
-      {name: "Чиабатта", unit: "шт", limit: 10},
-      {name: "Багет французский", unit: "шт", limit: 10},
-      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
-      {name: "Хлеб Датский", unit: "шт", limit: 10},
-      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
+      {name: "Панини", unit: "шт", limit: 10}, {name: "Чиабатта", unit: "шт", limit: 10},
+      {name: "Багет французский", unit: "шт", limit: 10}, {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
+      {name: "Хлеб Датский", unit: "шт", limit: 10}, {name: "Пампушки Бородинские", unit: "шт", limit: 40}
     ]
   },
   {
     supplier: "Пионер (Заготовки)",
     schedule: "Заявка в воскресенье, отгрузка в чт-пт",
     items: [
-      {name: "Ребра запеченые", unit: "кг", limit: 10},
-      {name: "Щечки томленые", unit: "кг", limit: 10},
-      {name: "Фарш штат", unit: "кг", limit: 10},
-      {name: "Фарш 70/30", unit: "кг", limit: 10},
-      {name: "Ростбиф", unit: "кг", limit: 10},
-      {name: "Смалец", unit: "кг", limit: 2}
+      {name: "Ребра запеченые", unit: "кг", limit: 10}, {name: "Щечки томленые", unit: "кг", limit: 10},
+      {name: "Фарш штат", unit: "кг", limit: 10}, {name: "Фарш 70/30", unit: "кг", limit: 10},
+      {name: "Ростбиф", unit: "кг", limit: 10}, {name: "Смалец", unit: "кг", limit: 2}
     ]
   },
   {
     supplier: "Партнер",
     schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
     items: [
-      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
-      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
-      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
-      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
-      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
-      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
-      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
-      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
-      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
-      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
-      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
-      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
-      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
-      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
-      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
-      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
-      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
-      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
-      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
-      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
-      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
-      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
-      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
-      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
-      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
-      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
-      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
-      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
-      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
-      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
-      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
+      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2}, {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
+      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1}, {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6}, {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
+      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10}, {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
+      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2}, {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2}, {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
+      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10}, {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
+      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1}, {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6}, {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
+      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4}, {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
+      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36}, {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
+      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3}, {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
+      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2}, {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
+      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1}, {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
+      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2}, {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
+      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2}, {name: "СОУС Ворчестер", unit: "шт", limit: 1},
+      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2}, {name: "СОУС соевый 1л", unit: "шт", limit: 2},
+      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1}, {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
       {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
     ]
   },
@@ -259,148 +233,95 @@ const MATRIX_DATA = [
     supplier: "Интегрита",
     schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
     items: [
-      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
-      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
-      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
-      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
-      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
-      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
-      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
-      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
-      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
-      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
-      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
-      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
-      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
-      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
-      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
-      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
-      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
-      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
-      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
-      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
-      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
+      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5}, {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2}, {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
+      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5}, {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
+      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3}, {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2}, {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5}, {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4}, {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
+      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3}, {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5}, {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
+      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24}, {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
+      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3}, {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
+      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6}, {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
+      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
+      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6}, {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
+      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4}, {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
     ]
   },
   {
     supplier: "Восток Запад",
     schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
     items: [
-      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
-      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
-      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
-      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
-      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
-      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
-      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
-      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
-      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
-      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
-      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
-      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
-      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
-      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
-      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
-      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
-      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
-      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
-      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
-      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
-      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
-      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
-      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
+      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1}, {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2}, {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
+      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36}, {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
+      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24}, {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
+      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1}, {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
+      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5}, {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
+      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10}, {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
+      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10}, {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
+      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
+      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3}, {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2}, {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
+      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4}, {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
+      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3}, {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
+      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3}, {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
     ]
   },
   {
     supplier: "Снежный Городок",
     schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
     items: [
-      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
-      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
+      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4}, {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2}, {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
     ]
   },
   {
     supplier: "Мираторг",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Свиная шейка", unit: "кг", limit: 20},
-      {name: "Свиная вырезка", unit: "кг", limit: 15},
-      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
-      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
+      {name: "Свиная шейка", unit: "кг", limit: 20}, {name: "Свиная вырезка", unit: "кг", limit: 15},
+      {name: "Диафрагма толстый край", unit: "кг", limit: 10}, {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
     ]
   },
   {
     supplier: "Вкусная Жизнь",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Мясник толстый край", unit: "кг", limit: 2},
-      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
-      {name: "Колбаски горчичные", unit: "уп", limit: 5},
-      {name: "Колбаски с сыром", unit: "уп", limit: 5}
+      {name: "Мясник толстый край", unit: "кг", limit: 2}, {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
+      {name: "Колбаски горчичные", unit: "уп", limit: 5}, {name: "Колбаски с сыром", unit: "уп", limit: 5}
     ]
   },
   {
     supplier: "ИП Орлов",
     schedule: "Ежедневно",
     items: [
-      {name: "Черная смородина с/м", unit: "кг", limit: 4},
-      {name: "Черника с/м", unit: "кг", limit: 2},
-      {name: "Облепиха", unit: "кг", limit: 1},
-      {name: "Клюква", unit: "кг", limit: 3},
-      {name: "Брусника", unit: "кг", limit: 0.5},
-      {name: "Малина", unit: "кг", limit: 3},
-      {name: "Огурец свежий", unit: "кг", limit: 5},
-      {name: "Томат свежий", unit: "кг", limit: 0},
-      {name: "Томат черри", unit: "кг", limit: 4},
-      {name: "Баклажан", unit: "кг", limit: 0.1},
-      {name: "Цукини", unit: "кг", limit: 5},
-      {name: "Капуста б/к", unit: "кг", limit: 10},
-      {name: "Айсберг", unit: "кг", limit: 5},
-      {name: "Романо", unit: "кг", limit: 2},
-      {name: "Перец Болгарский", unit: "кг", limit: 5},
-      {name: "Перец чили", unit: "кг", limit: 5},
-      {name: "Морковь", unit: "кг", limit: 0.4},
-      {name: "Картофель", unit: "кг", limit: 0.5},
-      {name: "Картофель беби", unit: "кг", limit: 0.5},
-      {name: "Чеснок", unit: "кг", limit: 0.4},
-      {name: "Лук репчатый", unit: "кг", limit: 0.3},
-      {name: "Лук красный", unit: "кг", limit: 0.1},
-      {name: "Лук зелёный", unit: "кг", limit: 0.1},
-      {name: "Петрушка", unit: "шт", limit: 2},
-      {name: "Укроп", unit: "шт", limit: 2},
-      {name: "Кинза", unit: "кг", limit: 1},
-      {name: "Базилик свежий", unit: "шт", limit: 5},
-      {name: "Тимьян", unit: "кг", limit: 1}
+      {name: "Черная смородина с/м", unit: "кг", limit: 4}, {name: "Черника с/м", unit: "кг", limit: 2},
+      {name: "Облепиха", unit: "кг", limit: 1}, {name: "Клюква", unit: "кг", limit: 3},
+      {name: "Брусника", unit: "кг", limit: 0.5}, {name: "Малина", unit: "кг", limit: 3},
+      {name: "Огурец свежий", unit: "кг", limit: 5}, {name: "Томат свежий", unit: "кг", limit: 0},
+      {name: "Томат черри", unit: "кг", limit: 4}, {name: "Баклажан", unit: "кг", limit: 0.1},
+      {name: "Цукини", unit: "кг", limit: 5}, {name: "Капуста б/к", unit: "кг", limit: 10},
+      {name: "Айсберг", unit: "кг", limit: 5}, {name: "Романо", unit: "кг", limit: 2},
+      {name: "Перец Болгарский", unit: "кг", limit: 5}, {name: "Перец чили", unit: "кг", limit: 5},
+      {name: "Морковь", unit: "кг", limit: 0.4}, {name: "Картофель", unit: "кг", limit: 0.5},
+      {name: "Картофель беби", unit: "кг", limit: 0.5}, {name: "Чеснок", unit: "кг", limit: 0.4},
+      {name: "Лук репчатый", unit: "кг", limit: 0.3}, {name: "Лук красный", unit: "кг", limit: 0.1},
+      {name: "Лук зелёный", unit: "кг", limit: 0.1}, {name: "Петрушка", unit: "шт", limit: 2},
+      {name: "Укроп", unit: "шт", limit: 2}, {name: "Кинза", unit: "кг", limit: 1},
+      {name: "Базилик свежий", unit: "шт", limit: 5}, {name: "Тимьян", unit: "кг", limit: 1}
     ]
   },
   {
     supplier: "ИП Филатова",
     schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
     items: [
-      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
-      {name: "Крупа манная 1кг", unit: "уп", limit: null},
-      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
-      {name: "Макароны персонал", unit: "уп", limit: null},
-      {name: "Мука Алейка", unit: "уп", limit: null},
-      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
-      {name: "Соль 1кг", unit: "уп", limit: null},
-      {name: "Сахар песок 1кг", unit: "уп", limit: null},
+      {name: "Крупа гречневая 750г", unit: "уп", limit: null}, {name: "Крупа манная 1кг", unit: "уп", limit: null},
+      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null}, {name: "Макароны персонал", unit: "уп", limit: null},
+      {name: "Мука Алейка", unit: "уп", limit: null}, {name: "Рис пропаренный 750г", unit: "уп", limit: null},
+      {name: "Соль 1кг", unit: "уп", limit: null}, {name: "Сахар песок 1кг", unit: "уп", limit: null},
       {name: "Яйцо С1", unit: "уп", limit: null}
     ]
   },
@@ -408,54 +329,36 @@ const MATRIX_DATA = [
     supplier: "МЕТРО",
     schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
     items: [
-      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
-      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
-      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
-      {name: "Меланж пастеризованный", unit: "кг", limit: null},
-      {name: "Паприка", unit: "кг", limit: null},
-      {name: "Чеснок сушёный", unit: "кг", limit: null},
-      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
-      {name: "Приправа гриль", unit: "шт", limit: null},
-      {name: "Чёрный перец горошек", unit: "бут", limit: null},
-      {name: "Кориандр горошек", unit: "кг", limit: null},
-      {name: "Кориандр молотый", unit: "кг", limit: null},
-      {name: "Соль гималайская розовая", unit: "кг", limit: null},
-      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
-      {name: "Кефир", unit: "л", limit: null},
-      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
-      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
-      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
-      {name: "Сок лимона 1л", unit: "шт", limit: null},
-      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
-      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
-      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
-      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
-      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
-      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
-      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
-      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
+      {name: "Сметана 20% Коровкино", unit: "кг", limit: null}, {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
+      {name: "Яичный желток пастеризованный", unit: "кг", limit: null}, {name: "Меланж пастеризованный", unit: "кг", limit: null},
+      {name: "Паприка", unit: "кг", limit: null}, {name: "Чеснок сушёный", unit: "кг", limit: null},
+      {name: "Чеснок черный ферментированный", unit: "шт", limit: null}, {name: "Приправа гриль", unit: "шт", limit: null},
+      {name: "Чёрный перец горошек", unit: "бут", limit: null}, {name: "Кориандр горошек", unit: "кг", limit: null},
+      {name: "Кориандр молотый", unit: "кг", limit: null}, {name: "Соль гималайская розовая", unit: "кг", limit: null},
+      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null}, {name: "Кефир", unit: "л", limit: null},
+      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null}, {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
+      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null}, {name: "Сок лимона 1л", unit: "шт", limit: null},
+      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null}, {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
+      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null}, {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
+      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null}, {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
+      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null}, {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
     ]
   },
   {
     supplier: "СИБМК",
     schedule: "По наличию",
     items: [
-      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
-      {name: "Кальмар командорский", unit: "кг", limit: null},
-      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
-      {name: "Мидии в двух створках", unit: "кг", limit: null},
-      {name: "Мидии в одной створке", unit: "кг", limit: null},
-      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
+      {name: "Форель с/с Trim-D", unit: "кг", limit: null}, {name: "Кальмар командорский", unit: "кг", limit: null},
+      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null}, {name: "Мидии в двух створках", unit: "кг", limit: null},
+      {name: "Мидии в одной створке", unit: "кг", limit: null}, {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "О Бэйкери (ИП Фоминых)",
     schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
     items: [
-      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
-      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
-      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
-      {name: "Безе весовое", unit: "кг", limit: 0.5},
+      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15}, {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
+      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10}, {name: "Безе весовое", unit: "кг", limit: 0.5},
       {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
     ]
   },
@@ -463,8 +366,7 @@ const MATRIX_DATA = [
     supplier: "Алтайская Птица",
     schedule: "По договору",
     items: [
-      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
-      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
+      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null}, {name: "Крылья куриные рубленые", unit: "кг", limit: null},
       {name: "Филе куриной грудки", unit: "кг", limit: null}
     ]
   },
@@ -472,30 +374,24 @@ const MATRIX_DATA = [
     supplier: "Два Сыровара",
     schedule: "По договору",
     items: [
-      {name: "Качотта", unit: "кг", limit: null},
-      {name: "Рулет", unit: "кг", limit: null},
-      {name: "Адыгейский", unit: "кг", limit: null},
-      {name: "Сулугуни копченый", unit: "кг", limit: null}
+      {name: "Качотта", unit: "кг", limit: null}, {name: "Рулет", unit: "кг", limit: null},
+      {name: "Адыгейский", unit: "кг", limit: null}, {name: "Сулугуни копченый", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "Вяленое мясо",
     schedule: "По договору",
     items: [
-      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
-      {name: "Чипсы из индейки", unit: "уп", limit: null},
-      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
-      {name: "Чипсы из оленины", unit: "уп", limit: null}
+      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null}, {name: "Чипсы из индейки", unit: "уп", limit: null},
+      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null}, {name: "Чипсы из оленины", unit: "уп", limit: null}
     ]
   },
   {
     supplier: "Першин (микрозелень)",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Руккола мини", unit: "уп", limit: null},
-      {name: "Шпинат мини", unit: "уп", limit: null},
-      {name: "Щавель микро", unit: "уп", limit: null},
-      {name: "Мята микро", unit: "уп", limit: null},
+      {name: "Руккола мини", unit: "уп", limit: null}, {name: "Шпинат мини", unit: "уп", limit: null},
+      {name: "Щавель микро", unit: "уп", limit: null}, {name: "Мята микро", unit: "уп", limit: null},
       {name: "Фиалки", unit: "уп", limit: null}
     ]
   }
@@ -1065,8 +961,7 @@ function renderMatrix(){
   const filteredSuppliers = MATRIX_DATA.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
     if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
-      return {...sup, items: items.length > 0 ? items : sup.items}; // Если нашли поставщика, показываем все его товары или только найденные? Лучше все, если искали поставщика, иначе только товары.
-      // Упростим: если поиск по товару, показываем только совпадающие товары. Если по поставщику - все.
+      // Если искали по названию поставщика, показываем все товары, иначе только найденные
       if(q && !sup.supplier.toLowerCase().includes(q)) {
          return {...sup, items: items};
       }
