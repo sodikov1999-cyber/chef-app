@@ -80,30 +80,93 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.refresh-btn { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: transform 0.2s; margin-left: auto; }
+.refresh-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s;
+    margin-left: auto;
+}
 .refresh-btn:active { transform: scale(0.95); }
-.tab-btn { flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: none; color: var(--muted); font-weight: 600; border-radius: 8px; margin-right: 4px; cursor: pointer; }
-.tab-btn.on { background: var(--accent); color: #000; }
-.modal-body { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: var(--muted);
+    font-weight: 600;
+    border-radius: 8px;
+    margin-right: 4px;
+    cursor: pointer;
+}
+.tab-btn.on {
+    background: var(--accent);
+    color: #000;
+}
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
 /* Стили для матрицы */
 .supplier-block { margin-bottom: 20px; }
-.supplier-header { background: rgba(255,138,61,0.1); border-left: 3px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 10px; position: relative; }
+.supplier-header { 
+    background: rgba(255,138,61,0.1); 
+    border-left: 3px solid var(--accent); 
+    padding: 12px; 
+    border-radius: 8px; 
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.supplier-info { flex: 1; }
 .supplier-name { font-weight: 700; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
 .supplier-schedule { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.matrix-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.matrix-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 10px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+}
 .matrix-item:last-child { border-bottom: none; }
 .matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; }
 .matrix-meta { text-align: right; flex-shrink: 0; }
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
-.edit-supplier-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: var(--text); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-.edit-supplier-btn:hover { background: var(--accent); color: #000; }
+.edit-supplier-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: var(--text);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 8px;
+}
 </style>
 </head>
 <body>
 
 <div id="app"></div>
 <button id="admin-btn" class="admin-btn" onclick="haptic('hard');openAdmin()">✏️</button>
+
+<!-- Поле поиска для матрицы (вынесено отдельно для сохранения фокуса) -->
+<input type="search" id="matrix-search" placeholder="🔍 Поиск продукта или поставщика..." 
+       style="display:none; width:100%; padding:12px 16px; background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; color:var(--text); font-size:15px; margin:0 0 16px 0; outline:none; position:fixed; top:20px; left:20px; right:20px; z-index:50;">
+<div id="matrix-list" style="margin-top:80px;"></div>
 
 <script>
 /* ============================================================
@@ -138,52 +201,79 @@ const DEFAULT_TEAM = [
   {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
+// Матрица заявок (Данные из вашего списка)
 const DEFAULT_MATRIX = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
-    items: [ {name: "Лаваш традиционный", unit: "шт", limit: 40} ]
+    items: [
+      {name: "Лаваш традиционный", unit: "шт", limit: 40}
+    ]
   },
   {
     supplier: "Булочная Пирогов",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Панини", unit: "шт", limit: 10}, {name: "Чиабатта", unit: "шт", limit: 10},
-      {name: "Багет французский", unit: "шт", limit: 10}, {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
-      {name: "Хлеб Датский", unit: "шт", limit: 10}, {name: "Пампушки Бородинские", unit: "шт", limit: 40}
+      {name: "Панини", unit: "шт", limit: 10},
+      {name: "Чиабатта", unit: "шт", limit: 10},
+      {name: "Багет французский", unit: "шт", limit: 10},
+      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
+      {name: "Хлеб Датский", unit: "шт", limit: 10},
+      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
     ]
   },
   {
     supplier: "Пионер (Заготовки)",
     schedule: "Заявка в воскресенье, отгрузка в чт-пт",
     items: [
-      {name: "Ребра запеченые", unit: "кг", limit: 10}, {name: "Щечки томленые", unit: "кг", limit: 10},
-      {name: "Фарш штат", unit: "кг", limit: 10}, {name: "Фарш 70/30", unit: "кг", limit: 10},
-      {name: "Ростбиф", unit: "кг", limit: 10}, {name: "Смалец", unit: "кг", limit: 2}
+      {name: "Ребра запеченые", unit: "кг", limit: 10},
+      {name: "Щечки томленые", unit: "кг", limit: 10},
+      {name: "Фарш штат", unit: "кг", limit: 10},
+      {name: "Фарш 70/30", unit: "кг", limit: 10},
+      {name: "Ростбиф", unit: "кг", limit: 10},
+      {name: "Смалец", unit: "кг", limit: 2}
     ]
   },
   {
     supplier: "Партнер",
     schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
     items: [
-      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2}, {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
-      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1}, {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6}, {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
-      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10}, {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
-      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2}, {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2}, {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
-      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10}, {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
-      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1}, {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6}, {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
-      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4}, {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
-      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36}, {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
-      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3}, {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
-      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2}, {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
-      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1}, {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
-      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2}, {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
-      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2}, {name: "СОУС Ворчестер", unit: "шт", limit: 1},
-      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2}, {name: "СОУС соевый 1л", unit: "шт", limit: 2},
-      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1}, {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
+      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
+      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
+      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
+      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
+      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
+      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
+      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
+      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
+      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
+      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
+      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
+      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
+      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
+      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
+      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
+      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
+      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
+      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
+      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
+      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
+      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
+      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
+      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
+      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
+      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
+      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
+      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
+      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
+      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
+      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
+      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
       {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
     ]
   },
@@ -191,95 +281,148 @@ const DEFAULT_MATRIX = [
     supplier: "Интегрита",
     schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
     items: [
-      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5}, {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2}, {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
-      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5}, {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
-      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3}, {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2}, {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5}, {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4}, {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
-      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3}, {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5}, {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
-      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24}, {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
-      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3}, {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
-      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6}, {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
-      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
-      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6}, {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
-      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4}, {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
+      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
+      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
+      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
+      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
+      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
+      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
+      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
+      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
+      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
+      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
+      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
+      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
+      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
+      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
+      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
+      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
+      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
+      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
+      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
+      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
+      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
     ]
   },
   {
     supplier: "Восток Запад",
     schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
     items: [
-      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1}, {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2}, {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
-      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36}, {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
-      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24}, {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
-      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1}, {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
-      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5}, {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
-      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10}, {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
-      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10}, {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
-      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
-      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3}, {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2}, {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
-      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4}, {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
-      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3}, {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
-      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3}, {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
+      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
+      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
+      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
+      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
+      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
+      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
+      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
+      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
+      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
+      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
+      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
+      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
+      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
+      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
+      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
+      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
+      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
+      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
+      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
+      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
+      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
+      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
+      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
     ]
   },
   {
     supplier: "Снежный Городок",
     schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
     items: [
-      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4}, {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2}, {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
+      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
+      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
     ]
   },
   {
     supplier: "Мираторг",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Свиная шейка", unit: "кг", limit: 20}, {name: "Свиная вырезка", unit: "кг", limit: 15},
-      {name: "Диафрагма толстый край", unit: "кг", limit: 10}, {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
+      {name: "Свиная шейка", unit: "кг", limit: 20},
+      {name: "Свиная вырезка", unit: "кг", limit: 15},
+      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
+      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
     ]
   },
   {
     supplier: "Вкусная Жизнь",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Мясник толстый край", unit: "кг", limit: 2}, {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
-      {name: "Колбаски горчичные", unit: "уп", limit: 5}, {name: "Колбаски с сыром", unit: "уп", limit: 5}
+      {name: "Мясник толстый край", unit: "кг", limit: 2},
+      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
+      {name: "Колбаски горчичные", unit: "уп", limit: 5},
+      {name: "Колбаски с сыром", unit: "уп", limit: 5}
     ]
   },
   {
     supplier: "ИП Орлов",
     schedule: "Ежедневно",
     items: [
-      {name: "Черная смородина с/м", unit: "кг", limit: 4}, {name: "Черника с/м", unit: "кг", limit: 2},
-      {name: "Облепиха", unit: "кг", limit: 1}, {name: "Клюква", unit: "кг", limit: 3},
-      {name: "Брусника", unit: "кг", limit: 0.5}, {name: "Малина", unit: "кг", limit: 3},
-      {name: "Огурец свежий", unit: "кг", limit: 5}, {name: "Томат свежий", unit: "кг", limit: 0},
-      {name: "Томат черри", unit: "кг", limit: 4}, {name: "Баклажан", unit: "кг", limit: 0.1},
-      {name: "Цукини", unit: "кг", limit: 5}, {name: "Капуста б/к", unit: "кг", limit: 10},
-      {name: "Айсберг", unit: "кг", limit: 5}, {name: "Романо", unit: "кг", limit: 2},
-      {name: "Перец Болгарский", unit: "кг", limit: 5}, {name: "Перец чили", unit: "кг", limit: 5},
-      {name: "Морковь", unit: "кг", limit: 0.4}, {name: "Картофель", unit: "кг", limit: 0.5},
-      {name: "Картофель беби", unit: "кг", limit: 0.5}, {name: "Чеснок", unit: "кг", limit: 0.4},
-      {name: "Лук репчатый", unit: "кг", limit: 0.3}, {name: "Лук красный", unit: "кг", limit: 0.1},
-      {name: "Лук зелёный", unit: "кг", limit: 0.1}, {name: "Петрушка", unit: "шт", limit: 2},
-      {name: "Укроп", unit: "шт", limit: 2}, {name: "Кинза", unit: "кг", limit: 1},
-      {name: "Базилик свежий", unit: "шт", limit: 5}, {name: "Тимьян", unit: "кг", limit: 1}
+      {name: "Черная смородина с/м", unit: "кг", limit: 4},
+      {name: "Черника с/м", unit: "кг", limit: 2},
+      {name: "Облепиха", unit: "кг", limit: 1},
+      {name: "Клюква", unit: "кг", limit: 3},
+      {name: "Брусника", unit: "кг", limit: 0.5},
+      {name: "Малина", unit: "кг", limit: 3},
+      {name: "Огурец свежий", unit: "кг", limit: 5},
+      {name: "Томат свежий", unit: "кг", limit: 0},
+      {name: "Томат черри", unit: "кг", limit: 4},
+      {name: "Баклажан", unit: "кг", limit: 0.1},
+      {name: "Цукини", unit: "кг", limit: 5},
+      {name: "Капуста б/к", unit: "кг", limit: 10},
+      {name: "Айсберг", unit: "кг", limit: 5},
+      {name: "Романо", unit: "кг", limit: 2},
+      {name: "Перец Болгарский", unit: "кг", limit: 5},
+      {name: "Перец чили", unit: "кг", limit: 5},
+      {name: "Морковь", unit: "кг", limit: 0.4},
+      {name: "Картофель", unit: "кг", limit: 0.5},
+      {name: "Картофель беби", unit: "кг", limit: 0.5},
+      {name: "Чеснок", unit: "кг", limit: 0.4},
+      {name: "Лук репчатый", unit: "кг", limit: 0.3},
+      {name: "Лук красный", unit: "кг", limit: 0.1},
+      {name: "Лук зелёный", unit: "кг", limit: 0.1},
+      {name: "Петрушка", unit: "шт", limit: 2},
+      {name: "Укроп", unit: "шт", limit: 2},
+      {name: "Кинза", unit: "кг", limit: 1},
+      {name: "Базилик свежий", unit: "шт", limit: 5},
+      {name: "Тимьян", unit: "кг", limit: 1}
     ]
   },
   {
     supplier: "ИП Филатова",
     schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
     items: [
-      {name: "Крупа гречневая 750г", unit: "уп", limit: null}, {name: "Крупа манная 1кг", unit: "уп", limit: null},
-      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null}, {name: "Макароны персонал", unit: "уп", limit: null},
-      {name: "Мука Алейка", unit: "уп", limit: null}, {name: "Рис пропаренный 750г", unit: "уп", limit: null},
-      {name: "Соль 1кг", unit: "уп", limit: null}, {name: "Сахар песок 1кг", unit: "уп", limit: null},
+      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
+      {name: "Крупа манная 1кг", unit: "уп", limit: null},
+      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
+      {name: "Макароны персонал", unit: "уп", limit: null},
+      {name: "Мука Алейка", unit: "уп", limit: null},
+      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
+      {name: "Соль 1кг", unit: "уп", limit: null},
+      {name: "Сахар песок 1кг", unit: "уп", limit: null},
       {name: "Яйцо С1", unit: "уп", limit: null}
     ]
   },
@@ -287,36 +430,54 @@ const DEFAULT_MATRIX = [
     supplier: "МЕТРО",
     schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
     items: [
-      {name: "Сметана 20% Коровкино", unit: "кг", limit: null}, {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
-      {name: "Яичный желток пастеризованный", unit: "кг", limit: null}, {name: "Меланж пастеризованный", unit: "кг", limit: null},
-      {name: "Паприка", unit: "кг", limit: null}, {name: "Чеснок сушёный", unit: "кг", limit: null},
-      {name: "Чеснок черный ферментированный", unit: "шт", limit: null}, {name: "Приправа гриль", unit: "шт", limit: null},
-      {name: "Чёрный перец горошек", unit: "бут", limit: null}, {name: "Кориандр горошек", unit: "кг", limit: null},
-      {name: "Кориандр молотый", unit: "кг", limit: null}, {name: "Соль гималайская розовая", unit: "кг", limit: null},
-      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null}, {name: "Кефир", unit: "л", limit: null},
-      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null}, {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
-      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null}, {name: "Сок лимона 1л", unit: "шт", limit: null},
-      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null}, {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
-      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null}, {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
-      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null}, {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
-      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null}, {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
+      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
+      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
+      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
+      {name: "Меланж пастеризованный", unit: "кг", limit: null},
+      {name: "Паприка", unit: "кг", limit: null},
+      {name: "Чеснок сушёный", unit: "кг", limit: null},
+      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
+      {name: "Приправа гриль", unit: "шт", limit: null},
+      {name: "Чёрный перец горошек", unit: "бут", limit: null},
+      {name: "Кориандр горошек", unit: "кг", limit: null},
+      {name: "Кориандр молотый", unit: "кг", limit: null},
+      {name: "Соль гималайская розовая", unit: "кг", limit: null},
+      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
+      {name: "Кефир", unit: "л", limit: null},
+      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
+      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
+      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
+      {name: "Сок лимона 1л", unit: "шт", limit: null},
+      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
+      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
+      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
+      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
+      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
+      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
+      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
+      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
     ]
   },
   {
     supplier: "СИБМК",
     schedule: "По наличию",
     items: [
-      {name: "Форель с/с Trim-D", unit: "кг", limit: null}, {name: "Кальмар командорский", unit: "кг", limit: null},
-      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null}, {name: "Мидии в двух створках", unit: "кг", limit: null},
-      {name: "Мидии в одной створке", unit: "кг", limit: null}, {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
+      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
+      {name: "Кальмар командорский", unit: "кг", limit: null},
+      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
+      {name: "Мидии в двух створках", unit: "кг", limit: null},
+      {name: "Мидии в одной створке", unit: "кг", limit: null},
+      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "О Бэйкери (ИП Фоминых)",
     schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
     items: [
-      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15}, {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
-      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10}, {name: "Безе весовое", unit: "кг", limit: 0.5},
+      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
+      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
+      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
+      {name: "Безе весовое", unit: "кг", limit: 0.5},
       {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
     ]
   },
@@ -324,7 +485,8 @@ const DEFAULT_MATRIX = [
     supplier: "Алтайская Птица",
     schedule: "По договору",
     items: [
-      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null}, {name: "Крылья куриные рубленые", unit: "кг", limit: null},
+      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
+      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
       {name: "Филе куриной грудки", unit: "кг", limit: null}
     ]
   },
@@ -332,24 +494,30 @@ const DEFAULT_MATRIX = [
     supplier: "Два Сыровара",
     schedule: "По договору",
     items: [
-      {name: "Качотта", unit: "кг", limit: null}, {name: "Рулет", unit: "кг", limit: null},
-      {name: "Адыгейский", unit: "кг", limit: null}, {name: "Сулугуни копченый", unit: "кг", limit: null}
+      {name: "Качотта", unit: "кг", limit: null},
+      {name: "Рулет", unit: "кг", limit: null},
+      {name: "Адыгейский", unit: "кг", limit: null},
+      {name: "Сулугуни копченый", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "Вяленое мясо",
     schedule: "По договору",
     items: [
-      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null}, {name: "Чипсы из индейки", unit: "уп", limit: null},
-      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null}, {name: "Чипсы из оленины", unit: "уп", limit: null}
+      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
+      {name: "Чипсы из индейки", unit: "уп", limit: null},
+      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
+      {name: "Чипсы из оленины", unit: "уп", limit: null}
     ]
   },
   {
     supplier: "Першин (микрозелень)",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Руккола мини", unit: "уп", limit: null}, {name: "Шпинат мини", unit: "уп", limit: null},
-      {name: "Щавель микро", unit: "уп", limit: null}, {name: "Мята микро", unit: "уп", limit: null},
+      {name: "Руккола мини", unit: "уп", limit: null},
+      {name: "Шпинат мини", unit: "уп", limit: null},
+      {name: "Щавель микро", unit: "уп", limit: null},
+      {name: "Мята микро", unit: "уп", limit: null},
       {name: "Фиалки", unit: "уп", limit: null}
     ]
   }
@@ -395,10 +563,19 @@ if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
 const $ = s => document.querySelector(s);
 const app = $('#app');
+const matrixSearchInput = $('#matrix-search');
+const matrixListContainer = $('#matrix-list');
+
 let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
+
+// Инициализация поиска матрицы
+matrixSearchInput.addEventListener('input', function() {
+    window._matrixQ = this.value;
+    renderMatrixListOnly(); // Перерисовываем только список, не трогая инпут
+});
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -416,6 +593,13 @@ function toast(msg, type='info'){
 function navigate(view, data){
   currentView = view;
   if(data !== undefined) currentRecipeId = data;
+  
+  // Скрываем глобальный поиск если ушли с матрицы
+  if(view !== 'matrix') {
+      matrixSearchInput.style.display = 'none';
+      matrixListContainer.innerHTML = '';
+  }
+  
   render();
   window.scrollTo(0,0);
 }
@@ -427,9 +611,61 @@ function render(){
   else if(currentView === 'schedule') renderSchedule();
   else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
-  else if(currentView === 'matrix') renderMatrix();
+  else if(currentView === 'matrix') {
+      // Для матрицы рендерим только контейнер, а инпут показываем отдельно
+      matrixSearchInput.style.display = 'block';
+      matrixSearchInput.value = window._matrixQ || '';
+      matrixSearchInput.focus(); // Возвращаем фокус если нужно
+      renderMatrixListOnly();
+      app.classList.add('fade');
+      setTimeout(()=>app.classList.remove('fade'), 300);
+      return; // Выходим, чтобы не перерисовывать app.innerHTML
+  }
   app.classList.add('fade');
   setTimeout(()=>app.classList.remove('fade'), 300);
+}
+
+// Отдельная функция для рендера списка матрицы (без пересоздания инпута)
+function renderMatrixListOnly() {
+    const q = (window._matrixQ || '').toLowerCase();
+    
+    const filteredSuppliers = MATRIX_DATA.map(sup => {
+        const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
+        const supplierMatch = sup.supplier.toLowerCase().includes(q);
+        
+        if(supplierMatch) return sup; // Если совпал поставщик, показываем все товары
+        if(items.length > 0) return {...sup, items: items}; // Если совпали товары, показываем только их
+        return null;
+    }).filter(s => s !== null);
+
+    let html = '';
+    if(filteredSuppliers.length > 0) {
+        html = filteredSuppliers.map(sup => `
+          <div class="supplier-block">
+            <div class="supplier-header">
+              <div class="supplier-info">
+                  <div class="supplier-name">${sup.supplier}</div>
+                  <div class="supplier-schedule">🕒 ${sup.schedule}</div>
+              </div>
+            </div>
+            <div class="card" style="padding:10px 14px">
+              ${sup.items.map(it => `
+                <div class="matrix-item">
+                  <div class="matrix-name">${it.name}</div>
+                  <div class="matrix-meta">
+                    <span class="matrix-unit">${it.unit}</span>
+                    ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+    } else {
+        html = '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+    }
+    
+    matrixListContainer.innerHTML = `<button class="back" onclick="navigate('home');haptic()" style="margin-bottom:16px">← Назад</button><h1>Матрица заявок</h1>` + html;
 }
 
 function renderHome(){
@@ -799,6 +1035,7 @@ function toggleLoc(name) {
 }
 
 function renderChecklist(){
+  // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
@@ -824,6 +1061,7 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
+  // Получаем сотрудников на сегодня для этой локации
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   let todayStaff = [];
   const dayIndex = new Date().getDate() - 1;
@@ -834,6 +1072,7 @@ function renderChecklist(){
       todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
     }
   }
+  // Фильтруем только Су-шефов и ИО
   const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
@@ -910,54 +1149,8 @@ function renderTeam(){
   `;
 }
 
-function renderMatrix(){
-  window._matrixQ = window._matrixQ || '';
-  const q = window._matrixQ.toLowerCase();
-  
-  const filteredSuppliers = MATRIX_DATA.map(sup => {
-    const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-    if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
-      if(q && !sup.supplier.toLowerCase().includes(q)) {
-         return {...sup, items: items};
-      }
-      return sup;
-    }
-    return null;
-  }).filter(s => s !== null);
-
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Матрица заявок</h1>
-    <input type="search" placeholder="🔍 Поиск продукта или поставщика..." 
-           value="${window._matrixQ}" 
-           oninput="window._matrixQ=this.value;renderMatrix()"
-           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
-    
-    ${filteredSuppliers.length > 0 ? filteredSuppliers.map((sup, supIdx) => `
-      <div class="supplier-block">
-        <div class="supplier-header">
-          <div class="supplier-name">${sup.supplier}</div>
-          <div class="supplier-schedule">🕒 ${sup.schedule}</div>
-          <button class="edit-supplier-btn" onclick="editSupplier(${supIdx});haptic()">✏️</button>
-        </div>
-        <div class="card" style="padding:10px 14px">
-          ${sup.items.map(it => `
-            <div class="matrix-item">
-              <div class="matrix-name">${it.name}</div>
-              <div class="matrix-meta">
-                <span class="matrix-unit">${it.unit}</span>
-                ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
-  `;
-}
-
 /* ============================================================
-   🔐 АДМИНКА
+   🔐 АДМИНКА (С РЕДАКТИРОВАНИЕМ МАТРИЦЫ)
    ============================================================ */
 let adminTab = 'recipes';
 
@@ -995,6 +1188,7 @@ function showAdminModal(){
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
   if(!c) return;
+  
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
@@ -1050,153 +1244,310 @@ function renderAdminContent(){
       `).join('')}
     `;
   } else if(adminTab === 'matrix'){
-    c.innerHTML = `
-      <button class="btn" onclick="editSupplier(-1)">+ Добавить поставщика</button>
-      ${MATRIX_DATA.map((sup, i) => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div>
-              <div class="item-card-title">${sup.supplier}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${sup.items.length} товаров</div>
-            </div>
-            <div>
-              <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
+      c.innerHTML = `
+        <button class="btn" onclick="editSupplier()">+ Добавить поставщика</button>
+        ${MATRIX_DATA.map((s, i) => `
+          <div class="item-card">
+            <div class="item-card-head">
+              <div>
+                <div class="item-card-title">${s.supplier}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.items.length} товаров</div>
+              </div>
+              <div>
+                <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
+                <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('')}
-    `;
+        `).join('')}
+      `;
   }
 }
 
-// --- Recipe Functions (unchanged) ---
-function editRecipe(id){ /* ... same as before ... */ 
+// --- Функции редактирования Матрицы ---
+function editSupplier(index) {
+    const isEdit = index !== undefined;
+    const s = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'edit-matrix-modal';
+    
+    let itemsHtml = s.items.map((it, idx) => `
+        <div class="item-card" style="margin-top:8px">
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:6px; align-items:center">
+                <input class="form-input" placeholder="Продукт" value="${it.name}" id="mi-name-${idx}">
+                <input class="form-input" placeholder="Ед." value="${it.unit}" id="mi-unit-${idx}">
+                <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" id="mi-limit-${idx}">
+                <button class="icon-btn danger" onclick="this.closest('.item-card').remove()">✕</button>
+            </div>
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">${isEdit ? '✏️ Редактировать поставщика' : '✨ Новый поставщик'}</div>
+                <button class="modal-close" onclick="document.getElementById('edit-matrix-modal').remove()">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0 20px">
+                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="ms-name" value="${s.supplier}"></div>
+                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="ms-schedule" value="${s.schedule}"></div>
+                
+                <div class="form-label" style="margin-top:16px">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Товар</button></div>
+                <div id="matrix-items-list">${itemsHtml}</div>
+                
+                <button class="btn" style="margin-top:20px" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+window.addMatrixItem = function() {
+    const list = document.getElementById('matrix-items-list');
+    const idx = list.querySelectorAll('.item-card').length;
+    const div = document.createElement('div');
+    div.className = 'item-card';
+    div.style.marginTop = '8px';
+    div.innerHTML = `
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:6px; align-items:center">
+            <input class="form-input" placeholder="Продукт" id="mi-name-${idx}">
+            <input class="form-input" placeholder="Ед." id="mi-unit-${idx}">
+            <input class="form-input" placeholder="Лимит" type="number" id="mi-limit-${idx}">
+            <button class="icon-btn danger" onclick="this.closest('.item-card').remove()">✕</button>
+        </div>
+    `;
+    list.appendChild(div);
+};
+
+window.saveSupplier = function(index) {
+    const name = $('#ms-name').value;
+    const schedule = $('#ms-schedule').value;
+    if(!name) { toast('Введите название поставщика', 'error'); return; }
+    
+    const itemCards = document.querySelectorAll('#matrix-items-list .item-card');
+    const items = [];
+    itemCards.forEach(card => {
+        const inputs = card.querySelectorAll('input');
+        const iName = inputs[0].value;
+        const iUnit = inputs[1].value;
+        const iLimitRaw = inputs[2].value;
+        const iLimit = iLimitRaw === '' ? null : (parseFloat(iLimitRaw) || 0);
+        
+        if(iName) items.push({ name: iName, unit: iUnit, limit: iLimit });
+    });
+    
+    const newSupplier = { supplier: name, schedule: schedule, items: items };
+    
+    if(index !== null) {
+        MATRIX_DATA[index] = newSupplier;
+    } else {
+        MATRIX_DATA.push(newSupplier);
+    }
+    
+    saveData();
+    document.getElementById('edit-matrix-modal').remove();
+    toast('Сохранено', 'success');
+    renderAdminContent();
+};
+
+window.deleteSupplier = function(index) {
+    if(!confirm('Удалить этого поставщика и все его товары?')) return;
+    MATRIX_DATA.splice(index, 1);
+    saveData();
+    renderAdminContent();
+    toast('Удалено', 'success');
+};
+
+// --- Остальные функции админки (ТТК, Новости, Команда) ---
+function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
-  const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal';
-  modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div><div class="form-field"><label class="form-label">Категория</label><select class="form-select" id="r-cat">${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}</select></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div><div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div><div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div></div><div class="form-field"><label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label><div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div></div><div class="form-field"><label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label><div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div></div><div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div><button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button></div></div>`;
-  document.body.appendChild(modal);
-}
-function ingrRow(i, idx){ return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px"><input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}"><input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}"><input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}"><button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button></div></div>`; }
-function stepRow(s, idx){ return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start"><textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea><button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button></div>`; }
-window.addIngr = function(){ const list = document.getElementById('ingr-list'); const idx = list.querySelectorAll('.ing-editor').length; list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx)); };
-window.addStep = function(){ const list = document.getElementById('steps-list'); const idx = list.querySelectorAll('[data-step]').length; list.insertAdjacentHTML('beforeend', stepRow('', idx)); };
-window.saveRecipe = function(editId){ const r = { id: editId || Date.now(), name: $('#r-name').value, cat: $('#r-cat').value, time: $('#r-time').value, yield: $('#r-yield').value, kcal: parseInt($('#r-kcal').value) || 0, note: $('#r-note').value, ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{ const idx = el.dataset.ing; const f = el.dataset.f; acc[idx] = acc[idx] || []; const val = f==='name' ? el.value : parseFloat(el.value)||0; const pos = f==='name'?0:f==='brutto'?1:2; acc[idx][pos] = val; return acc; }, []).filter(x=>x && x[0]), steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim()) }; if(!r.name){ toast('Введите название', 'error'); return; } if(editId){ const idx = RECIPES.findIndex(x=>x.id===editId); RECIPES[idx] = r; } else { RECIPES.push(r); } saveData(); document.getElementById('edit-modal').remove(); toast('Сохранено ✓', 'success'); renderAdminContent(); };
-window.deleteRecipe = function(id){ if(!confirm('Удалить техкарту?')) return; const idx = RECIPES.findIndex(r=>r.id===id); if(idx>=0) RECIPES.splice(idx,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
-
-// --- News Functions (unchanged) ---
-function editNews(i){ const isEdit = i !== undefined; const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'}; const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal'; modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div><div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div><div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div><div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div><button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button></div></div>`; document.body.appendChild(modal); }
-window.saveNews = function(i){ const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value}; if(!n.title){ toast('Введите заголовок', 'error'); return; } if(i !== null) NEWS[i] = n; else NEWS.unshift(n); saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success'); };
-window.deleteNews = function(i){ if(!confirm('Удалить новость?')) return; NEWS.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
-
-// --- Team Functions (unchanged) ---
-function editTeamMember(i){ const isEdit = i !== undefined; const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'}; const modal = document.createElement('div'); modal.className = 'modal-bg'; modal.id = 'edit-modal'; modal.innerHTML = `<div class="modal"><div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div><div class="modal-body" style="padding:0 20px"><div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div><div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div><div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div><button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button></div></div>`; document.body.appendChild(modal); }
-window.saveTeamMember = function(i){ const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()}; if(!u.name){ toast('Введите имя', 'error'); return; } if(i !== null) TEAM[i] = u; else TEAM.push(u); saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success'); };
-window.deleteTeamMember = function(i){ if(!confirm('Удалить сотрудника?')) return; TEAM.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
-
-// --- Matrix Supplier Editor Functions ---
-function editSupplier(idx){
-  const isEdit = idx !== -1;
-  const sup = isEdit ? MATRIX_DATA[idx] : {supplier: '', schedule: '', items: []};
-  
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
-  
-  let itemsHtml = sup.items.map((it, i) => `
-    <div class="item-card" style="margin-bottom:8px; padding:10px;">
-      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:6px; margin-bottom:6px;">
-        <input class="form-input" placeholder="Название" value="${it.name}" id="mi-name-${i}">
-        <input class="form-input" placeholder="Ед." value="${it.unit}" id="mi-unit-${i}">
-        <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" id="mi-limit-${i}">
-        <button class="icon-btn danger" onclick="document.getElementById('mi-row-${i}').remove()">✕</button>
-      </div>
-    </div>
-  `).join('');
-
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новый'} поставщик</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
       </div>
       <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="ms-name" value="${sup.supplier}"></div>
-        <div class="form-field"><label class="form-label">График доставки / Заявки</label><input class="form-input" id="ms-schedule" value="${sup.schedule}"></div>
-        
-        <div style="margin: 15px 0; display:flex; justify-content:space-between; align-items:center;">
-          <label class="form-label" style="margin:0">Товары</label>
-          <button class="btn btn-sm btn-sec" onclick="addMatrixItem()">+ Товар</button>
+        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
+        <div class="form-field"><label class="form-label">Категория</label>
+          <select class="form-select" id="r-cat">
+            ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+          </select>
         </div>
-        <div id="matrix-items-list">${itemsHtml}</div>
-        
-        <button class="btn" style="margin-top:20px" onclick="saveSupplier(${isEdit?idx:'null'})">💾 Сохранить</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
+          <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
+          <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
+          <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
+          <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
+        </div>
+        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
+        <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
-window.addMatrixItem = function(){
-  const list = document.getElementById('matrix-items-list');
-  const idx = list.querySelectorAll('.item-card').length;
-  const div = document.createElement('div');
-  div.className = 'item-card';
-  div.style.marginBottom = '8px';
-  div.style.padding = '10px';
-  div.id = `mi-row-new-${idx}`;
-  div.innerHTML = `
-    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:6px; margin-bottom:6px;">
-      <input class="form-input" placeholder="Название" id="mi-name-new-${idx}">
-      <input class="form-input" placeholder="Ед." id="mi-unit-new-${idx}">
-      <input class="form-input" placeholder="Лимит" type="number" id="mi-limit-new-${idx}">
-      <button class="icon-btn danger" onclick="this.closest('.item-card').remove()">✕</button>
-    </div>
-  `;
-  list.appendChild(div);
+function ingrRow(i, idx){
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
+    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
+    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
+    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
+    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
+  </div></div>`;
+}
+
+function stepRow(s, idx){
+  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
+    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+window.addIngr = function(){
+  const list = document.getElementById('ingr-list');
+  const idx = list.querySelectorAll('.ing-editor').length;
+  list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
+};
+window.addStep = function(){
+  const list = document.getElementById('steps-list');
+  const idx = list.querySelectorAll('[data-step]').length;
+  list.insertAdjacentHTML('beforeend', stepRow('', idx));
 };
 
-window.saveSupplier = function(idx){
-  const name = $('#ms-name').value;
-  const schedule = $('#ms-schedule').value;
-  if(!name){ toast('Введите название поставщика', 'error'); return; }
-  
-  const itemCards = document.querySelectorAll('#matrix-items-list .item-card');
-  const newItems = [];
-  
-  itemCards.forEach(card => {
-    // Ищем инпуты внутри карточки (они могут быть с суффиксом -new-X или просто по индексу)
-    const inputs = card.querySelectorAll('input');
-    if(inputs.length >= 3) {
-      const iName = inputs[0].value;
-      const iUnit = inputs[1].value;
-      const iLimitRaw = inputs[2].value;
-      const iLimit = iLimitRaw === '' ? null : (parseFloat(iLimitRaw) || 0);
-      
-      if(iName) {
-        newItems.push({ name: iName, unit: iUnit || 'шт', limit: iLimit });
-      }
-    }
-  });
-  
-  const newSupplier = { supplier: name, schedule: schedule, items: newItems };
-  
-  if(idx !== null) {
-    MATRIX_DATA[idx] = newSupplier;
+window.saveRecipe = function(editId){
+  const r = {
+    id: editId || Date.now(),
+    name: $('#r-name').value,
+    cat: $('#r-cat').value,
+    time: $('#r-time').value,
+    yield: $('#r-yield').value,
+    kcal: parseInt($('#r-kcal').value) || 0,
+    note: $('#r-note').value,
+    ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
+      const idx = el.dataset.ing;
+      const f = el.dataset.f;
+      acc[idx] = acc[idx] || [];
+      const val = f==='name' ? el.value : parseFloat(el.value)||0;
+      const pos = f==='name'?0:f==='brutto'?1:2;
+      acc[idx][pos] = val;
+      return acc;
+    }, []).filter(x=>x && x[0]),
+    steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
+  };
+  if(!r.name){ toast('Введите название', 'error'); return; }
+  if(editId){
+    const idx = RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx] = r;
   } else {
-    MATRIX_DATA.push(newSupplier);
+    RECIPES.push(r);
   }
-  
   saveData();
   document.getElementById('edit-modal').remove();
   toast('Сохранено ✓', 'success');
   renderAdminContent();
 };
 
-window.deleteSupplier = function(idx){
-  if(!confirm('Удалить этого поставщика и все его товары?')) return;
-  MATRIX_DATA.splice(idx, 1);
+window.deleteRecipe = function(id){
+  if(!confirm('Удалить техкарту?')) return;
+  const idx = RECIPES.findIndex(r=>r.id===id);
+  if(idx>=0) RECIPES.splice(idx,1);
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
+function editNews(i){
+  const isEdit = i !== undefined;
+  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
+        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
+        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
+        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
+        <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.saveNews = function(i){
+  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
+  if(!n.title){ toast('Введите заголовок', 'error'); return; }
+  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
+  saveData();
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
+};
+
+window.deleteNews = function(i){
+  if(!confirm('Удалить новость?')) return;
+  NEWS.splice(i,1);
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
+function editTeamMember(i){
+  const isEdit = i !== undefined;
+  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
+        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
+        <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
+        <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.saveTeamMember = function(i){
+  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
+  if(!u.name){ toast('Введите имя', 'error'); return; }
+  if(i !== null) TEAM[i] = u; else TEAM.push(u);
+  saveData();
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
+};
+
+window.deleteTeamMember = function(i){
+  if(!confirm('Удалить сотрудника?')) return;
+  TEAM.splice(i,1);
   saveData();
   renderAdminContent();
   toast('Удалено', 'success');
