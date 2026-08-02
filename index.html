@@ -9,15 +9,33 @@
 <style>
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+body{font-family:'Golos Text',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
 h1,h2{font-family:'Unbounded',sans-serif;margin-bottom:20px}
 .card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
+
+/* КРАСИВЫЙ ЛОАДЕР */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
+.loader-spinner{width:50px;height:50px;border:3px solid rgba(255,138,61,.2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{color:var(--muted);font-size:14px;margin-bottom:6px}
+.loader-sub{color:var(--muted);font-size:12px;opacity:.6}
+.pulse-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin:0 2px;animation:pulseDot 1.4s ease-in-out infinite}
+.pulse-dot:nth-child(2){animation-delay:.2s}
+.pulse-dot:nth-child(3){animation-delay:.4s}
+@keyframes pulseDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* СКЕЛЕТОНЫ (серые прямоугольники пока грузится) */
+.skeleton{background:linear-gradient(90deg,#1B1613 0%,#221B16 50%,#1B1613 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;margin-bottom:12px}
+.skeleton.card{height:80px}
+.skeleton.title{height:28px;width:60%;margin-bottom:20px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
 .btn{display:block;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left}
 .btn:active{transform:scale(.98)}
 .pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{padding:20px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.tile{padding:20px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.08);cursor:pointer;animation:fadeIn .4s both}
 .tile:active{transform:scale(.97)}
 .tile-emoji{font-size:32px;margin-bottom:8px}
 .tile-title{font-weight:600;font-size:14px}
@@ -43,13 +61,22 @@ h1,h2{font-family:'Unbounded',sans-serif;margin-bottom:20px}
 .check-item.done .check-box{background:var(--green);border-color:var(--green)}
 .check-item.done .check-box::after{content:'✓';color:#000;font-weight:bold}
 .check-item.done span{text-decoration:line-through;color:var(--muted)}
-.loading{text-align:center;padding:40px;color:var(--muted)}
+.fade-in{animation:fadeIn .4s ease-out both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
 <div id="app">
-  <div class="loading">Загрузка...</div>
+  <div class="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">ШефБук</div>
+    <div class="loader-sub">
+      <span class="pulse-dot"></span>
+      <span class="pulse-dot"></span>
+      <span class="pulse-dot"></span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -64,17 +91,51 @@ if(tg){tg.ready();tg.expand()}
 const $ = s => document.querySelector(s);
 const app = $('#app');
 
-// API клиент
+// API клиент с кэшированием
+const CACHE_PREFIX = 'chef_';
+const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+
 const api = {
   async get(table, params=''){
+    const cacheKey = CACHE_PREFIX + table + '_' + params;
+    const cached = localStorage.getItem(cacheKey);
+    
+    // Если есть свежие данные в кэше — возвращаем их МГНОВЕННО
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        if (Date.now() - data.time < CACHE_TTL) {
+          // Фоновое обновление (не блокирует показ)
+          this.fetchAndCache(table, params, cacheKey);
+          return data.value;
+        }
+      } catch(e) {}
+    }
+    
+    // Иначе грузим с сервера
+    return this.fetchAndCache(table, params, cacheKey);
+  },
+  
+  async fetchAndCache(table, params, cacheKey) {
     const url = SUPABASE_URL + '/rest/v1/' + table + (params?'?'+params:'');
-    const res = await fetch(url, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+      });
+      const value = await res.json();
+      localStorage.setItem(cacheKey, JSON.stringify({ value, time: Date.now() }));
+      return value;
+    } catch(e) {
+      // Если сервер недоступен — пытаемся вернуть старые данные из кэша
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try { return JSON.parse(cached).value; } catch(e2) {}
       }
-    });
-    return res.json();
+      return [];
+    }
   }
 };
 
@@ -98,7 +159,20 @@ function render(){
 }
 
 async function renderHome(){
-  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  // СРАЗУ показываем красивые скелетоны вместо текста "Загрузка..."
+  app.innerHTML = `
+    <div class="skeleton title"></div>
+    <div class="skeleton card"></div>
+    <div class="grid" style="margin-bottom:20px">
+      <div class="skeleton" style="height:100px"></div>
+      <div class="skeleton" style="height:100px"></div>
+      <div class="skeleton" style="height:100px"></div>
+      <div class="skeleton" style="height:100px"></div>
+    </div>
+    <div class="skeleton title" style="width:40%"></div>
+    <div class="skeleton card"></div>
+    <div class="skeleton card"></div>
+  `;
   
   const [recipes, news] = await Promise.all([
     api.get('recipes', 'order=position.asc'),
@@ -114,7 +188,7 @@ async function renderHome(){
     const types = {open:'Открытие',mid:'Усиление',close:'Закрытие'};
     const times = {open:'09:00–17:00',mid:'12:00–20:00',close:'15:00–23:00'};
     shiftHtml = `
-      <div class="card">
+      <div class="card fade-in">
         <span class="pulse"></span>Сегодня
         <div style="margin-top:12px">
           <div class="shift-time">${times[shift.type]}</div>
@@ -123,8 +197,46 @@ async function renderHome(){
       </div>
     `;
   } else {
-    shiftHtml = '<div class="card">🎉 Сегодня выходной</div>';
+    shiftHtml = '<div class="card fade-in">🎉 Сегодня выходной</div>';
   }
+
+  app.innerHTML = `
+    <h1 class="fade-in">ШефБук 👨‍🍳</h1>
+    ${shiftHtml}
+    
+    <div class="grid" style="margin-bottom:20px">
+      <div class="tile" style="animation-delay:.05s" onclick="navigate('ttk')">
+        <div class="tile-emoji">📖</div>
+        <div class="tile-title">ТТК</div>
+        <div class="tile-desc">Техкарты</div>
+      </div>
+      <div class="tile" style="animation-delay:.1s" onclick="navigate('schedule')">
+        <div class="tile-emoji">🗓</div>
+        <div class="tile-title">График</div>
+        <div class="tile-desc">Смены</div>
+      </div>
+      <div class="tile" style="animation-delay:.15s" onclick="navigate('checklist')">
+        <div class="tile-emoji">✅</div>
+        <div class="tile-title">Чек-лист</div>
+        <div class="tile-desc">Открытие</div>
+      </div>
+      <div class="tile" style="animation-delay:.2s" onclick="navigate('team')">
+        <div class="tile-emoji">👥</div>
+        <div class="tile-title">Команда</div>
+        <div class="tile-desc">Контакты</div>
+      </div>
+    </div>
+
+    <h2 class="fade-in">Объявления</h2>
+    ${news.length ? news.slice(0,3).map((n,i) => `
+      <div class="news fade-in" style="animation-delay:${.25+i*.05}s">
+        <div class="news-title">${n.tag}</div>
+        <div class="news-text">${n.title}</div>
+        <div class="news-date">${new Date(n.date).toLocaleDateString('ru-RU')}</div>
+      </div>
+    `).join('') : '<div class="card fade-in">Нет объявлений</div>'}
+  `;
+}
 
   app.innerHTML = `
     <h1>ШефБук 👨‍🍳</h1>
