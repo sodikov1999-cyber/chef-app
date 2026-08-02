@@ -9,7 +9,7 @@
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF;--red:#FF6B5E}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px}
-h1{font-weight:800;font-size:26px;margin-bottom:16px;letter-spacing:-.5px}
+h1{font-weight:800;font-size:26px;margin-bottom:16px}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
@@ -20,15 +20,11 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .tile-desc{font-size:12px;color:var(--muted);margin-top:3px}
 .pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.shift-time{font-weight:800;font-size:24px;color:var(--accent);margin-top:6px}
-.shift-type{font-size:12px;color:var(--muted);margin-top:4px}
 .btn{display:block;width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:center}
 .btn:active{transform:scale(.98)}
 .btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1)}
-.btn-danger{background:rgba(255,107,94,.15);color:var(--red);border:1px solid rgba(255,107,94,.3)}
 .btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px}
 .back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.06);border-radius:10px;color:var(--text);margin-bottom:16px;cursor:pointer;border:none;font-size:14px;font-weight:600}
-.back:active{background:rgba(255,255,255,.1)}
 .recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
 .recipe:active{background:rgba(255,255,255,.07)}
 .recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
@@ -38,7 +34,6 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .ingredient b{color:var(--accent)}
 .step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5}
 .step-num{display:inline-block;width:20px;height:20px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:20px;font-weight:700;font-size:11px;margin-right:8px}
-.shift{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px}
 .news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
 .news-title{font-weight:700;font-size:14px;margin-bottom:3px}
 .news-text{font-size:13px;color:var(--muted);line-height:1.4}
@@ -48,7 +43,6 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;color:transparent;font-size:13px;transition:all .2s}
 .check-item.done .check-box{background:var(--green);border-color:var(--green);color:#000}
 .check-item.done span{text-decoration:line-through;color:var(--muted)}
-.note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:14px;font-size:13px;line-height:1.5}
 .kpi{display:flex;gap:8px;margin-bottom:14px}
 .kpi-box{flex:1;padding:10px;background:rgba(255,255,255,.03);border-radius:10px;text-align:center}
 .kpi-label{font-size:11px;color:var(--muted);margin-bottom:3px}
@@ -60,17 +54,13 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#FFB067,var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;flex-shrink:0}
 .user-info b{display:block;font-size:15px}
 .user-info span{font-size:12px;color:var(--muted)}
-.hidden{display:none}
-.fade{animation:fade .3s ease-out}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-/* АДМИНКА */
+.note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:14px;font-size:13px;line-height:1.5}
 .admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
 .admin-btn:active{transform:scale(.9)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 .modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;padding:20px;padding-bottom:40px;animation:slideUp .3s ease-out}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:sticky;top:-20px;background:var(--bg);padding:4px 0;z-index:1}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .modal-title{font-weight:800;font-size:18px}
 .modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
 .form-field{margin-bottom:14px}
@@ -81,58 +71,184 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .item-card{padding:14px;background:var(--card);border-radius:12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.06)}
 .item-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .item-card-title{font-weight:700;font-size:15px}
-.item-card-actions{display:flex;gap:6px}
 .icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
 .icon-btn:active{background:rgba(255,255,255,.1)}
 .icon-btn.danger{background:rgba(255,107,94,.15);color:var(--red)}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;transition:all .3s;z-index:300;max-width:85vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.ing-editor{background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:10px}
-.ing-row{display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px;margin-bottom:6px}
-.ing-row input{padding:8px;font-size:13px}
-.step-editor{display:flex;gap:6px;margin-bottom:8px;align-items:flex-start}
-.step-editor textarea{flex:1;padding:10px;font-size:13px;min-height:42px}
-.tabs{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:12px;margin-bottom:16px}
-.tab-btn{flex:1;padding:10px;background:transparent;border:none;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;border-radius:8px}
-.tab-btn.on{background:var(--accent);color:#000}
-.loader-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite}
+.fade{animation:fade .3s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.refresh-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s;
+    margin-left: auto;
+}
+.refresh-btn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 
 <div id="app"></div>
+<button id="admin-btn" class="admin-btn" onclick="haptic('hard');openAdmin()">✏️</button>
 
 <script>
 /* ============================================================
-   ⚙️ НАСТРОЙКИ (замени на свои!)
+   🔗 НАСТРОЙКИ
    ============================================================ */
-const GITHUB_CONFIG = {
-  owner: 'sodikov1999-cyber',        // ← твой логин на GitHub
-  repo: 'chef-app',                   // ← имя репозитория
-  path: 'data.json',                  // ← путь к файлу данных
-  branch: 'main'
+const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
+// Используем gviz для надежного чтения без CORS ошибок
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+/* ============================================================
+   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
+   ============================================================ */
+const LOCAL_DATA = {
+  month: 'Август 2026',
+  locations: [
+    {
+      name: 'Галактика',
+      staff: [
+        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
+        {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16}, // Исправлено 15->16 по таблице
+        {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
+        {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
+      ]
+    },
+    {
+      name: 'Сибирь',
+      staff: [
+        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
+        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
+        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
+        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
+        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
+      ]
+    },
+    {
+      name: 'Пионер',
+      staff: [
+        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
+        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4}, // Исправлено 3->4 по таблице (1,5,6)
+        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
+        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
+        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16},
+        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    },
+    {
+      name: 'Европа',
+      staff: [
+        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
+        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
+        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
+        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
+        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
+        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
+        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
+      ]
+    },
+    {
+      name: 'Лазурная',
+      staff: [
+        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}, // Исправлено по таблице
+        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
+        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
+        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
+        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
+        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
+      ]
+    }
+  ]
 };
 
-   
-const SHEETS_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
-const SHEETS_GID = '47934243';
-   
-/* ============================================================
-   📦 СОСТОЯНИЕ
-   ============================================================ */
-let DATA = null;
-let currentView = 'home';
-let currentRecipeId = null;
-let currentMult = 1;
-let adminTab = 'recipes';
-let githubToken = localStorage.getItem('gh_token') || '';
+const RECIPES = [
+  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
+   note:'Срок хранения основы — 12 ч при +2…+6 °C.',
+   ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
+   steps:['Сварить бульон 1,5 часа.','Добавить овощи, варить 15 мин.','Тушить свёклу 25 мин.','Пассеровать лук и морковь.','Довести до вкуса.']},
+  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
+   note:'Собирается при госте.',
+   ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус Цезарь',40,40],['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
+   steps:['Филе обжарить, нарезать.','Айсберг порвать.','Сухарики подсушить 4 мин.','Собрать салат, финиш — пармезан.']},
+  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
+   note:'Классика на желтке, без сливок.',
+   ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20]],
+   steps:['Спагетти al dente.','Вытопить гуанчале.','Смешать желтки с пармезаном.','Эмульгировать всё вместе.']},
+  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
+   note:'Тесто — 24 ч при +2…+6 °C.',
+   ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
+   steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.','Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
+  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
+   note:'Созревание не менее 4 часов.',
+   ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
+   steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.','Чередовать слои.','4 часа в холоде, какао перед подачей.']},
+  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
+   note:'Нарезка — заготовка смены, 6 часов.',
+   ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
+   steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
+  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
+   note:'Не кипятить! Нагрев строго до 70 °C.',
+   ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
+   steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
+  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
+   note:'Заготовка горячего цеха. Срок — 12 ч.',
+   ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
+   steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
+];
 
+const NEWS = [
+  {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
+  {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
+  {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
+];
+
+const TEAM = [
+  {name:'Марина К.', role:'Су-шеф', init:'МК'},
+  {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
+  {name:'Даша П.', role:'Кондитер', init:'ДП'},
+  {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
+  {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
+];
+
+const CHECKLISTS = {
+  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
+  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+};
+
+/* ============================================================
+   ⚙️ ЛОГИКА
+   ============================================================ */
 const tg = window.Telegram?.WebApp;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
 const $ = s => document.querySelector(s);
 const app = $('#app');
+let currentView = 'home';
+let currentRecipeId = null;
+let currentMult = 1;
+let expandedLocations = new Set();
+let scheduleData = null;
+let useLocalSchedule = false;
+let isLoading = false;
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -147,61 +263,6 @@ function toast(msg, type='info'){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
 }
 
-/* ============================================================
-   🌐 GITHUB API
-   ============================================================ */
-async function loadData(){
-  try {
-    const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.path}?t=${Date.now()}`);
-    if(!res.ok) throw new Error('Не удалось загрузить');
-    DATA = await res.json();
-    return true;
-  } catch(e){
-    console.error(e);
-    toast('Ошибка загрузки данных', 'error');
-    return false;
-  }
-}
-
-async function saveData(){
-  if(!githubToken){
-    toast('Сначала настрой GitHub токен', 'error');
-    openSettings();
-    return false;
-  }
-  try {
-    // Получаем текущий sha файла
-    const getRes = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`, {
-      headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if(!getRes.ok) throw new Error('Нет доступа к репозиторию');
-    const fileInfo = await getRes.json();
-    
-    // Обновляем файл
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA, null, 2))));
-    const updateRes = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.path}`, {
-      method: 'PUT',
-      headers: { 'Authorization': 'token ' + githubToken, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'Обновление данных из приложения',
-        content: content,
-        sha: fileInfo.sha,
-        branch: GITHUB_CONFIG.branch
-      })
-    });
-    if(!updateRes.ok) throw new Error('Ошибка сохранения');
-    toast('Сохранено ✓', 'success');
-    return true;
-  } catch(e){
-    console.error(e);
-    toast('Ошибка: ' + e.message, 'error');
-    return false;
-  }
-}
-
-/* ============================================================
-   🎨 РЕНДЕРИНГ
-   ============================================================ */
 function navigate(view, data){
   currentView = view;
   if(data !== undefined) currentRecipeId = data;
@@ -210,7 +271,6 @@ function navigate(view, data){
 }
 
 function render(){
-  if(!DATA){ app.innerHTML = '<div class="card" style="text-align:center;padding:40px">Загрузка...</div>'; return; }
   if(currentView === 'home') renderHome();
   else if(currentView === 'ttk') renderTTK();
   else if(currentView === 'recipe') renderRecipe();
@@ -224,38 +284,46 @@ function render(){
 function renderHome(){
   const user = tg?.initDataUnsafe?.user;
   const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
-  const today = new Date().getDay();
-  const dayIndex = today === 0 ? 6 : today - 1;
-  const todayShift = DATA.shifts[dayIndex] || DATA.shifts[0];
   
-  let shiftHtml = '';
-  if(todayShift && todayShift.type){
-    shiftHtml = `
-      <div class="card">
-        <span class="pulse"></span>Сегодня · ${todayShift.day}
-        <div class="shift-time">${todayShift.time}</div>
-        <div class="shift-type">Смена: ${todayShift.type==='open'?'Открытие':todayShift.type==='mid'?'Усиление':'Закрытие'}</div>
-        ${todayShift.crew.length ? '<div style="margin-top:10px;font-size:13px;color:var(--muted)">👥 '+todayShift.crew.join(', ')+'</div>' : ''}
-      </div>
-    `;
-  } else {
-    shiftHtml = '<div class="card" style="text-align:center;padding:30px">🎉 Сегодня выходной</div>';
+  const today = new Date();
+  const currentDay = today.getDate();
+  const dayIndex = currentDay - 1;
+  
+  let todayShifts = [];
+  // Берем данные из активного источника (онлайн или локаль)
+  const source = scheduleData || LOCAL_DATA;
+  
+  if(source && source.locations) {
+      source.locations.forEach(loc => {
+        loc.staff.forEach(p => {
+          // Защита от выхода за границы массива
+          if(p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0){
+            todayShifts.push({...p, location: loc.name});
+          }
+        });
+      });
   }
 
   app.innerHTML = `
     <h1>${greet}</h1>
-    ${shiftHtml}
+    
+    <div class="card">
+      <span class="pulse"></span>Сегодня ${currentDay} августа
+      <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+         На смене: <span style="color:var(--accent);font-weight:700">${todayShifts.length}</span> человек
+      </div>
+    </div>
     
     <div class="grid">
       <button class="tile" onclick="navigate('ttk');haptic()">
         <div class="tile-emoji">📖</div>
         <div class="tile-title">ТТК</div>
-        <div class="tile-desc">${DATA.recipes.length} техкарт</div>
+        <div class="tile-desc">${RECIPES.length} техкарт</div>
       </button>
       <button class="tile" onclick="navigate('schedule');haptic()">
         <div class="tile-emoji">🗓</div>
         <div class="tile-title">График</div>
-        <div class="tile-desc">Смены недели</div>
+        <div class="tile-desc">Смены</div>
       </button>
       <button class="tile" onclick="navigate('checklist');haptic()">
         <div class="tile-emoji">✅</div>
@@ -265,12 +333,12 @@ function renderHome(){
       <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
         <div class="tile-title">Команда</div>
-        <div class="tile-desc">${DATA.team.length} чел</div>
+        <div class="tile-desc">${TEAM.length} чел</div>
       </button>
     </div>
 
     <h2>Объявления</h2>
-    ${DATA.news.slice(0,3).map(n => `
+    ${NEWS.map(n => `
       <div class="news">
         <div class="news-title">${n.tag}: ${n.title}</div>
         <div class="news-text">${n.text}</div>
@@ -281,11 +349,11 @@ function renderHome(){
 }
 
 function renderTTK(){
-  const cats = ['Все', ...new Set(DATA.recipes.map(r=>r.cat))];
+  const cats = ['Все', ...new Set(RECIPES.map(r=>r.cat))];
   window._ttkCat = window._ttkCat || 'Все';
   window._ttkQ = window._ttkQ || '';
   const q = window._ttkQ.toLowerCase();
-  const items = DATA.recipes.filter(r => 
+  const items = RECIPES.filter(r => 
     (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
     (!q || r.name.toLowerCase().includes(q))
   );
@@ -310,7 +378,7 @@ function renderTTK(){
 }
 
 function renderRecipe(){
-  const r = DATA.recipes.find(x => x.id === currentRecipeId);
+  const r = RECIPES.find(x => x.id === currentRecipeId);
   if(!r){ navigate('ttk'); return; }
 
   app.innerHTML = `
@@ -345,304 +413,301 @@ function renderRecipe(){
   `;
 }
 
-let expandedLocations = new Set();
-let lastUpdateTime = null;
+// === ГЛАВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАННЫХ ===
+async function fetchScheduleData(force = false) {
+    if (isLoading) return;
+    isLoading = true;
 
-async function renderSchedule(forceRefresh = false){
-  app.innerHTML = `
+    // Если не форсируем и данные уже есть - не грузим
+    if (!force && scheduleData) {
+        isLoading = false;
+        return;
+    }
+
+    try {
+        // Добавляем случайный параметр, чтобы избежать кэширования
+        const response = await fetch(SHEET_URL + '&t=' + Date.now());
+        if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
+        
+        const text = await response.text();
+        const parsed = parseComplexCSV(text);
+        
+        if (parsed && parsed.locations && parsed.locations.length > 0) {
+            scheduleData = parsed;
+            useLocalSchedule = false;
+            toast('Данные обновлены', 'success');
+        } else {
+            throw new Error('Неверный формат данных');
+        }
+    } catch (e) {
+        console.warn('Онлайн загрузка не удалась:', e);
+        if (!scheduleData) {
+            scheduleData = LOCAL_DATA;
+            useLocalSchedule = true;
+        }
+        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+    } finally {
+        isLoading = false;
+    }
+}
+
+// === УМНЫЙ ПАРСЕР ДЛЯ ВАШЕЙ ТАБЛИЦЫ ===
+function parseComplexCSV(csvText) {
+    const rows = csvText.split('\n').map(row => {
+        // Обработка кавычек и запятых внутри ячеек
+        const result = [];
+        let cell = '';
+        let inQuotes = false;
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(cell.trim());
+                cell = '';
+            } else {
+                cell += char;
+            }
+        }
+        result.push(cell.trim());
+        return result;
+    }).filter(r => r.length > 2); // Отсекаем совсем пустые
+
+    if (rows.length < 5) return null;
+
+    const locations = [];
+    let currentLoc = null;
+    
+    // Проходим по строкам, игнорируя заголовки и "итого"
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const firstCell = (row[0] || '').trim().toLowerCase();
+        
+        // Пропускаем заголовки, даты, итоги и пустые строки
+        if (firstCell.includes('итого') || firstCell.includes('дата') || 
+            firstCell.includes('локация') || firstCell === '' || 
+            !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
+            continue;
+        }
+
+        // Проверка: это новая локация? (Вторая колонка содержит "Должность" или похожее, а первая - название)
+        // В вашей таблице структура: Название локации, Должность, 1, 2...
+        // Но иногда вторая колонка пустая у сотрудников.
+        // Эвристика: если во второй колонке написано "Должность" или она пустая, но первая длинная и не похожа на имя?
+        // Лучше: если вторая колонка == "Должность", это заголовок локации.
+        // Если вторая колонка != "Должность" и не пустая - это сотрудник.
+        
+        const secondCell = (row[1] || '').trim();
+        
+        if (secondCell === 'Должность' || secondCell === '') {
+             // Это заголовок новой локации (или повтор заголовка)
+             // Проверяем, есть ли там имя локации в первой ячейке
+             if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
+                 currentLoc = { name: row[0].trim(), staff: [] };
+                 locations.push(currentLoc);
+             }
+        } else if (currentLoc) {
+            // Это сотрудник
+            const name = row[0].trim();
+            const role = secondCell;
+            
+            // Берем дни с 3-й колонки (индекс 2) до конца (минус последние 2 колонки "Итого" и "Норма")
+            // В вашей таблице данные идут до предпоследней колонки
+            const shifts = [];
+            // Начинаем с индекса 2 (третья колонка - день 1)
+            // Берем максимум 31 день
+            for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
+                let val = row[d];
+                // Замена запятой на точку для дробных чисел (0,5 -> 0.5)
+                if (val && val.includes(',')) val = val.replace(',', '.');
+                
+                let num = parseFloat(val);
+                if (isNaN(num)) num = 0;
+                shifts.push(num);
+            }
+            
+            // Подсчет общего количества смен (сумма)
+            const total = shifts.reduce((a, b) => a + b, 0);
+
+            currentLoc.staff.push({
+                name: name,
+                role: role,
+                shifts: shifts,
+                total: total
+            });
+        }
+    }
+
+    if (locations.length === 0) return null;
+    return { month: 'Август 2026', locations: locations };
+}
+
+async function renderSchedule(){
+    // Сначала показываем заглушку
+    app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>График</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h1 style="margin:0">График</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Обновить
+        </button>
+    </div>
     <div class="card" style="text-align:center;padding:30px">
-      <div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div>
-      <div style="margin-top:14px;color:var(--muted)">${forceRefresh ? 'Обновляю данные...' : 'Загрузка...'}</div>
+      <div class="loader-inline"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
     </div>
   `;
 
-  try {
-    const ts = Date.now();
-    let rows;
+    await fetchScheduleData(true); // Принудительная загрузка
     
-    try {
-      const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&gid=${SHEETS_GID}&t=${ts}`;
-      const res = await fetch(gvizUrl, { cache: 'no-store' });
-      const text = await res.text();
-      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      const data = JSON.parse(jsonStr);
-      
-      // ПРАВИЛЬНЫЙ парсинг gviz: учитываем ВСЕ колонки, даже пустые
-      rows = data.table.rows.map(row => {
-        if (!row.c) return [];
-        // Создаём массив фиксированной длины (как в заголовках)
-        const result = new Array(data.table.cols.length).fill('');
-        row.c.forEach((cell, idx) => {
-          if (cell && cell.v !== null && cell.v !== undefined) {
-            result[idx] = cell.f !== null && cell.f !== undefined ? String(cell.f) : String(cell.v);
-          }
-        });
-        return result;
-      });
-      
-      // ОТЛАДКА: выводим первые 3 строки в консоль
-      console.log('📊 Первые строки данных:', rows.slice(0, 3));
-      console.log('📊 Количество колонок:', data.table.cols.length);
-      
-    } catch(e1) {
-      console.error('gviz error:', e1);
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}&t=${ts}`;
-      const res = await fetch(csvUrl, { cache: 'no-store' });
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      const csv = await res.text();
-      rows = csv.split('\n').map(row => {
-        const r = []; let c = ''; let q = false;
-        for(let i=0;i<row.length;i++){
-          const ch = row[i];
-          if(ch==='"'){if(q&&row[i+1]==='"'){c+='"';i++}else q=!q}
-          else if(ch===','&&!q){r.push(c.trim());c=''}
-          else c+=ch;
-        }
-        r.push(c.trim()); return r;
-      });
-    }
+    // После загрузки перерисовываем контент
+    renderScheduleContent();
+}
 
-    lastUpdateTime = new Date();
-    rows = rows.filter(r => r.length > 0);
-    const monthTitle = rows[0]?.[0] || 'График';
+function handleRefresh() {
+    renderSchedule();
+}
 
-    // Ищем локации
-    const locations = [];
-    rows.forEach((row, idx) => {
-      if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
-        locations.push({ name: row[0], startIdx: idx });
-      }
-    });
-    if (locations.length === 0) locations.push({ name: 'Все', startIdx: 0 });
-
-    const getShiftValue = (v) => {
-      if (v === null || v === undefined) return 0;
-      const s = String(v).trim().toLowerCase().replace(/\s/g, '');
-      if (s === '' || s === 'в' || s === 'от' || s === 'б' || s === 'о' || s === '0' || s === 'вых' || s === 'null') return 0;
-      const num = parseFloat(s.replace(',', '.'));
-      return isNaN(num) ? 1 : num;
-    };
-    
-    const isWorking = (v) => getShiftValue(v) > 0;
-
+function renderScheduleContent() {
     const today = new Date();
     const currentDay = today.getDate();
-    const dayColIndex = currentDay + 1; // день 1 = индекс 2, день 2 = индекс 3
+    const dayIndex = currentDay - 1;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
 
-    console.log(`📅 Сегодня: ${currentDay} число, индекс колонки: ${dayColIndex}`);
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
 
-    const locData = locations.map((loc, locIdx) => {
-      const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
-      const locRows = rows.slice(loc.startIdx, nextStart);
-      
-      const staffRows = locRows.slice(2).filter(r => {
-        const name = String(r[0] || '').trim();
-        if (!name) return false;
-        const nameLow = name.toLowerCase();
-        if (nameLow.includes('итого') || nameLow.includes('норма')) return false;
-        if (String(r[1] || '').trim().toLowerCase() === 'должность') return false;
-        return true;
-      });
-      
-      const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
-      
-      const dayOfWeek = today.getDay();
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + mondayOffset);
-      
-      const weekDays = [];
-      for(let i=0; i<7; i++){
+    const weekDays = [];
+    for(let i=0; i<7; i++){
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const dayNum = d.getDate();
-        const colIdx = dayNum + 1;
+        // Защита от выхода за пределы месяца (если день > 31, берем последний индекс)
+        const idx = Math.min(dayNum - 1, 30); 
+        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+        
         let count = 0;
-        if (totalRow && totalRow[colIdx]) {
-          count = parseFloat(String(totalRow[colIdx]).replace(',','.')) || 0;
-        } else {
-          count = staffRows.reduce((sum, r) => sum + getShiftValue(r[colIdx]), 0);
+        if(scheduleData && scheduleData.locations) {
+            scheduleData.locations.forEach(loc => {
+            loc.staff.forEach(p => {
+                if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
+            });
+            });
         }
+        
         weekDays.push({
-          dayNum,
-          isToday: dayNum === currentDay && d.getMonth() === today.getMonth(),
-          count: count % 1 === 0 ? count : count.toFixed(1),
-          dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
+        dayNum,
+        isToday,
+        count,
+        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
         });
-      }
-      
-      const workingToday = staffRows
-        .filter(r => isWorking(r[dayColIndex]))
-        .map(r => ({ 
-          name: r[0], 
-          role: r[1] || 'Сотрудник',
-          shift: r[dayColIndex]
-        }));
-      
-      // ОТЛАДКА: выводим кто работает сегодня
-      console.log(`👥 ${loc.name} - сегодня работают:`, workingToday.map(p => p.name));
-      
-      const staffStats = staffRows.map(r => {
-        let workShifts = 0;
-        let workDays = 0;
-        
-        for(let colIdx = 2; colIdx < r.length; colIdx++){
-          const val = getShiftValue(r[colIdx]);
-          if (val > 0) {
-            workShifts += val;
-            workDays += 1;
-          }
-        }
-        
-        let monthTotal = null;
-        for(let i = r.length - 1; i >= 32; i--){
-          const v = String(r[i] || '').trim();
-          if (v && v !== '' && !v.toLowerCase().includes('итого') && !v.toLowerCase().includes('норма')) {
-            const num = parseFloat(v.replace(',', '.'));
-            if (!isNaN(num) && num > 0) { 
-              monthTotal = num; 
-              break; 
-            }
-          }
-        }
-        
-        const finalTotal = monthTotal !== null ? monthTotal : workShifts;
-        
-        return { 
-          name: r[0], 
-          role: r[1] || 'Сотрудник', 
-          workDays,
-          workShifts: workShifts % 1 === 0 ? workShifts : workShifts.toFixed(1),
-          monthTotal: finalTotal % 1 === 0 ? finalTotal : finalTotal.toFixed(1)
-        };
-      }).sort((a,b) => parseFloat(b.monthTotal) - parseFloat(a.monthTotal));
-      
-      return { 
-        name: loc.name, 
-        weekDays, 
-        workingToday, 
-        staffStats, 
-        totalStaff: staffRows.length 
-      };
-    });
-
-    const timeStr = lastUpdateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
 
     app.innerHTML = `
-      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>${monthTitle}</h1>
-      
-      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:10px;font-size:13px;line-height:1.5">
-        📊 <b>Данные из Google Таблицы</b><br>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h1 style="margin:0">${scheduleData ? scheduleData.month : 'Август 2026'}</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+    </div>
+    
+    ${useLocalSchedule ? `
+      <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+        ⚠️ <b>Локальные данные</b><br>
+        <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
+      </div>
+    ` : `
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+         <b>Данные из Google Таблицы</b><br>
         <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
       </div>
-      
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px">
-        <div style="font-size:11px;color:var(--muted)">
-           Обновлено: <b style="color:var(--text)">${timeStr}</b>
+    `}
+    
+    <h2>Эта неделя</h2>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      ${weekDays.map(d => `
+        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
+          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
+          <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
+          <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
         </div>
-        <button class="btn btn-sm" onclick="renderSchedule(true);haptic()" style="padding:8px 14px;font-size:12px">
-          ↻ Обновить
-        </button>
-      </div>
+      `).join('')}
+    </div>
+    
+    ${scheduleData && scheduleData.locations ? scheduleData.locations.map(loc => {
+      if(!loc.staff || loc.staff.length === 0) return '';
       
-      ${locData.map(loc => {
-        const isOpen = expandedLocations.has(loc.name);
-        return `
-          <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-            <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <div style="flex:1;min-width:0">
-                <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
-                <div style="font-size:12px;color:var(--muted)">
-                  👥 Сегодня: <span style="color:var(--accent);font-weight:700">${loc.workingToday.length}</span> из ${loc.totalStaff}
-                </div>
+      const isOpen = expandedLocations.has(loc.name);
+      // Защита от отсутствия массива shifts
+      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
+      
+      return `
+        <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+          <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+              <div style="font-size:12px;color:var(--muted)">
+                👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
               </div>
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-            </button>
-            
-            <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-              <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-                
-                <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Эта неделя</div>
-                <div style="display:flex;gap:5px;margin-bottom:16px">
-                  ${loc.weekDays.map(d => `
-                    <div style="flex:1;text-align:center;padding:8px 2px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
-                      <div style="font-size:9px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
-                      <div style="font-weight:800;font-size:15px;margin:2px 0">${d.dayNum}</div>
-                      <div style="font-size:10px;color:${d.isToday?'#000':'var(--muted)'}">${d.count}</div>
-                    </div>
-                  `).join('')}
-                </div>
-                
-                <div style="margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">
-                  Сегодня на смене (${loc.workingToday.length})
-                </div>
-                ${loc.workingToday.length > 0 ? loc.workingToday.map(p => `
-                  <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-                    <div style="flex:1;min-width:0">
-                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                      <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
-                    </div>
+            </div>
+            <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </button>
+          
+          <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+            <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+              
+              <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
+              ${workingToday.length > 0 ? workingToday.map(p => `
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
                   </div>
-                `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-                
-                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">
-                  Команда за месяц (${loc.staffStats.length})
                 </div>
-                ${loc.staffStats.map(s => `
+              `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
+              
+              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
+              ${staffStats.map(s => {
+                let workDays = 0;
+                if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
+                return `
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                     <div style="flex:1;min-width:0">
                       <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${s.workDays} дн</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
                     </div>
                     <div style="text-align:right;margin-left:10px">
-                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.monthTotal}</div>
+                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
                     </div>
                   </div>
-                `).join('')}
-                
-              </div>
+                `;
+              }).join('')}
+              
             </div>
           </div>
-        `;
-      }).join('')}
-      
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6">
-        💡 Изменил таблицу? Нажми "↻ Обновить"<br>
-        или закрой и открой приложение заново
-      </div>
-      
-      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:12px;text-decoration:none;text-align:center">
-         Открыть таблицу
-      </a>
-    `;
+        </div>
+      `;
+    }).join('') : '<div class="card">Нет данных о локациях</div>'}
     
-  } catch(e){
-    console.error(e);
-    app.innerHTML = `
-      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>График</h1>
-      <div class="card" style="text-align:center;padding:30px">
-        <div style="font-size:40px;margin-bottom:12px">️</div>
-        <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.message}</div>
-        <button class="btn btn-sm" onclick="renderSchedule(true)">🔄 Повторить</button>
-      </div>
-    `;
-  }
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      📝 Открыть таблицу
+    </a>
+  `;
 }
 
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
   else expandedLocations.add(name);
-  renderSchedule();
+  renderScheduleContent();
 }
 
 function renderChecklist(){
@@ -650,7 +715,7 @@ function renderChecklist(){
   const key = window._clTab;
   const today = new Date().toISOString().slice(0,10);
   const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const items = DATA.checklists[key];
+  const items = CHECKLISTS[key];
   const done = saved.length;
   const total = items.length;
 
@@ -669,7 +734,7 @@ function renderChecklist(){
         </div>
       `).join('')}
     </div>
-    ${done===total && total>0 ? '<div class="note" style="text-align:center">🎉 Все пункты выполнены!</div>' : ''}
+    ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
     <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist();haptic()">↺ Сбросить</button>
   `;
 }
@@ -702,7 +767,7 @@ function renderTeam(){
         <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
       </div>
     ` : ''}
-    ${DATA.team.map(u => `
+    ${TEAM.map(u => `
       <div class="user">
         <div class="avatar">${u.init}</div>
         <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
@@ -712,14 +777,11 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА
+   🔐 АДМИНКА (Упрощенная, только для локальных данных)
    ============================================================ */
+let adminTab = 'recipes';
+
 function openAdmin(){
-  if(!githubToken && !localStorage.getItem('gh_token')){
-    openSettings();
-    return;
-  }
-  githubToken = localStorage.getItem('gh_token');
   showAdminModal();
 }
 
@@ -738,15 +800,10 @@ function showAdminModal(){
       </div>
       <div class="tabs">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
-        <button class="tab-btn ${adminTab==='shifts'?'on':''}" onclick="adminTab='shifts';showAdminModal()">График</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
       </div>
       <div id="admin-content"></div>
-      <div style="margin-top:20px;display:flex;gap:8px">
-        <button class="btn btn-sec" style="flex:1" onclick="openSettings()">🔑 Настройки</button>
-        <button class="btn" style="flex:2" id="save-btn" onclick="saveFromAdmin()">💾 Сохранить</button>
-      </div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -760,14 +817,14 @@ function renderAdminContent(){
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
-      ${DATA.recipes.map(r => `
+      ${RECIPES.map(r => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
               <div class="item-card-title">${r.name}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.cat} · ${r.time}</div>
             </div>
-            <div class="item-card-actions">
+            <div>
               <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
               <button class="icon-btn danger" onclick="deleteRecipe(${r.id})">🗑</button>
             </div>
@@ -775,30 +832,17 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if(adminTab === 'shifts'){
-    c.innerHTML = DATA.shifts.map((s,i) => `
-      <div class="item-card">
-        <div class="item-card-head" style="margin-bottom:10px">
-          <div class="item-card-title">${s.day}</div>
-          <button class="icon-btn" onclick="editShift(${i})">✏️</button>
-        </div>
-        <div style="font-size:13px;color:var(--muted)">
-          ${s.type ? (s.type==='open'?'Открытие':s.type==='mid'?'Усиление':'Закрытие')+' · '+s.time : 'Выходной'}
-          ${s.crew && s.crew.length ? '<br>👥 '+s.crew.join(', ') : ''}
-        </div>
-      </div>
-    `).join('');
   } else if(adminTab === 'news'){
     c.innerHTML = `
       <button class="btn" onclick="editNews()">+ Добавить новость</button>
-      ${DATA.news.map((n,i) => `
+      ${NEWS.map((n,i) => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
               <div class="item-card-title">${n.tag}: ${n.title}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:3px">${n.date}</div>
             </div>
-            <div class="item-card-actions">
+            <div>
               <button class="icon-btn" onclick="editNews(${i})">✏️</button>
               <button class="icon-btn danger" onclick="deleteNews(${i})">🗑</button>
             </div>
@@ -809,14 +853,14 @@ function renderAdminContent(){
   } else if(adminTab === 'team'){
     c.innerHTML = `
       <button class="btn" onclick="editTeamMember()">+ Добавить сотрудника</button>
-      ${DATA.team.map((u,i) => `
+      ${TEAM.map((u,i) => `
         <div class="item-card">
           <div class="item-card-head">
             <div>
               <div class="item-card-title">${u.name}</div>
               <div style="font-size:12px;color:var(--muted);margin-top:3px">${u.role}</div>
             </div>
-            <div class="item-card-actions">
+            <div>
               <button class="icon-btn" onclick="editTeamMember(${i})">✏️</button>
               <button class="icon-btn danger" onclick="deleteTeamMember(${i})">🗑</button>
             </div>
@@ -827,12 +871,8 @@ function renderAdminContent(){
   }
 }
 
-/* ============ РЕДАКТОРЫ ============ */
 function editRecipe(id){
-  const r = id ? DATA.recipes.find(x=>x.id===id) : {
-    id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, 
-    note:'', ingr:[['',0,0]], steps:[''], photo:''
-  };
+  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
   
   const modal = document.createElement('div');
@@ -842,92 +882,55 @@ function editRecipe(id){
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
+      </div>
+      <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
+      <div class="form-field"><label class="form-label">Категория</label>
+        <select class="form-select" id="r-cat">
+          ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
+        <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
+        <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
       </div>
       
-      <!-- ОСНОВНАЯ ИНФОРМАЦИЯ -->
-      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
-        <div style="font-weight:700;margin-bottom:12px">📋 Основная информация</div>
-        <div class="form-field"><label class="form-label">Название блюда</label>
-          <input class="form-input" id="r-name" value="${r.name}" placeholder="Например: Борщ с говядиной"></div>
-        <div class="form-field"><label class="form-label">Категория</label>
-          <select class="form-select" id="r-cat">
-            <option value="Горячее" ${r.cat==='Горячее'?'selected':''}>🍲 Горячее</option>
-            <option value="Салаты" ${r.cat==='Салаты'?'selected':''}>🥗 Салаты</option>
-            <option value="Десерты" ${r.cat==='Десерты'?'selected':''}>🍰 Десерты</option>
-            <option value="Напитки" ${r.cat==='Напитки'?'selected':''}>🍷 Напитки</option>
-            <option value="Заготовки" ${r.cat==='Заготовки'?'selected':''}>🥔 Заготовки</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div class="form-field"><label class="form-label">Время</label>
-            <input class="form-input" id="r-time" value="${r.time}" placeholder="30 мин"></div>
-          <div class="form-field"><label class="form-label">Выход</label>
-            <input class="form-input" id="r-yield" value="${r.yield}" placeholder="200 г"></div>
-          <div class="form-field"><label class="form-label">Ккал</label>
-            <input class="form-input" id="r-kcal" type="number" value="${r.kcal}" placeholder="150"></div>
-        </div>
-      </div>
-      
-      <!-- ИНГРЕДИЕНТЫ -->
-      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:700">🥕 Ингредиенты</div>
-          <button class="btn btn-sm" onclick="addIngr()">+ Добавить</button>
-        </div>
+      <div class="form-field">
+        <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
         <div id="ingr-list">
           ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:8px">
-          💡 Брутто — вес до обработки, нетто — после
-        </div>
       </div>
       
-      <!-- ШАГИ ПРИГОТОВЛЕНИЯ -->
-      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:700">👨‍🍳 Шаги приготовления</div>
-          <button class="btn btn-sm" onclick="addStep()">+ Добавить шаг</button>
-        </div>
+      <div class="form-field">
+        <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
         <div id="steps-list">
           ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
         </div>
       </div>
       
-      <!-- ПРИМЕЧАНИЕ -->
-      <div class="form-field">
-        <label class="form-label">📝 Важное примечание (срок хранения и т.д.)</label>
-        <textarea class="form-textarea" id="r-note" placeholder="Срок хранения — 12 часов при +2…+6°C">${r.note||''}</textarea>
-      </div>
+      <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
       
-      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})" style="margin-top:8px">
-        💾 Сохранить техкарту
-      </button>
+      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
 function ingrRow(i, idx){
-  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
-    <div style="display:grid;grid-template-columns:1fr;gap:6px">
-      <input class="form-input" placeholder="🥩 Название продукта" data-ing="${idx}" data-f="name" value="${i[0]||''}" style="font-weight:600">
-      <div style="display:grid;grid-template-columns:1fr 1fr 32px;gap:6px">
-        <input class="form-input" placeholder="Брутто (г)" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
-        <input class="form-input" placeholder="Нетто (г)" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-        <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()" title="Удалить">🗑</button>
-      </div>
-    </div>
-  </div>`;
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
+    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
+    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
+    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
+    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
+  </div></div>`;
 }
 
 function stepRow(s, idx){
-  return `<div class="step-editor" style="background:rgba(255,255,255,.03);padding:10px;border-radius:10px;margin-bottom:8px;border-left:3px solid var(--accent)">
-    <div style="display:flex;gap:8px;align-items:flex-start">
-      <div style="background:var(--accent);color:#000;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${idx+1}</div>
-      <textarea class="form-textarea" data-step="${idx}" placeholder="Описание шага..." style="flex:1;min-height:50px">${s||''}</textarea>
-      <button class="icon-btn danger" onclick="this.closest('.step-editor').remove()" title="Удалить">🗑</button>
-    </div>
+  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
+    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
 }
 
@@ -939,7 +942,7 @@ window.addIngr = function(){
 
 window.addStep = function(){
   const list = document.getElementById('steps-list');
-  const idx = list.querySelectorAll('.step-editor').length;
+  const idx = list.querySelectorAll('[data-step]').length;
   list.insertAdjacentHTML('beforeend', stepRow('', idx));
 };
 
@@ -965,65 +968,27 @@ window.saveRecipe = function(editId){
   };
   if(!r.name){ toast('Введите название', 'error'); return; }
   if(editId){
-    const idx = DATA.recipes.findIndex(x=>x.id===editId);
-    DATA.recipes[idx] = r;
+    const idx = RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx] = r;
   } else {
-    DATA.recipes.push(r);
+    RECIPES.push(r);
   }
   document.getElementById('edit-modal').remove();
-  toast('Сохранено локально. Теперь "Сохранить" в админке.', 'success');
+  toast('Сохранено ✓', 'success');
   renderAdminContent();
 };
 
 window.deleteRecipe = function(id){
   if(!confirm('Удалить техкарту?')) return;
-  DATA.recipes = DATA.recipes.filter(r=>r.id!==id);
+  const idx = RECIPES.findIndex(r=>r.id===id);
+  if(idx>=0) RECIPES.splice(idx,1);
   renderAdminContent();
   toast('Удалено', 'success');
 };
 
-function editShift(i){
-  const s = DATA.shifts[i];
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${s.day}</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
-      </div>
-      <div class="form-field"><label class="form-label">Тип смены</label>
-        <select class="form-select" id="s-type">
-          <option value="" ${!s.type?'selected':''}>Выходной</option>
-          <option value="open" ${s.type==='open'?'selected':''}>Открытие</option>
-          <option value="mid" ${s.type==='mid'?'selected':''}>Усиление</option>
-          <option value="close" ${s.type==='close'?'selected':''}>Закрытие</option>
-        </select>
-      </div>
-      <div class="form-field"><label class="form-label">Время (напр. 09:00–17:00)</label><input class="form-input" id="s-time" value="${s.time}"></div>
-      <div class="form-field"><label class="form-label">Команда (через запятую)</label><input class="form-input" id="s-crew" value="${(s.crew||[]).join(', ')}"></div>
-      <button class="btn" onclick="saveShift(${i})">💾 Сохранить</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveShift = function(i){
-  DATA.shifts[i] = {
-    ...DATA.shifts[i],
-    type: $('#s-type').value || null,
-    time: $('#s-time').value,
-    crew: $('#s-crew').value.split(',').map(s=>s.trim()).filter(s=>s)
-  };
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
 function editNews(i){
   const isEdit = i !== undefined;
-  const n = isEdit ? DATA.news[i] : {tag:'', title:'', text:'', date:'Сегодня'};
+  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
@@ -1033,7 +998,7 @@ function editNews(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="form-field"><label class="form-label">Тег (Поставка, Событие, Важно)</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
+      <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
       <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
       <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
       <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
@@ -1044,14 +1009,9 @@ function editNews(i){
 }
 
 window.saveNews = function(i){
-  const n = {
-    tag: $('#n-tag').value,
-    title: $('#n-title').value,
-    text: $('#n-text').value,
-    date: $('#n-date').value
-  };
+  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
   if(!n.title){ toast('Введите заголовок', 'error'); return; }
-  if(i !== null) DATA.news[i] = n; else DATA.news.unshift(n);
+  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1059,14 +1019,14 @@ window.saveNews = function(i){
 
 window.deleteNews = function(i){
   if(!confirm('Удалить новость?')) return;
-  DATA.news.splice(i,1);
+  NEWS.splice(i,1);
   renderAdminContent();
   toast('Удалено', 'success');
 };
 
 function editTeamMember(i){
   const isEdit = i !== undefined;
-  const u = isEdit ? DATA.team[i] : {name:'', role:'', init:'??'};
+  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
@@ -1078,7 +1038,7 @@ function editTeamMember(i){
       </div>
       <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
       <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
-      <div class="form-field"><label class="form-label">Инициалы (2 буквы)</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
+      <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
       <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
     </div>
   `;
@@ -1086,13 +1046,9 @@ function editTeamMember(i){
 }
 
 window.saveTeamMember = function(i){
-  const u = {
-    name: $('#u-name').value,
-    role: $('#u-role').value,
-    init: $('#u-init').value.toUpperCase()
-  };
+  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
   if(!u.name){ toast('Введите имя', 'error'); return; }
-  if(i !== null) DATA.team[i] = u; else DATA.team.push(u);
+  if(i !== null) TEAM[i] = u; else TEAM.push(u);
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1100,74 +1056,15 @@ window.saveTeamMember = function(i){
 
 window.deleteTeamMember = function(i){
   if(!confirm('Удалить сотрудника?')) return;
-  DATA.team.splice(i,1);
+  TEAM.splice(i,1);
   renderAdminContent();
   toast('Удалено', 'success');
-};
-
-async function saveFromAdmin(){
-  const btn = document.getElementById('save-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loader-inline"></span> Сохраняю...';
-  const ok = await saveData();
-  btn.disabled = false;
-  btn.innerHTML = '💾 Сохранить';
-  if(ok){
-    setTimeout(()=>{ 
-      document.getElementById('admin-modal').remove();
-      render();
-    }, 1000);
-  }
-}
-
-function openSettings(){
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'settings-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">🔑 Настройки GitHub</div>
-        <button class="modal-close" onclick="document.getElementById('settings-modal').remove()">✕</button>
-      </div>
-      <div class="form-field">
-        <label class="form-label">GitHub Token</label>
-        <input class="form-input" id="gh-token-input" type="password" value="${githubToken}" placeholder="ghp_xxxxxxxxxxxx">
-        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">
-          Создайте токен на <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--accent)">github.com/settings/tokens</a> → Generate new token (classic) → выберите scope "repo".
-        </div>
-      </div>
-      <button class="btn" onclick="saveToken()">💾 Сохранить токен</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveToken = function(){
-  const token = document.getElementById('gh-token-input').value.trim();
-  if(!token){ toast('Введите токен', 'error'); return; }
-  githubToken = token;
-  localStorage.setItem('gh_token', token);
-  document.getElementById('settings-modal').remove();
-  toast('Токен сохранён ✓', 'success');
 };
 
 /* ============================================================
    🚀 СТАРТ
    ============================================================ */
-(async function(){
-  app.innerHTML = '<div class="card" style="text-align:center;padding:40px"><div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div><div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div></div>';
-  await loadData();
-  render();
-  
-  // Кнопка админки (плавающая)
-  const adminBtn = document.createElement('button');
-  adminBtn.className = 'admin-btn';
-  adminBtn.innerHTML = '✏️';
-  adminBtn.title = 'Редактировать';
-  adminBtn.onclick = () => { haptic('hard'); openAdmin(); };
-  document.body.appendChild(adminBtn);
-})();
+render();
 </script>
 
 </body>
