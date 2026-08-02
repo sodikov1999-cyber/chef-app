@@ -98,6 +98,9 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 /* ============================================================
     ВСЕ ДАННЫЕ ПРИЛОЖЕНИЯ
    ============================================================ */
+
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHXjN1V5b883RkDdfavRpG0Ork0EmRmKm3NYwx0zNfFHPQnuxvuHCmaP7PK_0sEF7dTw/exec';
+    
 const DATA = {
   recipes: [
     {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
@@ -390,120 +393,152 @@ function renderRecipe(){
   `;
 }
 
-function renderSchedule(){
-  const today = new Date();
-  const currentDay = today.getDate();
-  const dayIndex = currentDay - 1; // день 1 = индекс 0
-  
-  const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
-  const currentDow = dowShort[today.getDay()];
-  
-  // Неделя
-  const dayOfWeek = today.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-  
-  const weekDays = [];
-  for(let i=0; i<7; i++){
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dayNum = d.getDate();
-    const idx = dayNum - 1;
-    const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-    
-    let count = 0;
-    DATA.schedule.locations.forEach(loc => {
-      loc.staff.forEach(p => {
-        if(p.shifts[idx] && p.shifts[idx] > 0) count++;
-      });
-    });
-    
-    weekDays.push({
-      dayNum,
-      isToday,
-      count,
-      dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
-    });
-  }
+let expandedLocations = new Set();
 
+async function renderSchedule(){
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>${DATA.schedule.month}</h1>
-    
-    <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-      📊 <b>График смен</b><br>
-      <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
+    <h1>График</h1>
+    <div class="card" style="text-align:center;padding:30px">
+      <div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
     </div>
-    
-    <h2>Эта неделя</h2>
-    <div style="display:flex;gap:6px;margin-bottom:16px">
-      ${weekDays.map(d => `
-        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
-          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
-          <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
-          <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
-        </div>
-      `).join('')}
-    </div>
-    
-    ${DATA.schedule.locations.map(loc => {
-      const isOpen = expandedLocations.has(loc.name);
-      const workingToday = loc.staff.filter(p => p.shifts[dayIndex] && p.shifts[dayIndex] > 0);
+  `;
+
+  try {
+    const ts = Date.now();
+    const res = await fetch(APPS_SCRIPT_URL + '?t=' + ts, { cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const scheduleData = await res.json();
+
+    const today = new Date();
+    const currentDay = today.getDate();
+    const dayIndex = currentDay - 1;
+    const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
+    const currentDow = dowShort[today.getDay()];
+
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+
+    const weekDays = [];
+    for(let i=0; i<7; i++){
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dayNum = d.getDate();
+      const idx = dayNum - 1;
+      const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
       
-      const staffStats = loc.staff.map(s => {
-        let workDays = 0;
-        s.shifts.forEach(v => { if(v && v > 0) workDays++; });
-        return {...s, workDays};
-      }).sort((a,b) => b.total - a.total);
+      let count = 0;
+      scheduleData.locations.forEach(loc => {
+        loc.staff.forEach(p => {
+          if(p.shifts[idx] && p.shifts[idx] > 0) count++;
+        });
+      });
       
-      return `
-        <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-          <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
-              <div style="font-size:12px;color:var(--muted)">
-                👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+      weekDays.push({
+        dayNum,
+        isToday,
+        count,
+        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
+      });
+    }
+
+    app.innerHTML = `
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>${scheduleData.month}</h1>
+      
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+        📊 <b>Данные из Google Таблицы</b><br>
+        <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
+      </div>
+      
+      <h2>Эта неделя</h2>
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        ${weekDays.map(d => `
+          <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}">
+            <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
+            <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
+            <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
+          </div>
+        `).join('')}
+      </div>
+      
+      ${scheduleData.locations.map(loc => {
+        const isOpen = expandedLocations.has(loc.name);
+        const workingToday = loc.staff.filter(p => p.shifts[dayIndex] && p.shifts[dayIndex] > 0);
+        const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
+        
+        return `
+          <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+            <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+                <div style="font-size:12px;color:var(--muted)">
+                  👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+                </div>
+              </div>
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </button>
+            
+            <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+              <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+                
+                <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
+                ${workingToday.length > 0 ? workingToday.map(p => `
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+                      <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
+                    </div>
+                  </div>
+                `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px"> Все отдыхают</div>'}
+                
+                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
+                ${staffStats.map(s => {
+                  let workDays = 0;
+                  s.shifts.forEach(v => { if(v && v > 0) workDays++; });
+                  return `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                      <div style="flex:1;min-width:0">
+                        <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
+                        <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
+                      </div>
+                      <div style="text-align:right;margin-left:10px">
+                        <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+                
               </div>
             </div>
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-          </button>
-          
-          <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-            <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-              
-              <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
-              ${workingToday.length > 0 ? workingToday.map(p => `
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
-                  </div>
-                </div>
-              `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-              
-              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц (${staffStats.length})</div>
-              ${staffStats.map(s => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                    <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${s.workDays} дн</div>
-                  </div>
-                  <div style="text-align:right;margin-left:10px">
-                    <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
-                  </div>
-                </div>
-              `).join('')}
-              
-            </div>
           </div>
-        </div>
-      `;
-    }).join('')}
-  `;
+        `;
+      }).join('')}
+      
+      <a href="https://docs.google.com/spreadsheets/d/1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+        📝 Открыть таблицу
+      </a>
+    `;
+    
+  } catch(e){
+    console.error(e);
+    app.innerHTML = `
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>График</h1>
+      <div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.message}</div>
+        <button class="btn btn-sm" onclick="renderSchedule()"> Повторить</button>
+      </div>
+    `;
+  }
 }
 
 function toggleLoc(name) {
@@ -511,7 +546,6 @@ function toggleLoc(name) {
   else expandedLocations.add(name);
   renderSchedule();
 }
-
 function renderChecklist(){
   window._clTab = window._clTab || 'open';
   const key = window._clTab;
