@@ -58,26 +58,9 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
 .admin-btn:active{transform:scale(.9)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-/* Исправленный стиль модалки */
-.modal{
-    background:var(--bg);
-    border-radius:20px 20px 0 0;
-    width:100%;
-    max-width:500px;
-    height:90vh; /* Фиксированная высота */
-    display:flex;
-    flex-direction:column;
-    animation:slideUp .3s ease-out;
-    overflow:hidden; /* Скрываем все, что вылезает */
-}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.modal-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding: 20px 20px 10px 20px;
-    flex-shrink:0; /* Не сжимать шапку */
-}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
 .modal-title{font-weight:800;font-size:18px}
 .modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
 .form-field{margin-bottom:14px}
@@ -129,10 +112,10 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     color: #000;
 }
 /* Контейнер для скролла внутри модалки */
-.modal-content-scroll {
+.modal-body {
     flex: 1;
     overflow-y: auto;
-    padding: 0 20px 20px 20px;
+    padding-bottom: 20px;
 }
 </style>
 </head>
@@ -200,6 +183,14 @@ const DEFAULT_TEAM = [
   {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
 ];
 
+// Чеклисты теперь тоже загружаются из памяти или дефолтные
+const DEFAULT_CHECKLISTS = {
+  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
+  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+};
+
+let CHECKLISTS = JSON.parse(localStorage.getItem('chef_checklists')) || DEFAULT_CHECKLISTS;
+
 const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
   locations: [
@@ -266,11 +257,6 @@ const DEFAULT_LOCAL_DATA = {
   ]
 };
 
-const CHECKLISTS = {
-  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
-  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
-};
-
 // === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
@@ -279,11 +265,12 @@ let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
 
-// Функция сохранения
+// Функция сохранения ВСЕХ данных
 function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
+    localStorage.setItem('chef_checklists', JSON.stringify(CHECKLISTS));
 }
 
 /* ============================================================
@@ -696,7 +683,7 @@ function renderChecklist(){
   const key = window._clTab;
   const today = new Date().toISOString().slice(0,10);
   const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
-  const items = CHECKLISTS[key];
+  const items = CHECKLISTS[key] || []; // Защита от отсутствия ключа
   const done = saved.length;
   const total = items.length;
   app.innerHTML = `
@@ -707,12 +694,12 @@ function renderChecklist(){
       <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие</button>
     </div>
     <div class="card">
-      ${items.map((item,i) => `
+      ${items.length > 0 ? items.map((item,i) => `
         <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck(${i});haptic()">
           <div class="check-box">✓</div>
           <span>${item}</span>
         </div>
-      `).join('')}
+      `).join('') : '<div style="text-align:center;padding:20px;color:var(--muted)">Список пуст. Добавьте пункты в редакторе.</div>'}
     </div>
     ${done===total && total>0 ? '<div class="note" style="text-align:center"> Все пункты выполнены!</div>' : ''}
     <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist();haptic()">↺ Сбросить</button>
@@ -757,49 +744,45 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (ИСПРАВЛЕННАЯ)
+   🔐 АДМИНКА (С РЕДАКТИРОВАНИЕМ ЧЕК-ЛИСТОВ)
    ============================================================ */
 let adminTab = 'recipes';
 
-function openAdmin(){ 
-    // Проверка: если окно уже открыто, не открываем новое
-    if(document.getElementById('admin-modal')) return;
-    showAdminModal(); 
-}
+function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
-    // Принудительно удаляем старые окна, если они вдруг остались
-    const oldModals = document.querySelectorAll('#admin-modal');
-    oldModals.forEach(m => m.remove());
-
-    adminTab = adminTab || 'recipes';
-    const modal = document.createElement('div');
-    modal.className = 'modal-bg';
-    modal.id = 'admin-modal';
-    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-    
-    // Структура модалки исправлена
-    modal.innerHTML = `
-      <div class="modal">
-        <div class="modal-header">
-          <div class="modal-title">⚙️ Редактор</div>
-          <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
-        </div>
-        <div style="display:flex;gap:4px;margin:0 20px 12px 20px;flex-shrink:0">
-          <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
-          <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
-          <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
-        </div>
-        <div id="admin-content" class="modal-content-scroll"></div>
+  // Сначала закрываем все открытые модалки, чтобы не наслаивались
+  document.querySelectorAll('.modal-bg').forEach(el => el.remove());
+  
+  adminTab = adminTab || 'recipes';
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'admin-modal';
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Редактор</div>
+        <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-    `;
-    document.body.appendChild(modal);
-    renderAdminContent();
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
+        <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
+        <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
+        <button class="tab-btn ${adminTab==='checklist'?'on':''}" onclick="adminTab='checklist';showAdminModal()">Чек-лист</button>
+        <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
+      </div>
+      <div id="admin-content" class="modal-body"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  renderAdminContent();
 }
 
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
   if(!c) return;
+  
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
@@ -836,6 +819,39 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
+  } else if(adminTab === 'checklist'){
+    c.innerHTML = `
+      <div style="margin-bottom:16px">
+        <button class="btn" onclick="editChecklistItem('open')">+ Пункт открытия</button>
+        <button class="btn btn-sec" onclick="editChecklistItem('close')" style="margin-top:8px">+ Пункт закрытия</button>
+      </div>
+      
+      <h3 style="margin:16px 0 8px;font-size:14px;color:var(--muted)">ОТКРЫТИЕ</h3>
+      ${(CHECKLISTS.open || []).map((item,i) => `
+        <div class="item-card">
+          <div class="item-card-head">
+            <div class="item-card-title">${item}</div>
+            <div>
+              <button class="icon-btn" onclick="editChecklistItem('open', ${i})">✏️</button>
+              <button class="icon-btn danger" onclick="deleteChecklistItem('open', ${i})">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+      
+      <h3 style="margin:16px 0 8px;font-size:14px;color:var(--muted)">ЗАКРЫТИЕ</h3>
+      ${(CHECKLISTS.close || []).map((item,i) => `
+        <div class="item-card">
+          <div class="item-card-head">
+            <div class="item-card-title">${item}</div>
+            <div>
+              <button class="icon-btn" onclick="editChecklistItem('close', ${i})">✏️</button>
+              <button class="icon-btn danger" onclick="deleteChecklistItem('close', ${i})">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    `;
   } else if(adminTab === 'team'){
     c.innerHTML = `
       <button class="btn" onclick="editTeamMember()">+ Добавить сотрудника</button>
@@ -857,6 +873,55 @@ function renderAdminContent(){
   }
 }
 
+// --- ФУНКЦИИ ДЛЯ ЧЕК-ЛИСТОВ ---
+window.editChecklistItem = function(type, index){
+  const isEdit = index !== undefined;
+  const currentVal = isEdit ? CHECKLISTS[type][index] : '';
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новый'} пункт</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0 20px">
+        <div class="form-field"><label class="form-label">Текст пункта</label><input class="form-input" id="cl-text" value="${currentVal}" placeholder="Например: Проверить кассу"></div>
+        <button class="btn" onclick="saveChecklistItem('${type}', ${isEdit?index:'null'})">💾 Сохранить</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.saveChecklistItem = function(type, index){
+  const text = $('#cl-text').value.trim();
+  if(!text){ toast('Введите текст', 'error'); return; }
+  
+  if(index !== null){
+    CHECKLISTS[type][index] = text;
+  } else {
+    if(!CHECKLISTS[type]) CHECKLISTS[type] = [];
+    CHECKLISTS[type].push(text);
+  }
+  
+  saveData();
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
+};
+
+window.deleteChecklistItem = function(type, index){
+  if(!confirm('Удалить этот пункт?')) return;
+  CHECKLISTS[type].splice(index, 1);
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
+
+// --- ОСТАЛЬНЫЕ ФУНКЦИИ АДМИНКИ (без изменений) ---
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
@@ -869,7 +934,7 @@ function editRecipe(id){
         <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
       </div>
-      <div class="modal-content-scroll">
+      <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
         <div class="form-field"><label class="form-label">Категория</label>
           <select class="form-select" id="r-cat">
@@ -978,7 +1043,7 @@ function editNews(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="modal-content-scroll">
+      <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
         <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
         <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
@@ -1020,7 +1085,7 @@ function editTeamMember(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="modal-content-scroll">
+      <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
         <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
         <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
