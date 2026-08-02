@@ -5,429 +5,396 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Golos Text',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-h1,h2{font-family:'Unbounded',sans-serif;margin-bottom:20px}
-.card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
-
-/* КРАСИВЫЙ ЛОАДЕР */
-.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}
-.loader-spinner{width:50px;height:50px;border:3px solid rgba(255,138,61,.2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loader-text{color:var(--muted);font-size:14px;margin-bottom:6px}
-.loader-sub{color:var(--muted);font-size:12px;opacity:.6}
-.pulse-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin:0 2px;animation:pulseDot 1.4s ease-in-out infinite}
-.pulse-dot:nth-child(2){animation-delay:.2s}
-.pulse-dot:nth-child(3){animation-delay:.4s}
-@keyframes pulseDot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
-
-/* СКЕЛЕТОНЫ (серые прямоугольники пока грузится) */
-.skeleton{background:linear-gradient(90deg,#1B1613 0%,#221B16 50%,#1B1613 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px;margin-bottom:12px}
-.skeleton.card{height:80px}
-.skeleton.title{height:28px;width:60%;margin-bottom:20px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-.btn{display:block;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left}
-.btn:active{transform:scale(.98)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px}
+h1{font-weight:800;font-size:28px;margin-bottom:18px;letter-spacing:-.5px}
+h2{font-weight:700;font-size:20px;margin:24px 0 14px}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.tile{padding:18px 14px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
+.tile:active{transform:scale(.97);background:#221B16}
+.tile-emoji{font-size:28px;margin-bottom:8px}
+.tile-title{font-weight:700;font-size:15px}
+.tile-desc{font-size:12px;color:var(--muted);margin-top:3px}
 .pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{padding:20px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.08);cursor:pointer;animation:fadeIn .4s both}
-.tile:active{transform:scale(.97)}
-.tile-emoji{font-size:32px;margin-bottom:8px}
-.tile-title{font-weight:600;font-size:14px}
-.tile-desc{font-size:12px;color:var(--muted);margin-top:4px}
-.recipe{margin-bottom:12px;padding:16px;background:rgba(255,255,255,.03);border-radius:12px;cursor:pointer}
-.recipe:active{background:rgba(255,255,255,.06)}
-.recipe-name{font-weight:600;margin-bottom:4px}
-.recipe-meta{font-size:12px;color:var(--muted)}
-.back{display:inline-block;padding:8px 16px;background:rgba(255,255,255,.08);border-radius:10px;color:var(--text);text-decoration:none;margin-bottom:20px;cursor:pointer;border:none;font-size:14px}
-.ingredient{padding:12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between}
-.ingredient:last-child{border:none}
-.step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent)}
-.shift{padding:16px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:10px}
-.shift-time{font-weight:600;font-size:18px;color:var(--accent)}
+.shift-time{font-weight:800;font-size:26px;color:var(--accent);margin-top:8px}
 .shift-type{font-size:12px;color:var(--muted);margin-top:4px}
-.news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:10px;border-left:3px solid var(--accent)}
-.news-title{font-weight:600;margin-bottom:4px}
-.news-text{font-size:13px;color:var(--muted)}
-.news-date{font-size:11px;color:var(--muted);margin-top:6px}
-.check-item{display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
+.back{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(255,255,255,.06);border-radius:10px;color:var(--text);margin-bottom:18px;cursor:pointer;border:none;font-size:14px;font-weight:600}
+.back:active{background:rgba(255,255,255,.1)}
+.recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
+.recipe:active{background:rgba(255,255,255,.07)}
+.recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
+.recipe-meta{font-size:12px;color:var(--muted)}
+.ingredient{padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:14px}
+.ingredient:last-child{border:none}
+.ingredient b{color:var(--accent)}
+.step{padding:13px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:11px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5}
+.step-num{display:inline-block;width:22px;height:22px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:22px;font-weight:700;font-size:12px;margin-right:10px}
+.shift{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px}
+.news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
+.news-title{font-weight:700;font-size:14px;margin-bottom:3px}
+.news-text{font-size:13px;color:var(--muted);line-height:1.4}
+.news-date{font-size:11px;color:var(--muted);margin-top:5px}
+.check-item{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
 .check-item:last-child{border:none}
-.check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.check-item.done .check-box{background:var(--green);border-color:var(--green)}
-.check-item.done .check-box::after{content:'✓';color:#000;font-weight:bold}
+.check-box{width:24px;height:24px;border:2px solid var(--muted);border-radius:7px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;color:transparent;font-size:14px;transition:all .2s}
+.check-item.done .check-box{background:var(--green);border-color:var(--green);color:#000}
 .check-item.done span{text-decoration:line-through;color:var(--muted)}
-.fade-in{animation:fadeIn .4s ease-out both}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:16px;font-size:13px;line-height:1.5}
+.kpi{display:flex;gap:8px;margin-bottom:16px}
+.kpi-box{flex:1;padding:10px;background:rgba(255,255,255,.03);border-radius:10px;text-align:center}
+.kpi-label{font-size:11px;color:var(--muted);margin-bottom:3px}
+.kpi-value{font-weight:700;font-size:14px}
+.mults{display:flex;gap:6px;margin-bottom:14px}
+.mult{padding:7px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text)}
+.mult.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.user{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#FFB067,var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;flex-shrink:0}
+.user-info b{display:block;font-size:15px}
+.user-info span{font-size:12px;color:var(--muted)}
+.hidden{display:none}
+.fade{animation:fade .3s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 
-<div id="app">
-  <div class="loader">
-    <div class="loader-spinner"></div>
-    <div class="loader-text">ШефБук</div>
-    <div class="loader-sub">
-      <span class="pulse-dot"></span>
-      <span class="pulse-dot"></span>
-      <span class="pulse-dot"></span>
-    </div>
-  </div>
-</div>
+<div id="app"></div>
 
 <script>
-// ===== ВАЖНО: ЗАМЕНИ ЭТИ ЗНАЧЕНИЯ НА СВОИ =====
-const SUPABASE_URL = 'zduiaodltjrmibinysmi';
-const SUPABASE_KEY = 'sb_publishable_pf8p6bBcJWnQDJx46lFzCQ_AUZb_rQH';
-// ===============================================
-
-const tg = window.Telegram?.WebApp;
-if(tg){tg.ready();tg.expand()}
-
-const $ = s => document.querySelector(s);
-const app = $('#app');
-
-// API клиент с кэшированием
-const CACHE_PREFIX = 'chef_';
-const CACHE_TTL = 5 * 60 * 1000; // 5 минут
-
-const api = {
-  async get(table, params=''){
-    const cacheKey = CACHE_PREFIX + table + '_' + params;
-    const cached = localStorage.getItem(cacheKey);
-    
-    // Если есть свежие данные в кэше — возвращаем их МГНОВЕННО
-    if (cached) {
-      try {
-        const data = JSON.parse(cached);
-        if (Date.now() - data.time < CACHE_TTL) {
-          // Фоновое обновление (не блокирует показ)
-          this.fetchAndCache(table, params, cacheKey);
-          return data.value;
-        }
-      } catch(e) {}
-    }
-    
-    // Иначе грузим с сервера
-    return this.fetchAndCache(table, params, cacheKey);
+/* ============================================================
+   📦 ВСЕ ДАННЫЕ ПРИЛОЖЕНИЯ — РЕДАКТИРУЙ ЗДЕСЬ
+   Чтобы обновить техкарты, смены или команду —
+   просто меняй этот JSON и коммить в GitHub.
+   ============================================================ */
+const DATA = {
+  recipes: [
+    {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
+     note:'Срок хранения основы — 12 ч при +2…+6 °C. Сметана и зелень — при подаче.',
+     ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста б/к',63,50],
+           ['Морковь',25,20],['Лук',24,20],['Томатная паста',20,20],['Масло раст.',10,10],
+           ['Уксус 3%',8,8],['Чеснок',6,5],['Сахар',4,4],['Сметана (подача)',30,30],['Зелень',6,5]],
+     steps:['Сварить бульон: грудинку залить 1,5 л воды, снять пену, варить 1,5 часа.',
+            'Картофель бруском, капусту нашинковать. Варить 15 минут.',
+            'Свёклу соломкой, тушить с томатной пастой и уксусом 25 минут.',
+            'Пассеровать лук и морковь, добавить в котёл.',
+            'Довести до вкуса солью и чесноком, настоять 20 минут.',
+            'Отдача: 350 г, сметана и зелень отдельно.']},
+    {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
+     note:'Собирается строго при госте. Соус — 72 ч.',
+     ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус «Цезарь»',40,40],
+           ['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
+     steps:['Филе обжарить на гриле, нарезать слайсами.','Айсберг порвать, черри пополам.',
+            'Сухарики подсушить при 180°C — 4 мин.','Смешать с соусом, выложить всё.',
+            'Финиш: стружка пармезана.']},
+    {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
+     note:'Сливки не используются — классика на желтке.',
+     ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20],['Перец',1,1]],
+     steps:['Спагетти варить до al dente.','Гуанчале вытопить.','Желтки + пармезан + перец.',
+            'Смешать всё, добавить 40 мл паста-воды.','Эмульгировать.']},
+    {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
+     note:'Тесто — 24 ч при +2…+6 °C.',
+     ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
+     steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.',
+            'Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
+    {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
+     note:'Созревание не менее 4 часов. Срок — 48 ч.',
+     ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
+     steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.',
+            'Чередовать слои.','4 часа в холоде, какао перед подачей.']},
+    {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
+     note:'Нарезка — заготовка смены, 6 часов.',
+     ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
+     steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
+    {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
+     note:'Не кипятить! Нагрев строго до 70 °C.',
+     ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
+     steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
+    {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
+     note:'Заготовка горячего цеха. Срок — 12 ч.',
+     ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
+     steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
+  ],
+  
+  shifts: {
+    // тип смены для каждого дня недели (0=пн ... 6=вс)
+    // сегодня определяется автоматически
+    today: 'open', // 'open' | 'mid' | 'close' | null (выходной)
+    week: [
+      {day:'Пн', date:'сегодня', type:'open', time:'09:00–17:00', crew:['Марина К.','Олег С.']},
+      {day:'Вт', date:'завтра', type:'mid', time:'12:00–20:00', crew:['Даша П.']},
+      {day:'Ср', date:'послезавтра', type:'close', time:'15:00–23:00', crew:['Сергей Л.','Аня В.']},
+      {day:'Чт', date:'', type:'open', time:'09:00–17:00', crew:['Марина К.']},
+      {day:'Пт', date:'', type:'mid', time:'12:00–20:00', crew:['Ты','Даша П.']},
+      {day:'Сб', date:'', type:'close', time:'15:00–23:00', crew:['Аня В.','Сергей Л.']},
+      {day:'Вс', date:'', type:null, time:'Выходной', crew:[]},
+    ]
   },
   
-  async fetchAndCache(table, params, cacheKey) {
-    const url = SUPABASE_URL + '/rest/v1/' + table + (params?'?'+params:'');
-    try {
-      const res = await fetch(url, {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
-        }
-      });
-      const value = await res.json();
-      localStorage.setItem(cacheKey, JSON.stringify({ value, time: Date.now() }));
-      return value;
-    } catch(e) {
-      // Если сервер недоступен — пытаемся вернуть старые данные из кэша
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try { return JSON.parse(cached).value; } catch(e2) {}
-      }
-      return [];
-    }
+  news: [
+    {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика. Принять по накладной №214.', date:'Сегодня'},
+    {tag:'Событие', title:'Дегустация нового меню — пятница, 16:00', text:'Каждому цеху подготовить по одной позиции.', date:'Вчера'},
+    {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: замена сливок 35% → 33%.', date:'2 дня назад'},
+  ],
+  
+  team: [
+    {name:'Марина К.', role:'Су-шеф', init:'МК'},
+    {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
+    {name:'Даша П.', role:'Кондитер', init:'ДП'},
+    {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
+    {name:'Аня В.', role:'Менеджер зала', init:'АВ'},
+  ],
+  
+  checklists: {
+    open: ['Включить вентиляцию, разогреть печи','Проверить температурные листы холодильников',
+           'Принять поставку, сверить накладные','Обновить заготовки по стоп-листу',
+           'Санобработка поверхностей','Проверить кассу и терминал','Выставить меню-борды'],
+    close: ['Убрать заготовки, промаркировать','Санобработка цеха',
+            'Почистить и выключить оборудование','Вынести мусор',
+            'Снять кассу, отправить отчёт','Выключить свет','Поставить на сигнализацию']
   }
 };
 
-// Роутер
+/* ============================================================
+   ⚙️ ЛОГИКА (можно не трогать)
+   ============================================================ */
+const tg = window.Telegram?.WebApp;
+if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
 let currentView = 'home';
-let currentRecipe = null;
+let currentRecipeId = null;
+let currentMult = 1;
+
+function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
 function navigate(view, data){
   currentView = view;
-  if(data) currentRecipe = data;
+  if(data !== undefined) currentRecipeId = data;
   render();
+  window.scrollTo(0,0);
 }
 
 function render(){
+  const start = performance.now();
   if(currentView === 'home') renderHome();
   else if(currentView === 'ttk') renderTTK();
   else if(currentView === 'recipe') renderRecipe();
   else if(currentView === 'schedule') renderSchedule();
   else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
+  else if(currentView === 'news') renderNews();
+  app.classList.add('fade');
+  setTimeout(()=>app.classList.remove('fade'), 300);
+  console.log('render:', (performance.now()-start).toFixed(1)+'ms');
 }
 
-async function renderHome(){
-  // СРАЗУ показываем красивые скелетоны вместо текста "Загрузка..."
-  app.innerHTML = `
-    <div class="skeleton title"></div>
-    <div class="skeleton card"></div>
-    <div class="grid" style="margin-bottom:20px">
-      <div class="skeleton" style="height:100px"></div>
-      <div class="skeleton" style="height:100px"></div>
-      <div class="skeleton" style="height:100px"></div>
-      <div class="skeleton" style="height:100px"></div>
-    </div>
-    <div class="skeleton title" style="width:40%"></div>
-    <div class="skeleton card"></div>
-    <div class="skeleton card"></div>
-  `;
+function renderHome(){
+  const user = tg?.initDataUnsafe?.user;
+  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
+  const todayShift = DATA.shifts.week[0];
   
-  const [recipes, news] = await Promise.all([
-    api.get('recipes', 'order=position.asc'),
-    api.get('news', 'order=date.desc')
-  ]);
-
-  const today = new Date().toISOString().slice(0,10);
-  const shifts = await api.get('shifts', `date=eq.${today}&order=type.asc`);
-
   let shiftHtml = '';
-  if(shifts.length > 0){
-    const shift = shifts[0];
-    const types = {open:'Открытие',mid:'Усиление',close:'Закрытие'};
-    const times = {open:'09:00–17:00',mid:'12:00–20:00',close:'15:00–23:00'};
+  if(todayShift.type){
     shiftHtml = `
-      <div class="card fade-in">
-        <span class="pulse"></span>Сегодня
-        <div style="margin-top:12px">
-          <div class="shift-time">${times[shift.type]}</div>
-          <div class="shift-type">${types[shift.type]}</div>
-        </div>
+      <div class="card">
+        <span class="pulse"></span>Сегодня · ${todayShift.day}
+        <div class="shift-time">${todayShift.time}</div>
+        <div class="shift-type">Смена: ${todayShift.type==='open'?'Открытие':todayShift.type==='mid'?'Усиление':'Закрытие'}</div>
+        ${todayShift.crew.length ? '<div style="margin-top:10px;font-size:13px;color:var(--muted)">Команда: '+todayShift.crew.join(', ')+'</div>' : ''}
       </div>
     `;
   } else {
-    shiftHtml = '<div class="card fade-in">🎉 Сегодня выходной</div>';
+    shiftHtml = '<div class="card" style="text-align:center;padding:30px">🎉 Сегодня выходной</div>';
   }
 
   app.innerHTML = `
-    <h1 class="fade-in">ШефБук 👨‍🍳</h1>
+    <h1>${greet}</h1>
     ${shiftHtml}
     
-    <div class="grid" style="margin-bottom:20px">
-      <div class="tile" style="animation-delay:.05s" onclick="navigate('ttk')">
+    <div class="grid">
+      <button class="tile" onclick="navigate('ttk');haptic()">
         <div class="tile-emoji">📖</div>
         <div class="tile-title">ТТК</div>
-        <div class="tile-desc">Техкарты</div>
-      </div>
-      <div class="tile" style="animation-delay:.1s" onclick="navigate('schedule')">
+        <div class="tile-desc">${DATA.recipes.length} техкарт</div>
+      </button>
+      <button class="tile" onclick="navigate('schedule');haptic()">
         <div class="tile-emoji">🗓</div>
         <div class="tile-title">График</div>
-        <div class="tile-desc">Смены</div>
-      </div>
-      <div class="tile" style="animation-delay:.15s" onclick="navigate('checklist')">
+        <div class="tile-desc">Смены недели</div>
+      </button>
+      <button class="tile" onclick="navigate('checklist');haptic()">
         <div class="tile-emoji">✅</div>
         <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">Открытие</div>
-      </div>
-      <div class="tile" style="animation-delay:.2s" onclick="navigate('team')">
+        <div class="tile-desc">Открытие/закрытие</div>
+      </button>
+      <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
         <div class="tile-title">Команда</div>
-        <div class="tile-desc">Контакты</div>
-      </div>
-    </div>
-
-    <h2 class="fade-in">Объявления</h2>
-    ${news.length ? news.slice(0,3).map((n,i) => `
-      <div class="news fade-in" style="animation-delay:${.25+i*.05}s">
-        <div class="news-title">${n.tag}</div>
-        <div class="news-text">${n.title}</div>
-        <div class="news-date">${new Date(n.date).toLocaleDateString('ru-RU')}</div>
-      </div>
-    `).join('') : '<div class="card fade-in">Нет объявлений</div>'}
-  `;
-}
-
-  app.innerHTML = `
-    <h1>ШефБук 👨‍🍳</h1>
-    ${shiftHtml}
-    
-    <div class="grid" style="margin-bottom:20px">
-      <div class="tile" onclick="navigate('ttk')">
-        <div class="tile-emoji">📖</div>
-        <div class="tile-title">ТТК</div>
-        <div class="tile-desc">Техкарты</div>
-      </div>
-      <div class="tile" onclick="navigate('schedule')">
-        <div class="tile-emoji">🗓</div>
-        <div class="tile-title">График</div>
-        <div class="tile-desc">Смены</div>
-      </div>
-      <div class="tile" onclick="navigate('checklist')">
-        <div class="tile-emoji">✅</div>
-        <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">Открытие</div>
-      </div>
-      <div class="tile" onclick="navigate('team')">
-        <div class="tile-emoji">👥</div>
-        <div class="tile-title">Команда</div>
-        <div class="tile-desc">Контакты</div>
-      </div>
+        <div class="tile-desc">${DATA.team.length} чел</div>
+      </button>
     </div>
 
     <h2>Объявления</h2>
-    ${news.length ? news.slice(0,3).map(n => `
+    ${DATA.news.slice(0,3).map(n => `
       <div class="news">
-        <div class="news-title">${n.tag}</div>
-        <div class="news-text">${n.title}</div>
-        <div class="news-date">${new Date(n.date).toLocaleDateString('ru-RU')}</div>
-      </div>
-    `).join('') : '<div class="card">Нет объявлений</div>'}
-  `;
-}
-
-async function renderTTK(){
-  app.innerHTML = '<div class="loading">Загрузка...</div>';
-  const recipes = await api.get('recipes', 'order=position.asc');
-  
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home')">← Назад</button>
-    <h1>Техкарты</h1>
-    ${recipes.map(r => `
-      <div class="recipe" onclick="navigate('recipe', ${r.id})">
-        <div class="recipe-name">${r.name}</div>
-        <div class="recipe-meta">${r.time} · ${r.yield_g}</div>
+        <div class="news-title">${n.tag}: ${n.title}</div>
+        <div class="news-text">${n.text}</div>
+        <div class="news-date">${n.date}</div>
       </div>
     `).join('')}
   `;
 }
 
-async function renderRecipe(){
-  app.innerHTML = '<div class="loading">Загрузка...</div>';
-  
-  const [recipe, ingredients, steps] = await Promise.all([
-    api.get('recipes', `id=eq.${currentRecipe}&limit=1`).then(r => r[0]),
-    api.get('ingredients', `recipe_id=eq.${currentRecipe}&order=position.asc`),
-    api.get('steps', `recipe_id=eq.${currentRecipe}&order=position.asc`)
-  ]);
+function renderTTK(){
+  const cats = ['Все', ...new Set(DATA.recipes.map(r=>r.cat))];
+  window._ttkCat = window._ttkCat || 'Все';
+  window._ttkQ = window._ttkQ || '';
+  const q = window._ttkQ.toLowerCase();
+  const items = DATA.recipes.filter(r => 
+    (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
+    (!q || r.name.toLowerCase().includes(q))
+  );
 
   app.innerHTML = `
-    <button class="back" onclick="navigate('ttk')">← Назад</button>
-    <h1>${recipe.name}</h1>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Техкарты</h1>
+    <input type="search" placeholder="🔍 Поиск блюда..." 
+           value="${window._ttkQ}" 
+           oninput="window._ttkQ=this.value;renderTTK()"
+           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none">
+    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
+      ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
+    </div>
+    ${items.length ? items.map(r => `
+      <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
+        <div class="recipe-name">${r.name}</div>
+        <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
+      </button>
+    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+  `;
+}
+
+function renderRecipe(){
+  const r = DATA.recipes.find(x => x.id === currentRecipeId);
+  if(!r){ navigate('ttk'); return; }
+
+  app.innerHTML = `
+    <button class="back" onclick="navigate('ttk');haptic()">← Назад</button>
+    <h1>${r.name}</h1>
     
-    <div class="card">
-      <div style="margin-bottom:12px"><strong>Время:</strong> ${recipe.time}</div>
-      <div style="margin-bottom:12px"><strong>Выход:</strong> ${recipe.yield_g}</div>
-      <div><strong>Калорийность:</strong> ${recipe.kcal} ккал</div>
+    <div class="kpi">
+      <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${r.time}</div></div>
+      <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${r.yield}</div></div>
+      <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
     </div>
 
     <h2>Ингредиенты</h2>
+    <div class="mults">
+      ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
+    </div>
     <div class="card">
-      ${ingredients.map(i => `
+      ${r.ingr.map(i => `
         <div class="ingredient">
-          <span>${i.name}</span>
-          <strong>${i.netto} г</strong>
+          <span>${i[0]}</span>
+          <b>${Math.round(i[2]*currentMult)} г</b>
         </div>
       `).join('')}
     </div>
 
     <h2>Приготовление</h2>
-    ${steps.map((s, idx) => `
-      <div class="step">
-        <strong>${idx + 1}.</strong> ${s.text}
-      </div>
+    ${r.steps.map((s,i) => `
+      <div class="step"><span class="step-num">${i+1}</span>${s}</div>
     `).join('')}
 
-    ${recipe.note ? `
-      <div class="card" style="margin-top:20px;background:rgba(95,211,138,.1);border-left:3px solid var(--green)">
-        <strong>📝 Важно:</strong><br>${recipe.note}
-      </div>
-    ` : ''}
+    ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
   `;
 }
 
-async function renderSchedule(){
-  app.innerHTML = '<div class="loading">Загрузка...</div>';
-  
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay() + 1);
-  
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  
-  const shifts = await api.get('shifts', `date=gte.${weekStart.toISOString().slice(0,10)}&date=lte.${weekEnd.toISOString().slice(0,10)}&order=date.asc,type.asc`);
-  
-  const byDate = {};
-  shifts.forEach(s => {
-    if(!byDate[s.date]) byDate[s.date] = [];
-    byDate[s.date].push(s);
-  });
-
-  const types = {open:'Открытие',mid:'Усиление',close:'Закрытие'};
-  const times = {open:'09:00–17:00',mid:'12:00–20:00',close:'15:00–23:00'};
-
+function renderSchedule(){
   app.innerHTML = `
-    <button class="back" onclick="navigate('home')">← Назад</button>
-    <h1>График смен</h1>
-    ${Object.keys(byDate).map(date => {
-      const d = new Date(date);
-      const dayName = d.toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'short'});
-      return `
-        <h2 style="margin-top:24px">${dayName}</h2>
-        ${byDate[date].map(s => `
-          <div class="shift">
-            <div class="shift-time">${times[s.type]}</div>
-            <div class="shift-type">${types[s.type]}</div>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>График на неделю</h1>
+    ${DATA.shifts.week.map((s,i) => `
+      <div class="shift" style="${i===0?'border-left:3px solid var(--accent)':''}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;font-size:16px">${s.day}${i===0?' · сегодня':''}</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:2px">${s.time}</div>
           </div>
-        `).join('')}
-      `;
-    }).join('')}
+          ${s.type ? `<div style="padding:5px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:700">${s.type==='open'?'ОТКРЫТИЕ':s.type==='mid'?'УСИЛЕНИЕ':'ЗАКРЫТИЕ'}</div>` : '<div style="color:var(--muted);font-size:12px">выходной</div>'}
+        </div>
+        ${s.crew.length ? `<div style="margin-top:8px;font-size:13px;color:var(--muted)">👥 ${s.crew.join(', ')}</div>` : ''}
+      </div>
+    `).join('')}
   `;
 }
 
-async function renderChecklist(){
-  const items = [
-    'Включить вентиляцию, разогреть печи',
-    'Проверить температурные листы холодильников',
-    'Принять поставку, сверить накладные',
-    'Обновить заготовки по стоп-листу',
-    'Санобработка поверхностей и инвентаря',
-    'Проверить кассу и терминал',
-    'Выставить меню-борды и витрину'
-  ];
-
-  const saved = JSON.parse(localStorage.getItem('checklist_' + new Date().toISOString().slice(0,10)) || '[]');
+function renderChecklist(){
+  window._clTab = window._clTab || 'open';
+  const key = window._clTab;
+  const today = new Date().toISOString().slice(0,10);
+  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
+  const items = DATA.checklists[key];
+  const done = saved.length;
+  const total = items.length;
 
   app.innerHTML = `
-    <button class="back" onclick="navigate('home')">← Назад</button>
-    <h1>Чек-лист открытия</h1>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Чек-листы</h1>
+    <div class="mults">
+      <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${done}/${total})</button>
+      <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие</button>
+    </div>
     <div class="card">
-      ${items.map((item, idx) => `
-        <div class="check-item ${saved.includes(idx)?'done':''}" onclick="toggleCheck(${idx})">
-          <div class="check-box"></div>
+      ${items.map((item,i) => `
+        <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck(${i});haptic()">
+          <div class="check-box">✓</div>
           <span>${item}</span>
         </div>
       `).join('')}
     </div>
+    ${done===total ? '<div class="note" style="text-align:center">🎉 Все пункты выполнены!</div>' : ''}
+    <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:#FF6B5E" onclick="resetChecklist();haptic()">↺ Сбросить</button>
   `;
 }
 
-window.toggleCheck = function(idx){
+window.toggleCheck = function(i){
+  const key = window._clTab;
   const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('checklist_' + today) || '[]');
-  
-  if(saved.includes(idx)){
-    saved.splice(saved.indexOf(idx), 1);
-  } else {
-    saved.push(idx);
-  }
-  
-  localStorage.setItem('checklist_' + today, JSON.stringify(saved));
+  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+key) || '[]');
+  const idx = saved.indexOf(i);
+  if(idx>=0) saved.splice(idx,1); else saved.push(i);
+  localStorage.setItem('cl_'+today+'_'+key, JSON.stringify(saved));
   renderChecklist();
 };
 
-async function renderTeam(){
-  app.innerHTML = '<div class="loading">Загрузка...</div>';
-  const users = await api.get('users', 'order=position.asc');
-  
+window.resetChecklist = function(){
+  const key = window._clTab;
+  const today = new Date().toISOString().slice(0,10);
+  localStorage.removeItem('cl_'+today+'_'+key);
+  renderChecklist();
+};
+
+function renderTeam(){
+  const user = tg?.initDataUnsafe?.user;
   app.innerHTML = `
-    <button class="back" onclick="navigate('home')">← Назад</button>
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
-    ${users.map(u => `
-      <div class="card">
-        <div style="font-weight:600;margin-bottom:4px">${u.first_name} ${u.last_name || ''}</div>
-        <div style="color:var(--muted);font-size:14px">${u.role}</div>
+    ${user ? `
+      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
+        <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
+      </div>
+    ` : ''}
+    ${DATA.team.map(u => `
+      <div class="user">
+        <div class="avatar">${u.init}</div>
+        <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
       </div>
     `).join('')}
   `;
