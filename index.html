@@ -58,9 +58,26 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
 .admin-btn:active{transform:scale(.9)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out}
+/* Исправленный стиль модалки */
+.modal{
+    background:var(--bg);
+    border-radius:20px 20px 0 0;
+    width:100%;
+    max-width:500px;
+    height:90vh; /* Фиксированная высота */
+    display:flex;
+    flex-direction:column;
+    animation:slideUp .3s ease-out;
+    overflow:hidden; /* Скрываем все, что вылезает */
+}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
+.modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 20px 20px 10px 20px;
+    flex-shrink:0; /* Не сжимать шапку */
+}
 .modal-title{font-weight:800;font-size:18px}
 .modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
 .form-field{margin-bottom:14px}
@@ -112,10 +129,10 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     color: #000;
 }
 /* Контейнер для скролла внутри модалки */
-.modal-body {
+.modal-content-scroll {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 20px;
+    padding: 0 20px 20px 20px;
 }
 </style>
 </head>
@@ -740,36 +757,44 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА (С СОХРАНЕНИЕМ И ФИКСОМ СКРОЛЛА)
+   🔐 АДМИНКА (ИСПРАВЛЕННАЯ)
    ============================================================ */
 let adminTab = 'recipes';
 
-function openAdmin(){ showAdminModal(); }
+function openAdmin(){ 
+    // Проверка: если окно уже открыто, не открываем новое
+    if(document.getElementById('admin-modal')) return;
+    showAdminModal(); 
+}
 
 function showAdminModal(){
-  adminTab = adminTab || 'recipes';
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'admin-modal';
-  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-  
-  // Изменена структура модального окна для корректного скролла
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">⚙️ Редактор</div>
-        <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
+    // Принудительно удаляем старые окна, если они вдруг остались
+    const oldModals = document.querySelectorAll('#admin-modal');
+    oldModals.forEach(m => m.remove());
+
+    adminTab = adminTab || 'recipes';
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'admin-modal';
+    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+    
+    // Структура модалки исправлена
+    modal.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">⚙️ Редактор</div>
+          <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
+        </div>
+        <div style="display:flex;gap:4px;margin:0 20px 12px 20px;flex-shrink:0">
+          <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
+          <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
+          <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
+        </div>
+        <div id="admin-content" class="modal-content-scroll"></div>
       </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
-        <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
-        <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
-        <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
-      </div>
-      <div id="admin-content" class="modal-body"></div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  renderAdminContent();
+    `;
+    document.body.appendChild(modal);
+    renderAdminContent();
 }
 
 function renderAdminContent(){
@@ -844,7 +869,7 @@ function editRecipe(id){
         <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()"></button>
       </div>
-      <div class="modal-body" style="padding:0 20px">
+      <div class="modal-content-scroll">
         <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
         <div class="form-field"><label class="form-label">Категория</label>
           <select class="form-select" id="r-cat">
@@ -953,7 +978,7 @@ function editNews(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="modal-body" style="padding:0 20px">
+      <div class="modal-content-scroll">
         <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
         <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
         <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
@@ -995,7 +1020,7 @@ function editTeamMember(i){
         <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="modal-body" style="padding:0 20px">
+      <div class="modal-content-scroll">
         <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
         <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
         <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
