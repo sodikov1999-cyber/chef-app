@@ -347,7 +347,7 @@ function renderRecipe(){
 async function renderSchedule(){
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>График на неделю</h1>
+    <h1>График</h1>
     <div class="card" style="text-align:center;padding:30px">
       <div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div>
       <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
@@ -357,11 +357,10 @@ async function renderSchedule(){
   if(!SHEETS_ID || SHEETS_ID === 'ВСТАВЬ_СЮДА_СВОЙ_ID'){
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>График на неделю</h1>
+      <h1>График</h1>
       <div class="card" style="text-align:center;padding:30px">
         <div style="font-size:50px;margin-bottom:14px">📊</div>
-        <div style="font-weight:700;margin-bottom:10px">Таблица не подключена</div>
-        <div style="font-size:13px;color:var(--muted)">Вставь ID таблицы в код</div>
+        <div style="font-weight:700">Таблица не подключена</div>
       </div>
     `;
     return;
@@ -373,6 +372,7 @@ async function renderSchedule(){
     if(!res.ok) throw new Error('Ошибка');
     const csv = await res.text();
 
+    // Парсер CSV (учитывает кавычки и переносы)
     const rows = csv.split('\n').map(row => {
       const r = []; let c = ''; let q = false;
       for(let i=0;i<row.length;i++){
@@ -382,48 +382,127 @@ async function renderSchedule(){
         else c+=ch;
       }
       r.push(c.trim()); return r;
-    }).filter(r=>r.length>0&&r[0]);
+    }).filter(r=>r.length>0);
 
-    const data = rows.slice(1);
-    const today = new Date().getDay();
-    const dayIdx = today===0?6:today-1;
-    const colors = {'Открытие':'var(--accent)','Усиление':'var(--green)','Закрытие':'var(--blue)'};
-    const labels = {'Открытие':'ОТКРЫТИЕ','Усиление':'УСИЛЕНИЕ','Закрытие':'ЗАКРЫТИЕ'};
+    // Определяем месяц из первой строки (например "Август 2026")
+    const monthTitle = rows[0]?.[0] || 'График';
+    
+    // Строка 4 (индекс 3) содержит дни недели: сб, вск, пн, ...
+    // Строки с индекса 4 — сотрудники
+    const dowRow = rows[3] || [];
+    const staffRows = rows.slice(4).filter(r => r[0] && r[0] !== 'Итого');
+    
+    // Определяем текущий день месяца
+    const today = new Date();
+    const currentDay = today.getDate(); // 1-31
+    const dayColIndex = currentDay + 1; // +2 в массиве (ФИО, Должность, 1, 2, 3...)
+
+    // Кто работает сегодня
+    const workingToday = staffRows.filter(r => {
+      const val = r[dayColIndex];
+      return val && val !== '' && val !== 'в' && val !== 'от' && val !== 'б';
+    }).map(r => ({
+      name: r[0],
+      role: r[1],
+      shift: r[dayColIndex]
+    }));
+
+    // Подсчёт рабочих дней для каждого сотрудника
+    const staffStats = staffRows.map(r => {
+      let workDays = 0;
+      for(let d=2; d<=32; d++){
+        const v = r[d];
+        if(v && v !== '' && v !== 'в' && v !== 'от' && v !== 'б') workDays++;
+      }
+      return { name: r[0], role: r[1], workDays, total: r[r.length-2] || workDays };
+    });
+
+    const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
+    const currentDow = dowShort[today.getDay()];
+
+    // Генерируем мини-календарь на текущую неделю (пн-вс)
+    // Находим понедельник текущей недели
+    const dayOfWeek = today.getDay(); // 0=вск, 1=пн...
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    
+    let weekHtml = '';
+    for(let i=0; i<7; i++){
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dayNum = d.getDate();
+      const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+      const colIdx = dayNum + 1;
+      const working = staffRows.filter(r => {
+        const v = r[colIdx];
+        return v && v !== '' && v !== 'в' && v !== 'от' && v !== 'б';
+      }).length;
+      
+      const dowNames = ['пн','вт','ср','чт','пт','сб','вск'];
+      weekHtml += `
+        <div style="flex:1;text-align:center;padding:8px 4px;background:${isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${isToday?'#000':'var(--text)'}">
+          <div style="font-size:10px;font-weight:700;color:${isToday?'#000':'var(--muted)'};text-transform:uppercase">${dowNames[i]}</div>
+          <div style="font-weight:800;font-size:17px;margin:3px 0">${dayNum}</div>
+          <div style="font-size:11px;color:${isToday?'#000':'var(--muted)'}">${working} чел</div>
+        </div>
+      `;
+    }
 
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>График на неделю</h1>
-      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px;border-radius:10px;margin-bottom:14px;font-size:13px">
-        📊 Данные из Google Таблицы
+      <h1>${monthTitle}</h1>
+      
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
+        📊 <b>Данные из Google Таблицы</b><br>
+        <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
       </div>
-      ${data.map((row,i)=>{
-        const [day,date,type,time,crew] = row;
-        const isToday = i===dayIdx;
-        const color = colors[type]||'var(--muted)';
-        const label = labels[type]||type||'ВЫХОДНОЙ';
-        const isOff = type==='Выходной'||!type;
-        return `<div class="shift" style="${isToday?'border-left:3px solid var(--accent)':''}">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:700;font-size:16px">${day||''} ${date?'· '+date:''}${isToday?' <span style="color:var(--accent);font-size:12px">· СЕГОДНЯ</span>':''}</div>
-              <div style="color:var(--muted);font-size:13px;margin-top:2px">${time||'-'}</div>
-            </div>
-            <div style="padding:5px 10px;background:rgba(255,255,255,.06);color:${color};border-radius:99px;font-size:11px;font-weight:700">${label}</div>
+      
+      <!-- Неделя -->
+      <h2>Эта неделя</h2>
+      <div style="display:flex;gap:6px;margin-bottom:16px">${weekHtml}</div>
+      
+      <!-- Сегодня работают -->
+      <h2>Сегодня на смене <span style="color:var(--accent)">${workingToday.length}</span></h2>
+      ${workingToday.length > 0 ? workingToday.map(p => `
+        <div class="user" style="margin-bottom:8px">
+          <div class="avatar">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div class="user-info">
+            <b>${p.name}</b>
+            <span>${p.role}${p.shift && p.shift !== '1' ? ' · смена '+p.shift : ''}</span>
           </div>
-          ${!isOff&&crew?`<div style="margin-top:8px;font-size:13px;color:var(--muted)">👥 ${crew}</div>`:''}
-        </div>`;
-      }).join('')}
-      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">📝 Редактировать таблицу</a>
+        </div>
+      `).join('') : '<div class="card" style="text-align:center;padding:24px;color:var(--muted)">🎉 Сегодня все отдыхают</div>'}
+      
+      <!-- Статистика сотрудников -->
+      <h2>Команда за месяц</h2>
+      ${staffStats.map(s => `
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px">
+          <div>
+            <div style="font-weight:700;font-size:15px">${s.name}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.role}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:800;font-size:20px;color:var(--accent)">${s.workDays}</div>
+            <div style="font-size:11px;color:var(--muted)">раб. дней</div>
+          </div>
+        </div>
+      `).join('')}
+      
+      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:20px;text-decoration:none;text-align:center">
+        📝 Открыть таблицу
+      </a>
     `;
+    
   } catch(e){
+    console.error(e);
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-      <h1>График на неделю</h1>
+      <h1>График</h1>
       <div class="card" style="text-align:center;padding:30px">
         <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-        <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
-        <div style="font-size:13px;color:var(--muted)">Проверь ID и доступ к таблице</div>
-        <button class="btn btn-sm" style="margin-top:12px" onclick="renderSchedule()">🔄 Повторить</button>
+        <div style="font-weight:700;margin-bottom:8px">Ошибка: ${e.message}</div>
+        <button class="btn btn-sm" onclick="renderSchedule()">🔄 Повторить</button>
       </div>
     `;
   }
