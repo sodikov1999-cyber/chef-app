@@ -2,330 +2,328 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Golos+Text:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0F0D0B;--bg2:#14100D;--card:#1B1613;--card2:#221B16;--line:rgba(255,228,200,.09);--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--green-soft:rgba(95,211,138,.14);--blue:#6FA8FF;--blue-soft:rgba(111,168,255,.14);--red:#FF6B5E;--shadow:0 12px 32px rgba(0,0,0,.35);--r-card:18px;--r-bar:22px}
-[data-theme="light"]{--bg:#F5F0E9;--bg2:#EFE8DE;--card:#FFFDF9;--card2:#FBF5EC;--line:rgba(72,48,24,.11);--text:#261D13;--muted:#7E6F5E;--accent:#F06A1B;--accent-soft:rgba(240,106,27,.13);--green:#1F9E57;--green-soft:rgba(31,158,87,.13);--blue:#2F6FD0;--blue-soft:rgba(47,111,208,.13);--shadow:0 12px 28px rgba(90,60,30,.14)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{font-family:'Golos Text',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100dvh;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
-h1,h2,h3,.disp{font-family:'Unbounded',sans-serif}
-a{color:inherit}button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
-::-webkit-scrollbar{display:none}
-.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.glow{position:absolute;border-radius:50%;filter:blur(90px);animation:drift 20s ease-in-out infinite alternate}
-.g1{width:360px;height:360px;top:-140px;left:-120px;background:rgba(255,122,46,.16)}
-.g2{width:320px;height:320px;bottom:-140px;right:-130px;background:rgba(62,124,89,.15);animation-delay:-10s}
-[data-theme="light"] .g1{background:rgba(255,140,60,.20)}[data-theme="light"] .g2{background:rgba(70,140,100,.18)}
-@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(40px,30px) scale(1.12)}}
-main,header.topbar{position:relative;z-index:1}
-.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 18px 12px;background:linear-gradient(var(--bg) 65%,transparent)}
-.avatar{width:44px;height:44px;border-radius:14px;flex:none;display:grid;place-items:center;font:700 15px 'Unbounded';color:#221405;background:linear-gradient(135deg,#FFB067,var(--accent));box-shadow:0 6px 16px rgba(255,138,61,.35)}
-.hi b{display:block;font:600 17px 'Unbounded';letter-spacing:.2px}.hi span{font-size:12.5px;color:var(--muted)}
-.bell{margin-left:auto;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;border:1px solid var(--line);background:var(--card);position:relative;transition:transform .15s}
-.bell:active{transform:scale(.92)}.bell i{position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px var(--card)}
-.tab{display:none;padding:4px 18px 24px;animation:tabIn .35s ease both}.tab.active{display:block}
-@keyframes tabIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-.rv{animation:rise .5s cubic-bezier(.2,.7,.3,1) both;animation-delay:var(--d,0s)}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow)}
-.lbl{font:700 11px 'Golos Text';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.sec-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px}
-.sec-head h2{margin:0;font-size:16px;font-weight:700;letter-spacing:.02em}
-.link{font-size:13px;font-weight:600;color:var(--accent)}
-.press{transition:transform .15s,box-shadow .2s}.press:active{transform:scale(.97)}
-.shift-card{padding:18px;position:relative;overflow:hidden}
-.shift-card::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,var(--accent-soft),transparent 70%)}
-.pulse{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--green)}
-.pulse::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.8s infinite}
-.pulse.off{color:var(--muted)}.pulse.off::before{background:var(--muted);animation:none}
-@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(95,211,138,.5)}50%{box-shadow:0 0 0 6px rgba(95,211,138,0)}}
-.shift-time{font:800 30px/1.1 'Unbounded';margin:10px 0 2px;letter-spacing:.5px}
-.shift-time em{font-style:normal;color:var(--accent)}.shift-meta{font-size:13px;color:var(--muted)}
-.shift-crew{display:flex;margin-top:14px}.shift-crew .mini{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font:700 10px 'Unbounded';border:2px solid var(--card);margin-left:-8px;background:var(--card2);border:1px solid var(--line)}.shift-crew .mini:first-child{margin-left:0}.shift-crew .mini.you{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.tile{padding:16px 14px;display:flex;flex-direction:column;gap:10px;text-align:left}
-.tile .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px}
-.tile b{font:600 14px 'Unbounded'}.tile span{font-size:11.5px;color:var(--muted);margin-top:-6px}
-.mini-prog{margin-top:14px;padding:16px}
-.bar{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:10px}
-.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#FFB067);transition:width .5s cubic-bezier(.2,.7,.3,1)}
-.news-row{padding:14px;display:flex;gap:12px;margin-bottom:10px}
-.news-tag{flex:none;font:700 10px 'Golos Text';letter-spacing:.1em;text-transform:uppercase;padding:5px 9px;border-radius:99px;height:fit-content}
-.news-row b{font-size:14px;display:block;line-height:1.35}.news-row p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.45}.news-row time{font-size:11px;color:var(--muted)}
-.tab h1.pt{font-size:24px;font-weight:800;margin:10px 0 14px}
-.search{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border-radius:15px;margin-bottom:12px}
-.search input{flex:1;background:none;border:0;outline:0;color:var(--text);font:500 15px 'Golos Text'}.search input::placeholder{color:var(--muted)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x proximity}
-.chip{flex:none;scroll-snap-align:start;padding:9px 15px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--muted);transition:all .2s}.chip.on{background:var(--accent);border-color:var(--accent);color:#1E0F02}
-.ttk-row{display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:13px;margin-bottom:10px}
-.ttk-emoji{width:54px;height:54px;flex:none;border-radius:15px;display:grid;place-items:center;font-size:27px}
-.ttk-row .nm{font:600 15px 'Unbounded';letter-spacing:.1px}.ttk-row .mt{font-size:12px;color:var(--muted);margin-top:4px}.ttk-row .chev{margin-left:auto;color:var(--muted);flex:none}
-.empty{padding:44px 20px;text-align:center;color:var(--muted);font-size:14px}.empty span{font-size:38px;display:block;margin-bottom:10px}
-.skel{height:80px;border-radius:var(--r-card);margin-bottom:10px;background:linear-gradient(100deg,var(--card) 40%,var(--card2) 50%,var(--card) 60%);background-size:200% 100%;animation:shim 1.1s infinite}
-@keyframes shim{to{background-position:-200% 0}}
-.dim{position:fixed;inset:0;background:rgba(8,5,3,.55);backdrop-filter:blur(3px);z-index:90;opacity:0;pointer-events:none;transition:opacity .3s}.dim.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:100;height:92dvh;border-radius:26px 26px 0 0;background:var(--bg);border-top:1px solid var(--line);transform:translateY(105%);transition:transform .38s cubic-bezier(.25,.8,.3,1);display:flex;flex-direction:column}.sheet.open{transform:none}
-.grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:10px auto 0;flex:none}
-.sheet-head{display:flex;align-items:center;gap:12px;padding:14px 18px 12px;flex:none}.sheet-head h3{margin:0;font-size:16px;font-weight:700;flex:1}
-.xbtn{width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:15px;transition:transform .15s}.xbtn:active{transform:scale(.9) rotate(90deg)}
-.sheet-body{overflow-y:auto;padding:0 18px calc(30px + env(safe-area-inset-bottom))}
-.d-hero{display:flex;gap:14px;align-items:center;margin-bottom:14px}.d-hero .big{width:74px;height:74px;border-radius:20px;display:grid;place-items:center;font-size:38px;flex:none}.d-hero h2{margin:6px 0 0;font-size:20px;font-weight:800;line-height:1.2}
-.cat-chip{display:inline-block;font:700 10px 'Golos Text';letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:99px}
-.kpi-row{display:flex;gap:8px;overflow-x:auto;margin:2px 0 16px}.kpi{flex:none;padding:10px 13px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:12px;color:var(--muted)}.kpi b{display:block;font:700 15px 'Unbounded';color:var(--text);margin-top:2px}
-.d-sub{font:700 15px 'Unbounded';margin:18px 0 10px;display:flex;align-items:center;justify-content:space-between}
-.mults{display:flex;gap:6px}.mult{padding:6px 12px;border-radius:99px;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--muted);transition:all .2s}.mult.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
-table.ingr{width:100%;border-collapse:collapse;font-size:13.5px}
-table.ingr th{font:700 10px 'Golos Text';letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
-table.ingr th:not(:first-child),table.ingr td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-table.ingr td{padding:9px 6px;border-bottom:1px solid var(--line)}table.ingr td b{color:var(--accent);font-weight:600}
-table.ingr tr{animation:rise .3s both}
-.steps{counter-reset:st;display:flex;flex-direction:column;gap:10px}.step{display:flex;gap:12px;padding:13px 14px;border-radius:15px;border:1px solid var(--line);background:var(--card)}.step::before{counter-increment:st;content:counter(st);flex:none;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font:700 12px 'Unbounded';background:var(--accent-soft);color:var(--accent)}.step p{margin:2px 0 0;font-size:13.5px;line-height:1.5}
-.note{display:flex;gap:10px;padding:13px 14px;border-radius:15px;background:var(--green-soft);border:1px solid rgba(95,211,138,.25);font-size:13px;line-height:1.5;margin-top:16px}
-.allerg{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}.allerg span{font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:99px;background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
-.week-nav{display:flex;align-items:center;gap:10px;margin:6px 0 14px}.wn-btn{width:40px;height:40px;border-radius:13px;border:1px solid var(--line);background:var(--card);font-size:17px;transition:transform .15s}.wn-btn:active{transform:scale(.9)}.wn-btn:disabled{opacity:.3}.week-nav b{flex:1;text-align:center;font:600 14px 'Unbounded'}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}.day{padding:10px 4px 8px;border-radius:14px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .2s}.day small{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}.day b{font:700 15px 'Unbounded'}.day i{width:6px;height:6px;border-radius:50%;background:var(--line)}.day.mine i{background:var(--accent)}.day.today{border-color:var(--accent)}.day.on{background:var(--accent);border-color:var(--accent)}.day.on small,.day.on b{color:#1E0F02}.day.on i{background:#1E0F02}
-.week-sum{display:flex;gap:8px;margin-bottom:16px}.ws{flex:1;padding:12px;border-radius:15px;border:1px solid var(--line);background:var(--card);text-align:center}.ws b{display:block;font:800 19px 'Unbounded';color:var(--accent)}.ws span{font-size:11px;color:var(--muted)}
-.shift-row{padding:15px;display:flex;gap:14px;align-items:center;margin-bottom:10px}.s-time{font:800 17px 'Unbounded';letter-spacing:.3px;white-space:nowrap}.s-type{font:700 10px 'Golos Text';letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:99px;width:fit-content;margin-bottom:5px}.s-crew{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-.ppl{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;max-width:170px}.ppl span{font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:99px;background:var(--bg2);border:1px solid var(--line)}.ppl span.you{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
-.legend{display:flex;gap:14px;margin-top:4px;font-size:12px;color:var(--muted)}.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.cl{margin-bottom:14px;overflow:hidden}.cl-head{display:flex;align-items:center;gap:14px;width:100%;padding:16px;text-align:left}.ring{width:46px;height:46px;flex:none;transform:rotate(-90deg)}.ring circle{fill:none;stroke-width:4}.ring .rbg{stroke:var(--bg2)}.ring .rfg{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .5s cubic-bezier(.2,.7,.3,1)}.cl.done .rfg{stroke:var(--green)}.cl-head b{font:600 15px 'Unbounded';display:block}.cl-head span{font-size:12px;color:var(--muted)}.cl-head .arr{margin-left:auto;color:var(--muted);transition:transform .3s}.cl.exp .arr{transform:rotate(180deg)}.cl-body{max-height:0;transition:max-height .4s cubic-bezier(.2,.7,.3,1)}.cl.exp .cl-body{max-height:700px}
-.cl-items{padding:0 16px 6px}.citem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 4px;border-top:1px solid var(--line);font-size:13.5px;line-height:1.4}.box{width:23px;height:23px;flex:none;border-radius:8px;border:1.6px solid var(--muted);display:grid;place-items:center;transition:all .2s}.box svg{width:13px;height:13px;stroke:#12331F;stroke-width:3.2;fill:none;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .25s .05s}.citem.on .box{background:var(--green);border-color:var(--green)}.citem.on .box svg{stroke-dashoffset:0}.citem.on span{color:var(--muted);text-decoration:line-through}
-.cl-foot{padding:10px 16px 16px;display:flex;justify-content:flex-end}.reset{font-size:12.5px;font-weight:600;color:var(--muted);padding:8px 12px;border-radius:10px}.reset:active{background:var(--bg2)}
-.mrow{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:15px 16px;margin-bottom:9px}.mrow .mi{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:19px;flex:none}.mrow b{font-size:14.5px;font-weight:600}.mrow span{display:block;font-size:12px;color:var(--muted);margin-top:2px}.mrow .chev{margin-left:auto;color:var(--muted)}
-.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:22px;line-height:1.7}
-.team-row{display:flex;align-items:center;gap:13px;padding:13px 4px;border-bottom:1px solid var(--line)}.team-row .av{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;font:700 13px 'Unbounded';background:var(--accent-soft);color:var(--accent)}.team-row b{font-size:14.5px}.team-row span{display:block;font-size:12px;color:var(--muted);margin-top:2px}.team-row .acts{margin-left:auto;display:flex;gap:8px}
-.icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;font-size:15px;transition:transform .15s}.icon-btn:active{transform:scale(.9)}
-.doc-row{display:flex;align-items:center;gap:13px;padding:14px 4px;border-bottom:1px solid var(--line);font-size:14px}.doc-row .fi{width:40px;height:40px;border-radius:12px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font:800 11px 'Unbounded';flex:none}
-.about-c{text-align:center;padding:26px 10px 8px}.about-c .logo{width:72px;height:72px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;font-size:36px;background:linear-gradient(135deg,#FFB067,var(--accent));box-shadow:0 10px 26px rgba(255,138,61,.35)}.about-c h2{margin:0;font-size:22px;font-weight:800}.about-c p{color:var(--muted);font-size:13.5px;line-height:1.55;margin:10px auto 18px;max-width:270px}
-.btn{display:inline-block;padding:13px 22px;border-radius:14px;font-weight:700;font-size:14px;background:var(--accent);color:#1E0F02;transition:transform .15s}.btn:active{transform:scale(.96)}
-#tabbar{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:50;display:flex;gap:4px;padding:8px;border-radius:var(--r-bar);background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:blur(12px)}.tbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px 6px;border-radius:15px;color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.04em;transition:all .25s}.tbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.tbtn.on{color:var(--accent);background:var(--accent-soft)}.tbtn.on svg{transform:translateY(-1px)}.tbtn:active{transform:scale(.93)}
-#toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:200;background:var(--text);color:var(--bg);padding:11px 18px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis}#toast.show{opacity:1;transform:translateX(-50%)}
+:root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Golos Text',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+h1,h2{font-family:'Unbounded',sans-serif;margin-bottom:20px}
+.card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)}
+.btn{display:block;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;text-align:left}
+.btn:active{transform:scale(.98)}
+.pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{padding:20px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.tile:active{transform:scale(.97)}
+.tile-emoji{font-size:32px;margin-bottom:8px}
+.tile-title{font-weight:600;font-size:14px}
+.tile-desc{font-size:12px;color:var(--muted);margin-top:4px}
+.recipe{margin-bottom:12px;padding:16px;background:rgba(255,255,255,.03);border-radius:12px;cursor:pointer}
+.recipe:active{background:rgba(255,255,255,.06)}
+.recipe-name{font-weight:600;margin-bottom:4px}
+.recipe-meta{font-size:12px;color:var(--muted)}
+.back{display:inline-block;padding:8px 16px;background:rgba(255,255,255,.08);border-radius:10px;color:var(--text);text-decoration:none;margin-bottom:20px;cursor:pointer;border:none;font-size:14px}
+.ingredient{padding:12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between}
+.ingredient:last-child{border:none}
+.step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent)}
+.shift{padding:16px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:10px}
+.shift-time{font-weight:600;font-size:18px;color:var(--accent)}
+.shift-type{font-size:12px;color:var(--muted);margin-top:4px}
+.news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:10px;border-left:3px solid var(--accent)}
+.news-title{font-weight:600;margin-bottom:4px}
+.news-text{font-size:13px;color:var(--muted)}
+.news-date{font-size:11px;color:var(--muted);margin-top:6px}
+.check-item{display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
+.check-item:last-child{border:none}
+.check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-item.done .check-box{background:var(--green);border-color:var(--green)}
+.check-item.done .check-box::after{content:'✓';color:#000;font-weight:bold}
+.check-item.done span{text-decoration:line-through;color:var(--muted)}
+.loading{text-align:center;padding:40px;color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="bg"><div class="glow g1"></div><div class="glow g2"></div></div>
-<header class="topbar"><div class="avatar" id="ava">ШБ</div><div class="hi"><b id="greet">Привет!</b><span id="today"></span></div><button class="bell press" id="bellBtn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><i></i></button></header>
-<main>
-<section class="tab active" id="tab-home"><div id="homeShift"></div><div class="tiles rv" style="--d:.08s"><button class="tile card press" data-goto="ttk"><div class="ico" style="background:var(--accent-soft)">📖</div><b>ТТК</b><span>Техкарты</span></button><button class="tile card press" data-goto="sched"><div class="ico" style="background:var(--blue-soft)">🗓</div><b>График</b><span>Смены</span></button><button class="tile card press" data-goto="check"><div class="ico" style="background:var(--green-soft)">✅</div><b>Чек-листы</b><span>Открытие/закрытие</span></button><button class="tile card press" id="teamTile"><div class="ico" style="background:rgba(255,107,94,.14)">👥</div><b>Команда</b><span>Контакты</span></button></div><div class="mini-prog card rv" style="--d:.14s" id="homeProg"></div><div class="sec-head rv" style="--d:.18s"><h2>Объявления</h2><button class="link" id="allNews">Все →</button></div><div id="homeNews" class="rv" style="--d:.22s"></div></section>
-<section class="tab" id="tab-ttk"><h1 class="pt">Техкарты</h1><div class="card search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="ttkSearch" type="search" placeholder="Найти блюдо или продукт…"></div><div class="chips" id="ttkCats"></div><div id="ttkList"></div></section>
-<section class="tab" id="tab-sched"><h1 class="pt">График смен</h1><div class="week-nav"><button class="wn-btn press" id="wPrev">‹</button><b id="wLabel"></b><button class="wn-btn press" id="wNext">›</button></div><div class="days" id="daysRow"></div><div class="week-sum" id="weekSum"></div><div class="sec-head" style="margin-top:4px"><h2 id="dayTitle"></h2></div><div id="dayShifts"></div><div class="legend"><span><i style="background:var(--accent)"></i>Открытие</span><span><i style="background:var(--green)"></i>Усиление</span><span><i style="background:var(--blue)"></i>Закрытие</span></div></section>
-<section class="tab" id="tab-check"><h1 class="pt">Чек-листы</h1><div id="clWrap"></div><p class="foot">Отметки сохраняются на сервере</p></section>
-<section class="tab" id="tab-more"><h1 class="pt">Ещё</h1><div id="moreList"></div><p class="foot">ШефБук v3.0</p></section>
-</main>
-<nav id="tabbar">
-<button class="tbtn on" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Главная</button>
-<button class="tbtn" data-tab="ttk"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/><path d="M9 7h7M9 11h5"/></svg>ТТК</button>
-<button class="tbtn" data-tab="sched"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>График</button>
-<button class="tbtn" data-tab="check"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8.5 9l2 2 4-4M8.5 15.5h7"/></svg>Чек-лист</button>
-<button class="tbtn" data-tab="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></svg>Ещё</button>
-</nav>
-<div class="dim" id="dim"></div>
-<div class="sheet" id="sheet"><div class="grab"></div><div class="sheet-head"><h3 id="sheetTitle"></h3><button class="xbtn" id="sheetClose">✕</button></div><div class="sheet-body" id="sheetBody"></div></div>
-<div id="toast"></div>
+
+<div id="app">
+  <div class="loading">Загрузка...</div>
+</div>
 
 <script>
-/* =========================================
-   ВАЖНО! ЗАМЕНИ ЭТИ 2 ЗНАЧЕНИЯ НА СВОИ:
-   (из Settings → API в Supabase)
-   ========================================= */
+// ===== ВАЖНО: ЗАМЕНИ ЭТИ ЗНАЧЕНИЯ НА СВОИ =====
 const SUPABASE_URL = 'zduiaodltjrmibinysmi';
 const SUPABASE_KEY = 'sb_publishable_pf8p6bBcJWnQDJx46lFzCQ_AUZb_rQH';
+// ===============================================
 
-const BOT_TOKEN = '8684266398:AAFt9-lOUC1INXpnwDhWnTwcXeBeb4coFnc '; // от @BotFather
+const tg = window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand()}
 
-/* ===== Telegram ===== */
-const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
-const USER_NAME = user && user.first_name ? user.first_name : 'Шеф';
-const INIT_DATA = tg && tg.initData ? tg.initData : '';
+const $ = s => document.querySelector(s);
+const app = $('#app');
 
-function haptic(kind){try{if(!tg||!tg.HapticFeedback)return;if(kind==='success')tg.HapticFeedback.notificationOccurred('success');else tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light')}catch(e){}}
-function applyTheme(){let s='dark';try{if(tg&&tg.colorScheme)s=tg.colorScheme;else if(!window.matchMedia('(prefers-color-scheme:dark)').matches)s='light';if(tg&&tg.setHeaderColor)tg.setHeaderColor(s==='dark'?'#0F0D0B':'#F5F0E9');if(tg&&tg.setBackgroundColor)tg.setBackgroundColor(s==='dark'?'#0F0D0B':'#F5F0E9')}catch(e){}document.documentElement.dataset.theme=s}
-applyTheme();if(tg){try{tg.ready();tg.expand()}catch(e){}if(tg.onEvent)tg.onEvent('themeChanged',applyTheme)}
-
-/* ===== Supabase API клиент ===== */
-const S = {
-  async q(table, params=''){
+// API клиент
+const api = {
+  async get(table, params=''){
     const url = SUPABASE_URL + '/rest/v1/' + table + (params?'?'+params:'');
     const res = await fetch(url, {
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + SUPABASE_KEY
       }
     });
-    if (!res.ok) throw new Error('HTTP '+res.status);
     return res.json();
-  },
-  async upsert(table, rows){
-    const res = await fetch(SUPABASE_URL+'/rest/v1/'+table,{
-      method:'POST',
-      headers:{
-        'apikey':SUPABASE_KEY,
-        'Authorization':'Bearer '+SUPABASE_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'resolution=merge-duplicates'
-      },
-      body: JSON.stringify(rows)
-    });
-    return res.ok;
-  },
-  categories: ()=> S.q('categories','order=position.asc'),
-  recipes: ()=> S.q('recipes','order=position.asc&category_id=eq.'),
-  allRecipes: ()=> S.q('recipes','order=position.asc'),
-  recipe: (id)=> S.q('recipes','id=eq.'+id+'&limit=1').then(r=>r[0]),
-  ingredients: (rid)=> S.q('ingredients','recipe_id=eq.'+rid+'&order=position.asc'),
-  steps: (rid)=> S.q('steps','recipe_id=eq.'+rid+'&order=position.asc'),
-  news: ()=> S.q('news','order=date.desc'),
-  users: ()=> S.q('users','order=position.asc'),
-  shifts: (from,to)=> S.q('shifts','date=gte.'+from+'&date=lte.'+to+'&order=date.asc'),
-  shiftUsers: (from,to)=> S.q('shift_users,users!inner(id,first_name,last_name,role,telegram_id)','shifts!inner(date=gte.'+from+',date=lte.'+to+')'),
-  checklists: (uid,date)=> S.q('checklists','user_id=eq.'+uid+'&date=eq.'+date+'&limit=1').then(r=>r[0]),
+  }
 };
 
-/* ===== Утилиты ===== */
-const $=s=>document.querySelector(s);
-const iso=d=>d.toISOString().slice(0,10);
-const fmt=(d,o)=>new Intl.DateTimeFormat('ru-RU',o).format(d);
-const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
-function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
-function initials(n){return(n||'ШБ').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-function monday(w){const n=new Date();const off=(n.getDay()+6)%7;const m=new Date(n);m.setDate(n.getDate()-off+w*7);m.setHours(0,0,0,0);return m}
-const dow=d=>(d.getDay()+6)%7;
-const WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-const SHIFTS={open:{label:'Открытие',time:'09:00–17:00',s:9,e:17,color:'var(--accent)',soft:'var(--accent-soft)'},mid:{label:'Усиление',time:'12:00–20:00',s:12,e:20,color:'var(--green)',soft:'var(--green-soft)'},close:{label:'Закрытие',time:'15:00–23:00',s:15,e:23,color:'var(--blue)',soft:'var(--blue-soft)'}};
+// Роутер
+let currentView = 'home';
+let currentRecipe = null;
 
-/* ===== Шапка ===== */
-(function(){const h=new Date().getHours();const g=h>=5&&h<12?'Доброе утро':h>=12&&h<18?'Добрый день':h>=18&&h<24?'Добрый вечер':'Доброй ночи';$('#greet').textContent=g+', '+USER_NAME+'!';$('#today').textContent=cap(fmt(new Date(),{weekday:'long',day:'numeric',month:'long'}));const ava=$('#ava');if(user&&user.photo_url){ava.innerHTML='<img src="'+user.photo_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">'}else ava.textContent=initials(USER_NAME);$('#bellBtn').onclick=()=>{haptic();openNews()}})();
-
-/* ===== Табы ===== */
-function showTab(id,silent){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.id==='tab-'+id));document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));$('.topbar').style.display=id==='home'?'flex':'none';if(!silent)haptic();window.scrollTo({top:0})}
-document.querySelectorAll('.tbtn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
-document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{haptic();showTab(b.dataset.goto)});
-
-/* ===== Данные ===== */
-let TEAM=[],TTK=[],NEWS=[],CATS={},CHECK_ITEMS={open:['Включить вентиляцию, разогреть печи','Проверить температурные листы холодильников','Принять поставку, сверить накладные','Обновить заготовки по стоп-листу','Санобработка поверхностей и инвентаря','Проверить кассу и терминал','Выставить меню-борды и витрину'],close:['Убрать заготовки, промаркировать','Санобработка цеха','Почистить и выключить оборудование','Вынести мусор, заменить пакеты','Снять кассу, отправить отчёт','Выключить свет и технику в зале','Поставить помещение на сигнализацию']};
-let shiftsByDate={};
-window._clState={open:[],close:[]};
-let MY_DB_ID=null; // id текущего юзера в БД
-
-async function ensureUser(){
-  if(!user) return null;
-  const existing = await S.q('users','telegram_id=eq.'+user.id+'&limit=1');
-  if(existing.length) { MY_DB_ID=existing[0].id; return existing[0]; }
-  const ins = await fetch(SUPABASE_URL+'/rest/v1/users?select=id',{
-    method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body:JSON.stringify({telegram_id:user.id,first_name:user.first_name,last_name:user.last_name||null,username:user.username||null,role:'Повар',position:99})
-  });
-  const r=await ins.json();
-  if(r[0]) MY_DB_ID=r[0].id;
-  return r[0];
+function navigate(view, data){
+  currentView = view;
+  if(data) currentRecipe = data;
+  render();
 }
 
-async function loadData(){
-  try{
-    const [cats,recs,newsR,users] = await Promise.all([S.categories(),S.allRecipes(),S.news(),S.users()]);
-    CATS={};cats.forEach(c=>{CATS[c.id]={h:c.hue,e:c.emoji,name:c.name}});
-    TTK=recs.map(r=>({...r,category_name:CATS[r.category_id]?.name||r.category_id,allergens:r.allergens||[],kbju:r.kbju||{}}));
-    NEWS=(newsR||[]).map(n=>({tag:n.tag,color:n.color,soft:n.soft,t:n.title,x:n.body,off:Math.round((new Date(n.date)-new Date())/86400000)+1}));
-    TEAM=(users||[]).map(u=>({id:u.telegram_id,name:[u.first_name,u.last_name].filter(Boolean).join(' '),role:u.role,_isMe:u.telegram_id===user?.id}));
-    await ensureUser();
-  }catch(e){console.error(e);toast('Не удалось загрузить данные')}
+function render(){
+  if(currentView === 'home') renderHome();
+  else if(currentView === 'ttk') renderTTK();
+  else if(currentView === 'recipe') renderRecipe();
+  else if(currentView === 'schedule') renderSchedule();
+  else if(currentView === 'checklist') renderChecklist();
+  else if(currentView === 'team') renderTeam();
 }
 
-const person=id=>TEAM.find(t=>t.id===id)||{name:'?',role:''};
-
-/* ===== Главная ===== */
 async function renderHome(){
-  $('#homeShift').innerHTML='<div class="skel"></div>';
-  const now=new Date(),today=iso(now);
-  const m=monday(0),sun=new Date(m);sun.setDate(m.getDate()+6);
-  try{const shifts=await S.shifts(iso(m),iso(sun));shifts.forEach(s=>{if(!shiftsByDate[s.date])shiftsByDate[s.date]={};shiftsByDate[s.date][s.type]=s})}catch(e){}
-  const todayShifts=shiftsByDate[today]||{};
-  const myType=Object.keys(todayShifts).find(t=>true); // просто берём первую смену дня (демо)
-  // более корректно: проверяем shift_users
-  let myType2=null,myColleagues=[];
-  for(const t of ['open','mid','close']){
-    if(!todayShifts[t]) continue;
-    try{
-      const su=await S.q('shift_users,users!inner(id,first_name,last_name,role,telegram_id)','shift_id=eq.'+todayShifts[t].id);
-      const people=(su||[]).map(r=>({...r.users,name:[r.users.first_name,r.users.last_name].filter(Boolean).join(' ')}));
-      if(people.some(p=>p.telegram_id===user?.id)){
-        myType2=t;
-        myColleagues=people.filter(p=>p.telegram_id!==user?.id);
-        todayShifts[t]._people=people;
-        break;
-      }
-    }catch(e){}
+  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  
+  const [recipes, news] = await Promise.all([
+    api.get('recipes', 'order=position.asc'),
+    api.get('news', 'order=date.desc')
+  ]);
+
+  const today = new Date().toISOString().slice(0,10);
+  const shifts = await api.get('shifts', `date=eq.${today}&order=type.asc`);
+
+  let shiftHtml = '';
+  if(shifts.length > 0){
+    const shift = shifts[0];
+    const types = {open:'Открытие',mid:'Усиление',close:'Закрытие'};
+    const times = {open:'09:00–17:00',mid:'12:00–20:00',close:'15:00–23:00'};
+    shiftHtml = `
+      <div class="card">
+        <span class="pulse"></span>Сегодня
+        <div style="margin-top:12px">
+          <div class="shift-time">${times[shift.type]}</div>
+          <div class="shift-type">${types[shift.type]}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    shiftHtml = '<div class="card">🎉 Сегодня выходной</div>';
   }
-  const st=myType2?SHIFTS[myType2]:null;
-  let status='';
-  if(st){const hh=now.getHours();const w=hh>=st.s&&hh<st.e;status=w?'<span class="pulse">Смена идёт</span>':'<span class="pulse off">Начало в '+st.time.split('–')[0]+'</span>'}
-  let nextLine='';
-  if(!st){for(let i=1;i<14;i++){const d=new Date(now);d.setDate(now.getDate()+i);if(shiftsByDate[iso(d)]){nextLine='Сегодня выходной · следующая смена: '+fmt(d,{weekday:'short',day:'numeric',month:'long'});break}}}
-  const crew=myColleagues.slice(0,4).map(p=>'<div class="mini">'+initials(p.name)+'</div>').join('');
-  $('#homeShift').innerHTML='<div class="shift-card card rv">'+status+(st?'<div class="shift-time">Сегодня <em>'+st.time+'</em></div><div class="shift-meta">'+st.label+' · с вами: '+myColleagues.map(p=>p.name.split(' ')[0]).join(', ')+'</div><div class="shift-crew"><div class="mini you">Я</div>'+crew+'</div>':'<div class="shift-time">Выходной 🎉</div><div class="shift-meta">'+nextLine+'</div>')+'</div>';
-  renderHomeProg();
-  $('#homeNews').innerHTML=NEWS.slice(0,2).map(n=>newsRow(n)).join('')||'<div class="empty card"><span>📣</span>Пока нет объявлений</div>';
+
+  app.innerHTML = `
+    <h1>ШефБук 👨‍🍳</h1>
+    ${shiftHtml}
+    
+    <div class="grid" style="margin-bottom:20px">
+      <div class="tile" onclick="navigate('ttk')">
+        <div class="tile-emoji">📖</div>
+        <div class="tile-title">ТТК</div>
+        <div class="tile-desc">Техкарты</div>
+      </div>
+      <div class="tile" onclick="navigate('schedule')">
+        <div class="tile-emoji">🗓</div>
+        <div class="tile-title">График</div>
+        <div class="tile-desc">Смены</div>
+      </div>
+      <div class="tile" onclick="navigate('checklist')">
+        <div class="tile-emoji">✅</div>
+        <div class="tile-title">Чек-лист</div>
+        <div class="tile-desc">Открытие</div>
+      </div>
+      <div class="tile" onclick="navigate('team')">
+        <div class="tile-emoji">👥</div>
+        <div class="tile-title">Команда</div>
+        <div class="tile-desc">Контакты</div>
+      </div>
+    </div>
+
+    <h2>Объявления</h2>
+    ${news.length ? news.slice(0,3).map(n => `
+      <div class="news">
+        <div class="news-title">${n.tag}</div>
+        <div class="news-text">${n.title}</div>
+        <div class="news-date">${new Date(n.date).toLocaleDateString('ru-RU')}</div>
+      </div>
+    `).join('') : '<div class="card">Нет объявлений</div>'}
+  `;
 }
-function newsRow(n){const d=new Date();d.setDate(d.getDate()+n.off);const w=n.off===0?'Сегодня':n.off===-1?'Вчера':fmt(d,{day:'numeric',month:'long'});return '<button class="news-row card press" style="width:100%;text-align:left" onclick="openNews()"><span class="news-tag" style="background:'+n.soft+';color:'+n.color+'">'+n.tag+'</span><span><b>'+n.t+'</b><p>'+n.x+'</p><time>'+w+'</time></span></button>'}
-function checksState(){return window._clState}
-async function saveChecks(s){window._clState=s;if(!MY_DB_ID)return;try{await S.upsert('checklists',[{user_id:MY_DB_ID,date:iso(new Date()),open_items:s.open,close_items:s.close,updated_at:Date.now()}])}catch(e){toast('Не удалось сохранить на сервере')}}
-function renderHomeProg(){const st=checksState();const total=CHECK_ITEMS.open.length;const done=st.open.length;const pct=Math.round(done/total*100);$('#homeProg').innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl">Чек-лист открытия</span><b class="disp" style="font-size:15px;color:var(--accent)">'+done+' / '+total+'</b></div><div class="bar"><i style="width:'+pct+'%"></i></div><button class="link" style="margin-top:10px" onclick="haptic();showTab(\'check\')">Продолжить →</button>'}
-$('#allNews').onclick=()=>{haptic();openNews()};
-$('#teamTile').onclick=()=>{haptic();openTeam()};
-window.openNews=function(){openSheet('Объявления',NEWS.map(n=>{const d=new Date();d.setDate(d.getDate()+n.off);const w=n.off===0?'Сегодня':fmt(d,{day:'numeric',month:'long'});return '<div class="news-row card" style="margin-bottom:10px"><span class="news-tag" style="background:'+n.soft+';color:'+n.color+'">'+n.tag+'</span><span><b>'+n.t+'</b><p>'+n.x+'</p><time>'+w+'</time></span></div>'}).join('')||'<div class="empty"><span>📣</span>Нет объявлений</div>')};
-window.openTeam=function(){openSheet('Команда',TEAM.map(p=>'<div class="team-row"><div class="av">'+initials(p.name)+'</div><div><b>'+p.name+(p._isMe?' · вы':'')+'</b><span>'+p.role+'</span></div><div class="acts"><button class="icon-btn press" onclick="toast(\'Откроется чат\')">✈️</button></div></div>').join('')||'<div class="empty"><span>👥</span>Команда не загружена</div>')};
 
-/* ===== ТТК ===== */
-let ttkCat='Все',ttkQ='',ttkLoaded=false;
-function tileStyle(cat){const h=(CATS[cat]||{h:0}).h;return 'background:linear-gradient(135deg,hsla('+h+',75%,55%,.30),hsla('+h+',75%,45%,.08));border:1px solid hsla('+h+',75%,60%,.28)'}
-function renderCats(){const cats=['Все',...Object.keys(CATS)];$('#ttkCats').innerHTML=cats.map(c=>'<button class="chip'+(c===ttkCat?' on':'')+'" data-cat="'+c+'">'+(c==='Все'?'Все блюда':(CATS[c]?.e||'')+' '+(CATS[c]?.name||c))+'</button>').join('');document.querySelectorAll('#ttkCats .chip').forEach(ch=>ch.onclick=()=>{ttkCat=ch.dataset.cat;haptic();renderCats();renderTTK()})}
-function renderTTK(){const list=$('#ttkList');if(!ttkLoaded){list.innerHTML='<div class="skel"></div><div class="skel"></div><div class="skel"></div>';return}const q=ttkQ.trim().toLowerCase();const items=TTK.filter(t=>(ttkCat==='Все'||t.category_name===ttkCat)&&(!q||t.name.toLowerCase().includes(q)));if(!items.length){list.innerHTML='<div class="empty card"><span>🔍</span>По запросу ничего нет.</div>';return}list.innerHTML=items.map((t,i)=>'<button class="ttk-row card press rv" style="--d:'+(i*0.04)+'s" data-id="'+t.id+'"><div class="ttk-emoji" style="'+tileStyle(t.category_id)+'">'+(CATS[t.category_id]?.e||'🍽')+'</div><div><div class="nm">'+t.name+'</div><div class="mt">'+t.category_name+' · '+t.time+' · выход '+t.yield_g+'</div></div><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>').join('');list.querySelectorAll('.ttk-row').forEach(r=>r.onclick=()=>{haptic('hard');openTTK(+r.dataset.id)})}
-$('#ttkSearch').addEventListener('input',e=>{ttkQ=e.target.value;renderTTK()});
-async function openTTK(id){openSheet('Загрузка...','<div class="skel"></div><div class="skel"></div>');try{const r=await S.recipe(id);const ings=await S.ingredients(id);const stps=await S.steps(id);const t={...r,category_name:CATS[r.category_id]?.name||r.category_id,allergens:r.allergens||[],kbju:r.kbju||{},ingr:ings.map(x=>[x.name,x.brutto,x.netto]),steps:stps.map(s=>s.text)};let mult=1;const catColor='hsla('+(CATS[t.category_id]?.h||0)+',75%,60%,1)';const catSoft='hsla('+(CATS[t.category_id]?.h||0)+',75%,55%,.16)';const body='<div class="d-hero"><div class="big" style="'+tileStyle(t.category_id)+'">'+(CATS[t.category_id]?.e||'🍽')+'</div><div><span class="cat-chip" style="background:'+catSoft+';color:'+catColor+'">'+t.category_name+'</span><h2 class="disp">'+t.name+'</h2></div></div><div class="kpi-row"><div class="kpi">Выход<b>'+t.yield_g+'</b></div><div class="kpi">Время<b>'+t.time+'</b></div><div class="kpi">Калорийность<b>'+(t.kcal||0)+' ккал</b></div><div class="kpi">Б/Ж/У<b>'+(t.kbju.b||0)+'/'+(t.kbju.f||0)+'/'+(t.kbju.c||0)+'</b></div></div><div class="d-sub"><span>Ингредиенты</span><div class="mults">'+[1,2,5,10].map(m=>'<button class="mult'+(m===1?' on':'')+'" data-m="'+m+'">×'+m+'</button>').join('')+'</div></div><table class="ingr"><thead><tr><th>Продукт</th><th>Брутто</th><th>Нетто</th></tr></thead><tbody id="ingrBody"></tbody></table><div class="d-sub" style="margin-top:20px"><span>Приготовление</span></div><div class="steps">'+(t.steps||[]).map(s=>'<div class="step"><p>'+s+'</p></div>').join('')+'</div>'+((t.allergens||[]).length?'<div class="allerg">'+t.allergens.map(a=>'<span>⚠ '+a+'</span>').join('')+'</div>':'')+'<div class="note">🧊 <span>'+t.note+'</span></div>';openSheet('ТТК №'+String(t.id).padStart(3,'0'),body);const fill=()=>{$('#ingrBody').innerHTML=(t.ingr||[]).map((r,i)=>'<tr style="animation-delay:'+(i*0.025)+'s"><td>'+r[0]+'</td><td>'+Math.round(r[1]*mult)+' г</td><td><b>'+Math.round(r[2]*mult)+' г</b></td></tr>').join('')};fill();document.querySelectorAll('.mult').forEach(b=>b.onclick=()=>{mult=+b.dataset.m;haptic();document.querySelectorAll('.mult').forEach(x=>x.classList.toggle('on',x===b));fill()})}catch(e){openSheet('Ошибка','Не удалось загрузить рецепт.')}}
+async function renderTTK(){
+  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  const recipes = await api.get('recipes', 'order=position.asc');
+  
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home')">← Назад</button>
+    <h1>Техкарты</h1>
+    ${recipes.map(r => `
+      <div class="recipe" onclick="navigate('recipe', ${r.id})">
+        <div class="recipe-name">${r.name}</div>
+        <div class="recipe-meta">${r.time} · ${r.yield_g}</div>
+      </div>
+    `).join('')}
+  `;
+}
 
-/* ===== График ===== */
-let weekOff=0,selDay=dow(new Date());
-async function renderSched(){const m=monday(weekOff);const sun=new Date(m);sun.setDate(m.getDate()+6);$('#wLabel').textContent=fmt(m,{day:'numeric',month:'long'})+' — '+fmt(sun,{day:'numeric',month:'long'});$('#wPrev').disabled=weekOff<=-1;$('#wNext').disabled=weekOff>=2;const todayIso=iso(new Date());const shifts=await S.shifts(iso(m),iso(sun));const byDate={};shifts.forEach(s=>{if(!byDate[s.date])byDate[s.date]={};byDate[s.date][s.type]=s});$('#daysRow').innerHTML=Array.from({length:7},(_,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);const mine=!!byDate[iso(d)];return '<button class="day'+(i===selDay?' on':'')+(iso(d)===todayIso?' today':'')+(mine?' mine':'')+'" data-i="'+i+'"><small>'+WD[i]+'</small><b>'+d.getDate()+'</b><i></i></button>'}).join('');document.querySelectorAll('#daysRow .day').forEach(b=>b.onclick=()=>{selDay=+b.dataset.i;haptic();renderSched()});let cnt=0;Object.values(byDate).forEach(d=>cnt++);$('#weekSum').innerHTML='<div class="ws"><b>'+cnt+'</b><span>смен</span></div><div class="ws"><b>'+(cnt*8)+' ч</b><span>нагрузка</span></div>';const dd=new Date(m);dd.setDate(m.getDate()+selDay);$('#dayTitle').textContent=iso(dd)===todayIso?'Сегодня':cap(fmt(dd,{weekday:'long',day:'numeric',month:'long'}));const dayShifts=byDate[iso(dd)]||{};const list=['open','mid','close'].filter(t=>dayShifts[t]);if(!list.length){$('#dayShifts').innerHTML='<div class="empty card"><span>😴</span>Смен нет</div>';return}$('#dayShifts').innerHTML=(await Promise.all(list.map(async t=>{const sh=dayShifts[t];const st=SHIFTS[t];let people=[];try{const su=await S.q('shift_users,users!inner(id,first_name,last_name,telegram_id)','shift_id=eq.'+sh.id);people=(su||[]).map(r=>({...r.users,name:[r.users.first_name,r.users.last_name].filter(Boolean).join(' ')}))}catch(e){}const ppl=people.map(p=>'<span'+((user&&p.telegram_id===user.id)?' class="you"':'')+'>'+((user&&p.telegram_id===user.id)?'Вы':p.name)+'</span>').join('');return '<div class="shift-row card"><div><div class="s-type" style="background:'+st.soft+';color:'+st.color+'">'+st.label+'</div><div class="s-time">'+st.time+'</div></div><div class="s-crew"><div class="ppl">'+ppl+'</div><span style="font-size:11px;color:var(--muted)">'+people.length+' чел · 8 ч</span></div></div>'}))).join('')}
-$('#wPrev').onclick=()=>{if(weekOff>-1){weekOff--;selDay=0;haptic();renderSched()}};
-$('#wNext').onclick=()=>{if(weekOff<2){weekOff++;selDay=0;haptic();renderSched()}};
+async function renderRecipe(){
+  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  
+  const [recipe, ingredients, steps] = await Promise.all([
+    api.get('recipes', `id=eq.${currentRecipe}&limit=1`).then(r => r[0]),
+    api.get('ingredients', `recipe_id=eq.${currentRecipe}&order=position.asc`),
+    api.get('steps', `recipe_id=eq.${currentRecipe}&order=position.asc`)
+  ]);
 
-/* ===== Чек-листы ===== */
-let clExpanded={open:false,close:false};
-async function loadChecks(){if(!MY_DB_ID)return;try{const r=await S.checklists(MY_DB_ID,iso(new Date()));if(r){window._clState={open:r.open_items||[],close:r.close_items||[]}}}catch(e){}}
-function renderChecks(){const st=checksState();$('#clWrap').innerHTML=Object.keys(CHECK_ITEMS).map(key=>{const items=CHECK_ITEMS[key];const done=(st[key]||[]).length;const total=items.length;const pct=total?done/total:0;const C=2*Math.PI*18;const isDone=done===total&&total>0;return '<div class="cl card'+(clExpanded[key]?' exp':'')+(isDone?' done':'')+'" data-key="'+key+'"><button class="cl-head"><svg class="ring" viewBox="0 0 44 44"><circle class="rbg" cx="22" cy="22" r="18"/><circle class="rfg" cx="22" cy="22" r="18" stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-pct))+'"/></svg><div><b>'+(key==='open'?'Открытие смены':'Закрытие смены')+'</b><span>'+(isDone?'Выполнено ✅':done+' из '+total)+'</span></div><svg class="arr" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="cl-body"><div class="cl-items">'+items.map((it,i)=>'<button class="citem'+((st[key]||[]).includes(i)?' on':'')+'" data-i="'+i+'"><span class="box"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span><span>'+it+'</span></button>').join('')+'</div><div class="cl-foot"><button class="reset" data-reset="'+key+'">↺ Сбросить</button></div></div></div>'}).join('');document.querySelectorAll('.cl-head').forEach(h=>h.onclick=()=>{const k=h.parentElement.dataset.key;clExpanded[k]=!clExpanded[k];haptic();renderChecks()});let saveTimer=null;document.querySelectorAll('.citem').forEach(it=>it.onclick=()=>{const key=it.closest('.cl').dataset.key;const i=+it.dataset.i;const s=checksState();s[key]=s[key]||[];const was=s[key].length;s[key].includes(i)?s[key]=s[key].filter(x=>x!==i):s[key].push(i);window._clState=s;if(s[key].length===CHECK_ITEMS[key].length&&was<CHECK_ITEMS[key].length){haptic('success');toast((key==='open'?'Открытие':'Закрытие')+': готово ✅')}else haptic();renderChecks();renderHomeProg();clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveChecks(s),400)});document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{const s=checksState();s[b.dataset.reset]=[];window._clState=s;saveChecks(s);haptic();renderChecks();renderHomeProg()})}
+  app.innerHTML = `
+    <button class="back" onclick="navigate('ttk')">← Назад</button>
+    <h1>${recipe.name}</h1>
+    
+    <div class="card">
+      <div style="margin-bottom:12px"><strong>Время:</strong> ${recipe.time}</div>
+      <div style="margin-bottom:12px"><strong>Выход:</strong> ${recipe.yield_g}</div>
+      <div><strong>Калорийность:</strong> ${recipe.kcal} ккал</div>
+    </div>
 
-/* ===== Ещё ===== */
-$('#moreList').innerHTML=[{e:'📣',s:'var(--accent-soft)',t:'Объявления',d:'Поставки',fn:'openNews()'},...].map?$('#moreList').innerHTML='':[
-  {e:'📣',s:'var(--accent-soft)',t:'Объявления',d:'Поставки, события',fn:'openNews()'},
-  {e:'👥',s:'var(--green-soft)',t:'Команда',d:'Контакты',fn:'openTeam()'},
-  {e:'📄',s:'var(--blue-soft)',t:'Стандарты',d:'СанПиН',fn:'openDocs()'},
-  {e:'ℹ️',s:'rgba(255,107,94,.14)',t:'О приложении',d:'Версия',fn:'openAbout()'}
-].map(m=>'<button class="mrow card press" onclick="haptic();'+m.fn+'"><div class="mi" style="background:'+m.s+'">'+m.e+'</div><div><b>'+m.t+'</b><span>'+m.d+'</span></div><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>').join('');
-window.openDocs=function(){openSheet('Стандарты',[['PDF','СанПиН — выжимка'],['PDF','Стандарт формы'],['PDF','Стоп-лист']].map(r=>'<button class="doc-row press" style="width:100%;text-align:left" onclick="toast(\'Демо\')"><div class="fi">'+r[0]+'</div><span>'+r[1]+'</span></button>').join(''))};
-window.openAbout=function(){openSheet('О приложении','<div class="about-c"><div class="logo">👨‍🍳</div><h2 class="disp">ШефБук</h2><p>Telegram Mini App с базой данных. v3.0</p><button class="btn press" onclick="haptic(\'success\');toast(\'Спасибо!\')">Написать разработчику</button></div>')};
+    <h2>Ингредиенты</h2>
+    <div class="card">
+      ${ingredients.map(i => `
+        <div class="ingredient">
+          <span>${i.name}</span>
+          <strong>${i.netto} г</strong>
+        </div>
+      `).join('')}
+    </div>
 
-/* ===== Шторка ===== */
-function openSheet(title,html){$('#sheetTitle').textContent=title;$('#sheetBody').innerHTML=html;$('#sheetBody').scrollTop=0;$('#dim').classList.add('open');$('#sheet').classList.add('open');try{if(tg&&tg.BackButton)tg.BackButton.show()}catch(e){}}
-function closeSheet(){$('#dim').classList.remove('open');$('#sheet').classList.remove('open');try{if(tg&&tg.BackButton)tg.BackButton.hide()}catch(e){}}
-$('#sheetClose').onclick=()=>{haptic();closeSheet()};$('#dim').onclick=closeSheet;try{if(tg&&tg.BackButton)tg.BackButton.onClick(closeSheet)}catch(e){}
+    <h2>Приготовление</h2>
+    ${steps.map((s, idx) => `
+      <div class="step">
+        <strong>${idx + 1}.</strong> ${s.text}
+      </div>
+    `).join('')}
 
-/* ===== Запуск ===== */
-(async function(){
-  renderCats();ttkLoaded=false;renderTTK();renderHome();
-  await loadData();
-  ttkLoaded=true;renderCats();renderTTK();
-  await loadChecks();
-  renderHome();renderSched();renderChecks();
-})();
+    ${recipe.note ? `
+      <div class="card" style="margin-top:20px;background:rgba(95,211,138,.1);border-left:3px solid var(--green)">
+        <strong>📝 Важно:</strong><br>${recipe.note}
+      </div>
+    ` : ''}
+  `;
+}
+
+async function renderSchedule(){
+  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + 1);
+  
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  
+  const shifts = await api.get('shifts', `date=gte.${weekStart.toISOString().slice(0,10)}&date=lte.${weekEnd.toISOString().slice(0,10)}&order=date.asc,type.asc`);
+  
+  const byDate = {};
+  shifts.forEach(s => {
+    if(!byDate[s.date]) byDate[s.date] = [];
+    byDate[s.date].push(s);
+  });
+
+  const types = {open:'Открытие',mid:'Усиление',close:'Закрытие'};
+  const times = {open:'09:00–17:00',mid:'12:00–20:00',close:'15:00–23:00'};
+
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home')">← Назад</button>
+    <h1>График смен</h1>
+    ${Object.keys(byDate).map(date => {
+      const d = new Date(date);
+      const dayName = d.toLocaleDateString('ru-RU', {weekday:'short', day:'numeric', month:'short'});
+      return `
+        <h2 style="margin-top:24px">${dayName}</h2>
+        ${byDate[date].map(s => `
+          <div class="shift">
+            <div class="shift-time">${times[s.type]}</div>
+            <div class="shift-type">${types[s.type]}</div>
+          </div>
+        `).join('')}
+      `;
+    }).join('')}
+  `;
+}
+
+async function renderChecklist(){
+  const items = [
+    'Включить вентиляцию, разогреть печи',
+    'Проверить температурные листы холодильников',
+    'Принять поставку, сверить накладные',
+    'Обновить заготовки по стоп-листу',
+    'Санобработка поверхностей и инвентаря',
+    'Проверить кассу и терминал',
+    'Выставить меню-борды и витрину'
+  ];
+
+  const saved = JSON.parse(localStorage.getItem('checklist_' + new Date().toISOString().slice(0,10)) || '[]');
+
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home')">← Назад</button>
+    <h1>Чек-лист открытия</h1>
+    <div class="card">
+      ${items.map((item, idx) => `
+        <div class="check-item ${saved.includes(idx)?'done':''}" onclick="toggleCheck(${idx})">
+          <div class="check-box"></div>
+          <span>${item}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+window.toggleCheck = function(idx){
+  const today = new Date().toISOString().slice(0,10);
+  const saved = JSON.parse(localStorage.getItem('checklist_' + today) || '[]');
+  
+  if(saved.includes(idx)){
+    saved.splice(saved.indexOf(idx), 1);
+  } else {
+    saved.push(idx);
+  }
+  
+  localStorage.setItem('checklist_' + today, JSON.stringify(saved));
+  renderChecklist();
+};
+
+async function renderTeam(){
+  app.innerHTML = '<div class="loading">Загрузка...</div>';
+  const users = await api.get('users', 'order=position.asc');
+  
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home')">← Назад</button>
+    <h1>Команда</h1>
+    ${users.map(u => `
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:4px">${u.first_name} ${u.last_name || ''}</div>
+        <div style="color:var(--muted);font-size:14px">${u.role}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// Старт
+render();
 </script>
+
 </body>
 </html>
