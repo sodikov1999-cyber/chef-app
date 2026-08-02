@@ -368,7 +368,17 @@ async function renderSchedule(forceRefresh = false){
       const text = await res.text();
       const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
       const data = JSON.parse(jsonStr);
-      rows = data.table.rows.map(row => row.c ? row.c.map(cell => (!cell || cell.v === null || cell.v === undefined) ? '' : String(cell.f || cell.v)) : []);
+      
+      // ПРАВИЛЬНЫЙ парсинг gviz формата
+      rows = data.table.rows.map(row => {
+        if (!row.c) return [];
+        return row.c.map(cell => {
+          if (!cell || cell.v === null || cell.v === undefined) return '';
+          // Если есть форматированное значение (f), используем его
+          if (cell.f !== null && cell.f !== undefined) return String(cell.f);
+          return String(cell.v);
+        });
+      });
     } catch(e1) {
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}&t=${ts}`;
       const res = await fetch(csvUrl, { cache: 'no-store' });
@@ -390,7 +400,6 @@ async function renderSchedule(forceRefresh = false){
     rows = rows.filter(r => r.length > 0);
     const monthTitle = rows[0]?.[0] || 'График';
 
-    // Ищем локации
     const locations = [];
     rows.forEach((row, idx) => {
       if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
@@ -399,20 +408,18 @@ async function renderSchedule(forceRefresh = false){
     });
     if (locations.length === 0) locations.push({ name: 'Все', startIdx: 0 });
 
-    // ПРАВИЛЬНЫЙ подсчёт смен: 1=1, 0.5=0.5, "в"/"от"/"б"=0
     const getShiftValue = (v) => {
-      if (!v) return 0;
-      const s = String(v).trim().toLowerCase();
-      if (s === '' || s === 'в' || s === 'от' || s === 'б' || s === 'о' || s === '0' || s === 'вых') return 0;
+      if (v === null || v === undefined) return 0;
+      const s = String(v).trim().toLowerCase().replace(/\s/g, '');
+      if (s === '' || s === 'в' || s === 'от' || s === 'б' || s === 'о' || s === '0' || s === 'вых' || s === 'null') return 0;
       const num = parseFloat(s.replace(',', '.'));
-      return isNaN(num) ? 1 : num; // если число не распознано — считаем как 1 смену
+      return isNaN(num) ? 1 : num;
     };
     
     const isWorking = (v) => getShiftValue(v) > 0;
 
     const today = new Date();
     const currentDay = today.getDate();
-    // ИСПРАВЛЕНО: день 1 → индекс 2 (а не 3)
     const dayColIndex = currentDay + 1;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
@@ -421,11 +428,9 @@ async function renderSchedule(forceRefresh = false){
       const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
       const locRows = rows.slice(loc.startIdx, nextStart);
       
-      // ОСЛАБЛЕННЫЙ ФИЛЬТР: берём всех, у кого есть ИМЯ (даже без должности)
-      // Пропускаем: пустое имя, "итого", заголовок "Должность"
       const staffRows = locRows.slice(2).filter(r => {
         const name = String(r[0] || '').trim();
-        if (!name) return false; // без имени — пропускаем (технические строки)
+        if (!name) return false;
         const nameLow = name.toLowerCase();
         if (nameLow.includes('итого') || nameLow.includes('норма')) return false;
         if (String(r[1] || '').trim().toLowerCase() === 'должность') return false;
@@ -434,7 +439,6 @@ async function renderSchedule(forceRefresh = false){
       
       const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
       
-      // Неделя
       const dayOfWeek = today.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
       const monday = new Date(today);
@@ -445,7 +449,7 @@ async function renderSchedule(forceRefresh = false){
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const dayNum = d.getDate();
-        const colIdx = dayNum + 1; // ИСПРАВЛЕНО
+        const colIdx = dayNum + 1;
         let count = 0;
         if (totalRow && totalRow[colIdx]) {
           count = parseFloat(String(totalRow[colIdx]).replace(',','.')) || 0;
@@ -464,37 +468,45 @@ async function renderSchedule(forceRefresh = false){
         .filter(r => isWorking(r[dayColIndex]))
         .map(r => ({ 
           name: r[0], 
-          role: r[1] || 'Сотрудник', // если должности нет — пишем "Сотрудник"
+          role: r[1] || 'Сотрудник',
           shift: r[dayColIndex]
         }));
       
-      // ПРАВИЛЬНЫЙ подсчёт: ищем последнюю числовую ячейку в строке (после 32-й колонки)
+      // ИСПРАВЛЕНО: правильный подсчёт смен
       const staffStats = staffRows.map(r => {
         let workShifts = 0;
         let workDays = 0;
-        for(let d=1; d<=31; d++){
-          const val = getShiftValue(r[d+1]);
+        
+        // Проходим по всем колонкам начиная с индекса 2 (день 1)
+        for(let colIdx = 2; colIdx < r.length; colIdx++){
+          const val = getShiftValue(r[colIdx]);
           if (val > 0) {
             workShifts += val;
             workDays += 1;
           }
         }
-        // Ищем "Итого" в конце строки (любая ячейка после 32-й колонки)
+        
+        // Ищем "Итого" в последней колонке
         let monthTotal = null;
-        for(let i=32; i<r.length; i++){
+        for(let i = r.length - 1; i >= 32; i--){
           const v = String(r[i] || '').trim();
-          if (v && v !== '' && !v.toLowerCase().includes('итого')) {
+          if (v && v !== '' && !v.toLowerCase().includes('итого') && !v.toLowerCase().includes('норма')) {
             const num = parseFloat(v.replace(',', '.'));
-            if (!isNaN(num) && num > 0) { monthTotal = num; break; }
+            if (!isNaN(num) && num > 0) { 
+              monthTotal = num; 
+              break; 
+            }
           }
         }
+        
+        const finalTotal = monthTotal !== null ? monthTotal : workShifts;
         
         return { 
           name: r[0], 
           role: r[1] || 'Сотрудник', 
           workDays,
           workShifts: workShifts % 1 === 0 ? workShifts : workShifts.toFixed(1),
-          monthTotal: monthTotal !== null ? (monthTotal % 1 === 0 ? monthTotal : monthTotal.toFixed(1)) : (workShifts % 1 === 0 ? workShifts : workShifts.toFixed(1))
+          monthTotal: finalTotal % 1 === 0 ? finalTotal : finalTotal.toFixed(1)
         };
       }).sort((a,b) => parseFloat(b.monthTotal) - parseFloat(a.monthTotal));
       
@@ -520,7 +532,7 @@ async function renderSchedule(forceRefresh = false){
       
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px">
         <div style="font-size:11px;color:var(--muted)">
-          🔄 Обновлено: <b style="color:var(--text)">${timeStr}</b>
+           Обновлено: <b style="color:var(--text)">${timeStr}</b>
         </div>
         <button class="btn btn-sm" onclick="renderSchedule(true);haptic()" style="padding:8px 14px;font-size:12px">
           ↻ Обновить
@@ -597,7 +609,7 @@ async function renderSchedule(forceRefresh = false){
       </div>
       
       <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:12px;text-decoration:none;text-align:center">
-        📝 Открыть таблицу
+         Открыть таблицу
       </a>
     `;
     
@@ -607,7 +619,7 @@ async function renderSchedule(forceRefresh = false){
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
       <h1>График</h1>
       <div class="card" style="text-align:center;padding:30px">
-        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:40px;margin-bottom:12px">️</div>
         <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${e.message}</div>
         <button class="btn btn-sm" onclick="renderSchedule(true)">🔄 Повторить</button>
