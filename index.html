@@ -116,20 +116,29 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     overflow-y: auto;
     padding-bottom: 20px;
 }
-.loc-tile {
-    padding: 16px;
-    background: var(--card);
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.06);
+/* Стили для матрицы */
+.supplier-block { margin-bottom: 20px; }
+.supplier-header { 
+    background: rgba(255,138,61,0.1); 
+    border-left: 3px solid var(--accent); 
+    padding: 12px; 
+    border-radius: 8px; 
     margin-bottom: 10px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
-.loc-tile:active { transform: scale(.98); }
-.loc-name { font-weight: 700; font-size: 16px; }
-.loc-status { font-size: 12px; color: var(--muted); }
+.supplier-name { font-weight: 700; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
+.supplier-schedule { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.matrix-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 10px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+}
+.matrix-item:last-child { border-bottom: none; }
+.matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; }
+.matrix-meta { text-align: right; flex-shrink: 0; }
+.matrix-unit { font-size: 11px; color: var(--muted); display: block; }
+.matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
 </style>
 </head>
 <body>
@@ -145,163 +154,381 @@ const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
-   📦 ДАННЫЕ (С ЗАГРУЗКОЙ ИЗ ПАМЯТИ)
+   📦 ДАННЫЕ
    ============================================================ */
 const DEFAULT_RECIPES = [
-  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
-   note:'Срок хранения основы — 12 ч при +2…+6 °C.',
-   ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
-   steps:['Сварить бульон 1,5 часа.','Добавить овощи, варить 15 мин.','Тушить свёклу 25 мин.','Пассеровать лук и морковь.','Довести до вкуса.']},
-  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
-   note:'Собирается при госте.',
-   ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус Цезарь',40,40],['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
-   steps:['Филе обжарить, нарезать.','Айсберг порвать.','Сухарики подсушить 4 мин.','Собрать салат, финиш — пармезан.']},
-  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
-   note:'Классика на желтке, без сливок.',
-   ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20]],
-   steps:['Спагетти al dente.','Вытопить гуанчале.','Смешать желтки с пармезаном.','Эмульгировать всё вместе.']},
-  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
-   note:'Тесто — 24 ч при +2…+6 °C.',
-   ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
-   steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.','Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
-  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
-   note:'Созревание не менее 4 часов.',
-   ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
-   steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.','Чередовать слои.','4 часа в холоде, какао перед подачей.']},
-  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
-   note:'Нарезка — заготовка смены, 6 часов.',
-   ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
-   steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
-  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
-   note:'Не кипятить! Нагрев строго до 70 °C.',
-   ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
-   steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
-  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
-   note:'Заготовка горячего цеха. Срок — 12 ч.',
-   ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
-   steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
+  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'Срок хранения основы — 12 ч.', ingr:[['Говядина',121,80]], steps:['Варить.']},
+  {id:2, name:'Цезарь', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185, note:'', ingr:[['Курица',90,70]], steps:['Обжарить.']},
+  {id:3, name:'Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265, note:'', ingr:[['Паста',120,120]], steps:['Варить.']},
+  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210, note:'', ingr:[['Творог',140,135]], steps:['Жарить.']},
+  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин', yield:'140 г', kcal:298, note:'', ingr:[['Маскарпоне',70,70]], steps:['Собрать.']},
+  {id:6, name:'Греческий', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122, note:'', ingr:[['Фета',50,50]], steps:['Нарезать.']},
+  {id:7, name:'Глинтвейн', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64, note:'', ingr:[['Сок',200,200]], steps:['Нагреть.']},
+  {id:8, name:'Пюре', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118, note:'', ingr:[['Картофель',1350,1000]], steps:['Сварить.']}
 ];
 
 const DEFAULT_NEWS = [
-  {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
-  {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
-  {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
+  {tag:'Поставка', title:'Лосось в среду', text:'Перенос.', date:'Сегодня'},
+  {tag:'Событие', title:'Дегустация', text:'Пятница 16:00', date:'Вчера'},
+  {tag:'Важно', title:'ТТК обновлены', text:'Сливки 33%', date:'2 дня назад'}
 ];
 
 const DEFAULT_TEAM = [
   {name:'Марина К.', role:'Су-шеф', init:'МК'},
-  {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
-  {name:'Даша П.', role:'Кондитер', init:'ДП'},
-  {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
-  {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
+  {name:'Олег С.', role:'Повар', init:'ОС'},
+  {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
-// Чек-листы по умолчанию для каждой локации
-const DEFAULT_CHECKLISTS = {
-  'Галактика': {
-    open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу'],
-    close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет']
+// Матрица заявок (Данные из вашего списка)
+const MATRIX_DATA = [
+  {
+    supplier: "ИП Максимова",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [
+      {name: "Лаваш традиционный", unit: "шт", limit: 40}
+    ]
   },
-  'Сибирь': {
-    open: ['Включить свет','Проверить температуру','Принять доставку','Подготовить мангал'],
-    close: ['Затушить угли','Вымыть полы','Закрыть краны','Сигнализация']
+  {
+    supplier: "Булочная Пирогов",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [
+      {name: "Панини", unit: "шт", limit: 10},
+      {name: "Чиабатта", unit: "шт", limit: 10},
+      {name: "Багет французский", unit: "шт", limit: 10},
+      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
+      {name: "Хлеб Датский", unit: "шт", limit: 10},
+      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
+    ]
   },
-  'Пионер': {
-    open: ['Открыть окна','Включить музыку','Проверить чистоту'],
-    close: ['Закрыть окна','Выключить музыку','Убраться']
+  {
+    supplier: "Пионер (Заготовки)",
+    schedule: "Заявка в воскресенье, отгрузка в чт-пт",
+    items: [
+      {name: "Ребра запеченые", unit: "кг", limit: 10},
+      {name: "Щечки томленые", unit: "кг", limit: 10},
+      {name: "Фарш штат", unit: "кг", limit: 10},
+      {name: "Фарш 70/30", unit: "кг", limit: 10},
+      {name: "Ростбиф", unit: "кг", limit: 10},
+      {name: "Смалец", unit: "кг", limit: 2}
+    ]
   },
-  'Европа': {
-    open: ['Проверка оборудования','Заказ продуктов','Брифинг'],
-    close: ['Инвентаризация','Отчет','Закрытие смены']
+  {
+    supplier: "Партнер",
+    schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
+    items: [
+      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
+      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
+      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
+      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
+      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
+      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
+      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
+      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
+      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
+      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
+      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
+      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
+      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
+      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
+      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
+      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
+      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
+      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
+      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
+      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
+      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
+      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
+      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
+      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
+      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
+      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
+      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
+      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
+      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
+      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
+      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
+      {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
+    ]
   },
-  'Лазурная': {
-    open: ['Проверка моря (шутка)','Включить кондиционеры','Подготовка зала'],
-    close: ['Выключить все','Запереть двери']
+  {
+    supplier: "Интегрита",
+    schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
+    items: [
+      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
+      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
+      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
+      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
+      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
+      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
+      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
+      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
+      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
+      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
+      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
+      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
+      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
+      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
+      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
+      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
+      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
+      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
+      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
+      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
+      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
+    ]
+  },
+  {
+    supplier: "Восток Запад",
+    schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
+    items: [
+      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
+      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
+      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
+      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
+      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
+      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
+      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
+      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
+      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
+      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
+      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
+      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
+      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
+      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
+      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
+      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
+      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
+      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
+      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
+      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
+      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
+      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
+      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
+    ]
+  },
+  {
+    supplier: "Снежный Городок",
+    schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
+    items: [
+      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
+      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
+    ]
+  },
+  {
+    supplier: "Мираторг",
+    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
+    items: [
+      {name: "Свиная шейка", unit: "кг", limit: 20},
+      {name: "Свиная вырезка", unit: "кг", limit: 15},
+      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
+      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
+    ]
+  },
+  {
+    supplier: "Вкусная Жизнь",
+    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
+    items: [
+      {name: "Мясник толстый край", unit: "кг", limit: 2},
+      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
+      {name: "Колбаски горчичные", unit: "уп", limit: 5},
+      {name: "Колбаски с сыром", unit: "уп", limit: 5}
+    ]
+  },
+  {
+    supplier: "ИП Орлов",
+    schedule: "Ежедневно",
+    items: [
+      {name: "Черная смородина с/м", unit: "кг", limit: 4},
+      {name: "Черника с/м", unit: "кг", limit: 2},
+      {name: "Облепиха", unit: "кг", limit: 1},
+      {name: "Клюква", unit: "кг", limit: 3},
+      {name: "Брусника", unit: "кг", limit: 0.5},
+      {name: "Малина", unit: "кг", limit: 3},
+      {name: "Огурец свежий", unit: "кг", limit: 5},
+      {name: "Томат свежий", unit: "кг", limit: 0},
+      {name: "Томат черри", unit: "кг", limit: 4},
+      {name: "Баклажан", unit: "кг", limit: 0.1},
+      {name: "Цукини", unit: "кг", limit: 5},
+      {name: "Капуста б/к", unit: "кг", limit: 10},
+      {name: "Айсберг", unit: "кг", limit: 5},
+      {name: "Романо", unit: "кг", limit: 2},
+      {name: "Перец Болгарский", unit: "кг", limit: 5},
+      {name: "Перец чили", unit: "кг", limit: 5},
+      {name: "Морковь", unit: "кг", limit: 0.4},
+      {name: "Картофель", unit: "кг", limit: 0.5},
+      {name: "Картофель беби", unit: "кг", limit: 0.5},
+      {name: "Чеснок", unit: "кг", limit: 0.4},
+      {name: "Лук репчатый", unit: "кг", limit: 0.3},
+      {name: "Лук красный", unit: "кг", limit: 0.1},
+      {name: "Лук зелёный", unit: "кг", limit: 0.1},
+      {name: "Петрушка", unit: "шт", limit: 2},
+      {name: "Укроп", unit: "шт", limit: 2},
+      {name: "Кинза", unit: "кг", limit: 1},
+      {name: "Базилик свежий", unit: "шт", limit: 5},
+      {name: "Тимьян", unit: "кг", limit: 1}
+    ]
+  },
+  {
+    supplier: "ИП Филатова",
+    schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
+    items: [
+      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
+      {name: "Крупа манная 1кг", unit: "уп", limit: null},
+      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
+      {name: "Макароны персонал", unit: "уп", limit: null},
+      {name: "Мука Алейка", unit: "уп", limit: null},
+      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
+      {name: "Соль 1кг", unit: "уп", limit: null},
+      {name: "Сахар песок 1кг", unit: "уп", limit: null},
+      {name: "Яйцо С1", unit: "уп", limit: null}
+    ]
+  },
+  {
+    supplier: "МЕТРО",
+    schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
+    items: [
+      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
+      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
+      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
+      {name: "Меланж пастеризованный", unit: "кг", limit: null},
+      {name: "Паприка", unit: "кг", limit: null},
+      {name: "Чеснок сушёный", unit: "кг", limit: null},
+      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
+      {name: "Приправа гриль", unit: "шт", limit: null},
+      {name: "Чёрный перец горошек", unit: "бут", limit: null},
+      {name: "Кориандр горошек", unit: "кг", limit: null},
+      {name: "Кориандр молотый", unit: "кг", limit: null},
+      {name: "Соль гималайская розовая", unit: "кг", limit: null},
+      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
+      {name: "Кефир", unit: "л", limit: null},
+      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
+      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
+      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
+      {name: "Сок лимона 1л", unit: "шт", limit: null},
+      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
+      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
+      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
+      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
+      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
+      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
+      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
+      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
+    ]
+  },
+  {
+    supplier: "СИБМК",
+    schedule: "По наличию",
+    items: [
+      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
+      {name: "Кальмар командорский", unit: "кг", limit: null},
+      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
+      {name: "Мидии в двух створках", unit: "кг", limit: null},
+      {name: "Мидии в одной створке", unit: "кг", limit: null},
+      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "О Бэйкери (ИП Фоминых)",
+    schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
+    items: [
+      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
+      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
+      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
+      {name: "Безе весовое", unit: "кг", limit: 0.5},
+      {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
+    ]
+  },
+  {
+    supplier: "Алтайская Птица",
+    schedule: "По договору",
+    items: [
+      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
+      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
+      {name: "Филе куриной грудки", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "Два Сыровара",
+    schedule: "По договору",
+    items: [
+      {name: "Качотта", unit: "кг", limit: null},
+      {name: "Рулет", unit: "кг", limit: null},
+      {name: "Адыгейский", unit: "кг", limit: null},
+      {name: "Сулугуни копченый", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "Вяленое мясо",
+    schedule: "По договору",
+    items: [
+      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
+      {name: "Чипсы из индейки", unit: "уп", limit: null},
+      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
+      {name: "Чипсы из оленины", unit: "уп", limit: null}
+    ]
+  },
+  {
+    supplier: "Першин (микрозелень)",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [
+      {name: "Руккола мини", unit: "уп", limit: null},
+      {name: "Шпинат мини", unit: "уп", limit: null},
+      {name: "Щавель микро", unit: "уп", limit: null},
+      {name: "Мята микро", unit: "уп", limit: null},
+      {name: "Фиалки", unit: "уп", limit: null}
+    ]
   }
-};
+];
 
 const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
   locations: [
-    {
-      name: 'Галактика',
-      staff: [
-        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20},
-        {name:'Жулянов Иван', role:'Универсал', shifts:[1,1,0,0,1,0,0,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Аникеев Роман', role:'Повар', shifts:[0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0], total:16},
-        {name:'Корьянов Дмитрий', role:'Универсал', shifts:[1,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0], total:15},
-        {name:'Долума', role:'Повар', shifts:[1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,0,0,1,1,1,0], total:14}
-      ]
-    },
-    {
-      name: 'Сибирь',
-      staff: [
-        {name:'Владислав Борков', role:'Су-шеф', shifts:[0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,0,0,1,1,1,1,0,0,0,1,1,1,0,0,0], total:20},
-        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Карина Воложанова', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
-        {name:'Максим Кыпчаков', role:'Холодный цех', shifts:[1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Яссин Мусса', role:'Мангал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Самвел Маргарян', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,1], total:16},
-        {name:'Мохаммед Аль Хади', role:'Мангал/пицца', shifts:[0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:3},
-        {name:'Шатлык Язданов', role:'Италия', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16}
-      ]
-    },
-    {
-      name: 'Пионер',
-      staff: [
-        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
-        {name:'Захаров Владислав', role:'Универсальный раб', shifts:[1,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], total:4},
-        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15},
-        {name:'Петрова Алина', role:'Универсал', shifts:[0.5,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15.5},
-        {name:'Бабин Владислав', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1], total:16},
-        {name:'Горячева Елизавета', role:'Холодный цех', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Рыжкова Алина', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
-      ]
-    },
-    {
-      name: 'Европа',
-      staff: [
-        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
-        {name:'Антон Звягинцев', role:'Сотрудник', shifts:[1,1,1,1,1,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1], total:23},
-        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19},
-        {name:'Наталья Саблина', role:'Холодный цех', shifts:[1,1,1,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,0,0,1,1,1,0,1,1,1,1,1], total:17},
-        {name:'Марина Зайцева', role:'ИО', shifts:[1,1,0,0,1,1,0,0,0,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,1,1,0,0,0,0], total:16},
-        {name:'Илья Мешков', role:'Повар пицца', shifts:[0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,1,1,0,0,0,1,1,1], total:17},
-        {name:'Андрей Ширкин', role:'Повар пицца', shifts:[1,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0], total:21}
-      ]
-    },
-    {
-      name: 'Лазурная',
-      staff: [
-        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15},
-        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Токарь Сергей', role:'ИО', shifts:[1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1], total:18},
-        {name:'Тыщенко Наталья', role:'Универсал', shifts:[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0], total:15},
-        {name:'Гришечкин Вячеслав', role:'Универсал', shifts:[1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1], total:16},
-        {name:'Александр Гривицкий', role:'Италия', shifts:[1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:18}
-      ]
-    }
+    { name: 'Галактика', staff: [{name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Сибирь', staff: [{name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Пионер', staff: [{name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19}] },
+    { name: 'Европа', staff: [{name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21}] },
+    { name: 'Лазурная', staff: [{name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}] }
   ]
+};
+
+const CHECKLISTS = {
+  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
+  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
 };
 
 // === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-// Чек-листы храним как объект { 'Галактика': {...}, 'Сибирь': {...} }
-let LOCATION_CHECKLISTS = JSON.parse(localStorage.getItem('chef_loc_checklists')) || DEFAULT_CHECKLISTS;
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
 
-// Функция сохранения
 function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_loc_checklists', JSON.stringify(LOCATION_CHECKLISTS));
 }
 
 /* ============================================================
@@ -316,7 +543,6 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
-let currentLocForChecklist = null; // Для хранения выбранной локации в чек-листах
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -343,8 +569,9 @@ function render(){
   else if(currentView === 'ttk') renderTTK();
   else if(currentView === 'recipe') renderRecipe();
   else if(currentView === 'schedule') renderSchedule();
-  else if(currentView === 'checklist') renderChecklistLocations();
+  else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
+  else if(currentView === 'matrix') renderMatrix();
   app.classList.add('fade');
   setTimeout(()=>app.classList.remove('fade'), 300);
 }
@@ -394,7 +621,12 @@ function renderHome(){
       <button class="tile" onclick="navigate('checklist');haptic()">
         <div class="tile-emoji">✅</div>
         <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">По локациям</div>
+        <div class="tile-desc">Локации</div>
+      </button>
+      <button class="tile" onclick="navigate('matrix');haptic()">
+        <div class="tile-emoji">📦</div>
+        <div class="tile-title">Матрица</div>
+        <div class="tile-desc">Заявки</div>
       </button>
       <button class="tile" onclick="navigate('team');haptic()">
         <div class="tile-emoji">👥</div>
@@ -710,119 +942,99 @@ function toggleLoc(name) {
   renderScheduleContent();
 }
 
-// === ЧЕК-ЛИСТЫ ПО ЛОКАЦИЯМ ===
-
-function renderChecklistLocations() {
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    const today = new Date();
-    const dayIndex = today.getDate() - 1;
-    
+function renderChecklist(){
+  // Если локация не выбрана, показываем список локаций
+  if (!window._clLoc) {
     app.innerHTML = `
-        <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-        <h1>Чек-листы</h1>
-        <div style="margin-bottom:16px;font-size:13px;color:var(--muted)">Выберите локацию:</div>
-        ${source.locations.map(loc => {
-            // Проверяем, кто из руководства на смене сегодня
-            const leaders = loc.staff.filter(p => 
-                p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0 && 
-                (p.role.includes('Су-шеф') || p.role.includes('ИО'))
-            );
-            const leaderNames = leaders.map(l => l.name).join(', ') || 'Нет руководителя';
-            
-            return `
-            <div class="loc-tile" onclick="openLocationChecklist('${loc.name}');haptic()">
-                <div>
-                    <div class="loc-name">${loc.name}</div>
-                    <div class="loc-status">Ответственные: ${leaderNames}</div>
-                </div>
-                <div style="font-size:20px">➡️</div>
-            </div>
-            `;
-        }).join('')}
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>Чек-листы</h1>
+      <div style="display:grid;gap:10px">
+        ${DEFAULT_LOCAL_DATA.locations.map(loc => `
+          <button class="tile" onclick="window._clLoc='${loc.name}';renderChecklist();haptic()">
+            <div class="tile-title">${loc.name}</div>
+            <div class="tile-desc">Открыть чек-лист локации</div>
+          </button>
+        `).join('')}
+      </div>
     `;
-}
+    return;
+  }
 
-function openLocationChecklist(locName) {
-    currentLocForChecklist = locName;
-    renderChecklistContent(locName);
-}
+  const locName = window._clLoc;
+  const today = new Date().toISOString().slice(0,10);
+  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+locName) || '{}');
+  const manager = saved.manager || '';
+  const doneOpen = (saved.open || []).length;
+  const doneClose = (saved.close || []).length;
+  const totalOpen = CHECKLISTS.open.length;
+  const totalClose = CHECKLISTS.close.length;
 
-function renderChecklistContent(locName) {
-    window._clTab = window._clTab || 'open';
-    const key = window._clTab;
-    const todayStr = new Date().toISOString().slice(0,10);
-    const storageKey = `cl_${todayStr}_${locName}_${key}`;
-    const managerKey = `cl_mgr_${todayStr}_${locName}`;
-    
-    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    const savedManager = localStorage.getItem(managerKey) || '';
-    
-    const lists = LOCATION_CHECKLISTS[locName] || { open: [], close: [] };
-    const items = lists[key] || [];
-    
-    // Получаем список руководителей на сегодня для этой локации
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    const dayIndex = new Date().getDate() - 1;
+  // Получаем сотрудников на сегодня для этой локации
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
+  let todayStaff = [];
+  const dayIndex = new Date().getDate() - 1;
+  
+  if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
-    const leaders = locData ? locData.staff.filter(p => 
-        p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0 && 
-        (p.role.includes('Су-шеф') || p.role.includes('ИО'))
-    ) : [];
+    if(locData && locData.staff) {
+      todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+    }
+  }
+  // Фильтруем только Су-шефов и ИО
+  const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
-    const done = saved.length;
-    const total = items.length;
+  app.innerHTML = `
+    <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
+    <h1>${locName}</h1>
+    
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-label">Ответственный сегодня</div>
+      <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
+        <option value="">-- Не выбран --</option>
+        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
+      </select>
+      ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
+    </div>
 
-    app.innerHTML = `
-        <button class="back" onclick="renderChecklistLocations();haptic()">← Назад</button>
-        <h1>${locName}</h1>
-        <div class="mults">
-          <button class="mult ${key==='open'?'on':''}" onclick="window._clTab='open';renderChecklistContent('${locName}')">Открытие</button>
-          <button class="mult ${key==='close'?'on':''}" onclick="window._clTab='close';renderChecklistContent('${locName}')">Закрытие</button>
+    <div class="mults">
+      <button class="mult ${(!window._clTab || window._clTab==='open')?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${doneOpen}/${totalOpen})</button>
+      <button class="mult ${window._clTab==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие (${doneClose}/${totalClose})</button>
+    </div>
+    
+    <div class="card">
+      ${(window._clTab === 'close' ? CHECKLISTS.close : CHECKLISTS.open).map((item,i) => {
+        const key = window._clTab === 'close' ? 'close' : 'open';
+        const isDone = (saved[key] || []).includes(i);
+        return `
+        <div class="check-item ${isDone?'done':''}" onclick="toggleCheckItem('${locName}', '${key}', ${i});haptic()">
+          <div class="check-box">✓</div>
+          <span>${item}</span>
         </div>
-        
-        <div class="card" style="margin-bottom:16px">
-            <div class="form-label">Ответственный сегодня (Су-шеф / ИО)</div>
-            <select class="form-select" onchange="saveManager('${locName}', this.value)">
-                <option value="">-- Не выбран --</option>
-                ${leaders.map(l => `<option value="${l.name}" ${savedManager === l.name ? 'selected' : ''}>${l.name} (${l.role})</option>`).join('')}
-            </select>
-        </div>
-
-        <div class="card">
-          ${items.length > 0 ? items.map((item,i) => `
-            <div class="check-item ${saved.includes(i)?'done':''}" onclick="toggleCheck('${locName}', ${i});haptic()">
-              <div class="check-box">✓</div>
-              <span>${item}</span>
-            </div>
-          `).join('') : '<div style="text-align:center;color:var(--muted);padding:20px">Список пуст</div>'}
-        </div>
-        ${done===total && total>0 ? '<div class="note" style="text-align:center">Все пункты выполнены!</div>' : ''}
-        <button class="back" style="width:100%;justify-content:center;margin-top:12px;background:rgba(255,107,94,.1);color:var(--red);border:1px solid rgba(255,107,94,.3)" onclick="resetChecklist('${locName}');haptic()">↺ Сбросить</button>
-    `;
+      `}).join('')}
+    </div>
+  `;
 }
 
-window.saveManager = function(loc, name) {
-    const todayStr = new Date().toISOString().slice(0,10);
-    localStorage.setItem(`cl_mgr_${todayStr}_${loc}`, name);
-    toast('Ответственный сохранен', 'success');
+window.saveManager = function(loc, name){
+  const today = new Date().toISOString().slice(0,10);
+  const key = 'cl_'+today+'_'+loc;
+  const saved = JSON.parse(localStorage.getItem(key) || '{}');
+  saved.manager = name;
+  localStorage.setItem(key, JSON.stringify(saved));
+  renderChecklist();
 };
 
-window.toggleCheck = function(loc, i){
-  const key = window._clTab;
-  const todayStr = new Date().toISOString().slice(0,10);
-  const storageKey = `cl_${todayStr}_${loc}_${key}`;
-  const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-  const idx = saved.indexOf(i);
-  if(idx>=0) saved.splice(idx,1); else saved.push(i);
-  localStorage.setItem(storageKey, JSON.stringify(saved));
-  renderChecklistContent(loc);
-};
-
-window.resetChecklist = function(loc){
-  const key = window._clTab;
-  const todayStr = new Date().toISOString().slice(0,10);
-  localStorage.removeItem(`cl_${todayStr}_${loc}_${key}`);
-  renderChecklistContent(loc);
+window.toggleCheckItem = function(loc, type, i){
+  const today = new Date().toISOString().slice(0,10);
+  const key = 'cl_'+today+'_'+loc;
+  const saved = JSON.parse(localStorage.getItem(key) || '{}');
+  if(!saved[type]) saved[type] = [];
+  
+  const idx = saved[type].indexOf(i);
+  if(idx>=0) saved[type].splice(idx,1); else saved[type].push(i);
+  
+  localStorage.setItem(key, JSON.stringify(saved));
+  renderChecklist();
 };
 
 function renderTeam(){
@@ -845,19 +1057,66 @@ function renderTeam(){
   `;
 }
 
+function renderMatrix(){
+  window._matrixQ = window._matrixQ || '';
+  const q = window._matrixQ.toLowerCase();
+  
+  // Фильтрация поставщиков и товаров
+  const filteredSuppliers = MATRIX_DATA.map(sup => {
+    const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
+    if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
+      return {...sup, items: items.length > 0 ? items : sup.items}; // Если нашли поставщика, показываем все его товары или только найденные? Лучше все, если искали поставщика, иначе только товары.
+      // Упростим: если поиск по товару, показываем только совпадающие товары. Если по поставщику - все.
+      if(q && !sup.supplier.toLowerCase().includes(q)) {
+         return {...sup, items: items};
+      }
+      return sup;
+    }
+    return null;
+  }).filter(s => s !== null);
+
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Матрица заявок</h1>
+    <input type="search" placeholder="🔍 Поиск продукта или поставщика..." 
+           value="${window._matrixQ}" 
+           oninput="window._matrixQ=this.value;renderMatrix()"
+           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
+    
+    ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
+      <div class="supplier-block">
+        <div class="supplier-header">
+          <div class="supplier-name">${sup.supplier}</div>
+          <div class="supplier-schedule">🕒 ${sup.schedule}</div>
+        </div>
+        <div class="card" style="padding:10px 14px">
+          ${sup.items.map(it => `
+            <div class="matrix-item">
+              <div class="matrix-name">${it.name}</div>
+              <div class="matrix-meta">
+                <span class="matrix-unit">${it.unit}</span>
+                ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+  `;
+}
+
 /* ============================================================
    🔐 АДМИНКА
    ============================================================ */
 let adminTab = 'recipes';
 
-function openAdmin(){ 
-    // Удаляем старые модалки если есть
-    const old = document.getElementById('admin-modal');
-    if(old) old.remove();
-    showAdminModal(); 
-}
+function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
+  // Удаляем старые модалки перед открытием новой
+  const old = document.getElementById('admin-modal');
+  if(old) old.remove();
+
   adminTab = adminTab || 'recipes';
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
@@ -870,11 +1129,10 @@ function showAdminModal(){
         <div class="modal-title">⚙️ Редактор</div>
         <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0;overflow-x:auto;padding:0 20px">
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
-        <button class="tab-btn ${adminTab==='checklists'?'on':''}" onclick="adminTab='checklists';showAdminModal()">Чек-листы</button>
       </div>
       <div id="admin-content" class="modal-body"></div>
     </div>
@@ -886,7 +1144,6 @@ function showAdminModal(){
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
   if(!c) return;
-  
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
@@ -941,67 +1198,9 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if(adminTab === 'checklists'){
-      c.innerHTML = `
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Редактирование списков по локациям:</div>
-        ${Object.keys(LOCATION_CHECKLISTS).map(loc => `
-            <div class="item-card">
-                <div class="item-card-head">
-                    <div class="item-card-title">${loc}</div>
-                    <button class="icon-btn" onclick="editLocationChecklist('${loc}')">✏️</button>
-                </div>
-            </div>
-        `).join('')}
-      `;
   }
 }
 
-// Редактирование чек-листов локации
-window.editLocationChecklist = function(loc) {
-    const lists = LOCATION_CHECKLISTS[loc] || { open: [], close: [] };
-    const modal = document.createElement('div');
-    modal.className = 'modal-bg';
-    modal.id = 'edit-cl-modal';
-    
-    // Простая реализация: два текстовых поля, разделенных запятой
-    modal.innerHTML = `
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">Чек-листы: ${loc}</div>
-                <button class="modal-close" onclick="document.getElementById('edit-cl-modal').remove()">✕</button>
-            </div>
-            <div class="modal-body" style="padding:0 20px">
-                <div class="form-field">
-                    <label class="form-label">Открытие (через запятую)</label>
-                    <textarea class="form-textarea" id="cl-open" style="min-height:100px">${lists.open.join(', ')}</textarea>
-                </div>
-                <div class="form-field">
-                    <label class="form-label">Закрытие (через запятую)</label>
-                    <textarea class="form-textarea" id="cl-close" style="min-height:100px">${lists.close.join(', ')}</textarea>
-                </div>
-                <button class="btn" onclick="saveLocationChecklist('${loc}')">💾 Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-};
-
-window.saveLocationChecklist = function(loc) {
-    const openVal = document.getElementById('cl-open').value;
-    const closeVal = document.getElementById('cl-close').value;
-    
-    LOCATION_CHECKLISTS[loc] = {
-        open: openVal.split(',').map(s => s.trim()).filter(s => s),
-        close: closeVal.split(',').map(s => s.trim()).filter(s => s)
-    };
-    
-    saveData();
-    document.getElementById('edit-cl-modal').remove();
-    toast('Чек-листы обновлены', 'success');
-    renderAdminContent();
-};
-
-// Остальные функции редактирования (ТТК, Новости, Команда)
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
