@@ -359,26 +359,19 @@ async function renderSchedule(forceRefresh = false){
   `;
 
   try {
-    // Уникальный timestamp чтобы обойти кэш Google
     const ts = Date.now();
     let rows;
     
     try {
       const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:json&gid=${SHEETS_GID}&t=${ts}`;
-      const res = await fetch(gvizUrl, { 
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-      });
+      const res = await fetch(gvizUrl, { cache: 'no-store' });
       const text = await res.text();
       const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
       const data = JSON.parse(jsonStr);
       rows = data.table.rows.map(row => row.c ? row.c.map(cell => (!cell || cell.v === null || cell.v === undefined) ? '' : String(cell.f || cell.v)) : []);
     } catch(e1) {
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/export?format=csv&gid=${SHEETS_GID}&t=${ts}`;
-      const res = await fetch(csvUrl, { 
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
-      });
+      const res = await fetch(csvUrl, { cache: 'no-store' });
       if(!res.ok) throw new Error('HTTP ' + res.status);
       const csv = await res.text();
       rows = csv.split('\n').map(row => {
@@ -394,10 +387,10 @@ async function renderSchedule(forceRefresh = false){
     }
 
     lastUpdateTime = new Date();
-
     rows = rows.filter(r => r.length > 0);
     const monthTitle = rows[0]?.[0] || 'График';
 
+    // Ищем локации
     const locations = [];
     rows.forEach((row, idx) => {
       if (row[1] && String(row[1]).trim().toLowerCase() === 'должность' && row[0]) {
@@ -406,15 +399,21 @@ async function renderSchedule(forceRefresh = false){
     });
     if (locations.length === 0) locations.push({ name: 'Все', startIdx: 0 });
 
-    const isWorking = (v) => {
-      if (!v) return false;
+    // ПРАВИЛЬНЫЙ подсчёт смен: 1=1, 0.5=0.5, "в"/"от"/"б"=0
+    const getShiftValue = (v) => {
+      if (!v) return 0;
       const s = String(v).trim().toLowerCase();
-      return s !== '' && s !== 'в' && s !== 'от' && s !== 'б' && s !== 'о' && s !== '0';
+      if (s === '' || s === 'в' || s === 'от' || s === 'б' || s === 'о' || s === '0' || s === 'вых') return 0;
+      const num = parseFloat(s.replace(',', '.'));
+      return isNaN(num) ? 1 : num; // если число не распознано — считаем как 1 смену
     };
+    
+    const isWorking = (v) => getShiftValue(v) > 0;
 
     const today = new Date();
     const currentDay = today.getDate();
-    const dayColIndex = currentDay + 2;
+    // ИСПРАВЛЕНО: день 1 → индекс 2 (а не 3)
+    const dayColIndex = currentDay + 1;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
 
@@ -422,16 +421,20 @@ async function renderSchedule(forceRefresh = false){
       const nextStart = locIdx < locations.length - 1 ? locations[locIdx + 1].startIdx : rows.length;
       const locRows = rows.slice(loc.startIdx, nextStart);
       
+      // ОСЛАБЛЕННЫЙ ФИЛЬТР: берём всех, у кого есть ИМЯ (даже без должности)
+      // Пропускаем: пустое имя, "итого", заголовок "Должность"
       const staffRows = locRows.slice(2).filter(r => {
-        if (!r[0] || !r[1]) return false;
-        const name = String(r[0]).trim().toLowerCase();
-        if (name.includes('итого') || name === '') return false;
-        if (String(r[1]).trim().toLowerCase() === 'должность') return false;
+        const name = String(r[0] || '').trim();
+        if (!name) return false; // без имени — пропускаем (технические строки)
+        const nameLow = name.toLowerCase();
+        if (nameLow.includes('итого') || nameLow.includes('норма')) return false;
+        if (String(r[1] || '').trim().toLowerCase() === 'должность') return false;
         return true;
       });
       
       const totalRow = locRows.find(r => String(r[0] || '').toLowerCase().includes('итого в смен'));
       
+      // Неделя
       const dayOfWeek = today.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
       const monday = new Date(today);
@@ -442,32 +445,66 @@ async function renderSchedule(forceRefresh = false){
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
         const dayNum = d.getDate();
-        const colIdx = dayNum + 2;
+        const colIdx = dayNum + 1; // ИСПРАВЛЕНО
         let count = 0;
         if (totalRow && totalRow[colIdx]) {
           count = parseFloat(String(totalRow[colIdx]).replace(',','.')) || 0;
         } else {
-          count = staffRows.filter(r => isWorking(r[colIdx])).length;
+          count = staffRows.reduce((sum, r) => sum + getShiftValue(r[colIdx]), 0);
         }
         weekDays.push({
           dayNum,
           isToday: dayNum === currentDay && d.getMonth() === today.getMonth(),
-          count,
+          count: count % 1 === 0 ? count : count.toFixed(1),
           dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
         });
       }
       
       const workingToday = staffRows
         .filter(r => isWorking(r[dayColIndex]))
-        .map(r => ({ name: r[0], role: r[1], shift: r[dayColIndex] }));
+        .map(r => ({ 
+          name: r[0], 
+          role: r[1] || 'Сотрудник', // если должности нет — пишем "Сотрудник"
+          shift: r[dayColIndex]
+        }));
       
+      // ПРАВИЛЬНЫЙ подсчёт: ищем последнюю числовую ячейку в строке (после 32-й колонки)
       const staffStats = staffRows.map(r => {
+        let workShifts = 0;
         let workDays = 0;
-        for(let d=2; d<=32; d++) if (isWorking(r[d])) workDays++;
-        return { name: r[0], role: r[1], monthTotal: r[32] || workDays };
-      }).sort((a,b) => (parseFloat(String(b.monthTotal).replace(',','.')) || 0) - (parseFloat(String(a.monthTotal).replace(',','.')) || 0));
+        for(let d=1; d<=31; d++){
+          const val = getShiftValue(r[d+1]);
+          if (val > 0) {
+            workShifts += val;
+            workDays += 1;
+          }
+        }
+        // Ищем "Итого" в конце строки (любая ячейка после 32-й колонки)
+        let monthTotal = null;
+        for(let i=32; i<r.length; i++){
+          const v = String(r[i] || '').trim();
+          if (v && v !== '' && !v.toLowerCase().includes('итого')) {
+            const num = parseFloat(v.replace(',', '.'));
+            if (!isNaN(num) && num > 0) { monthTotal = num; break; }
+          }
+        }
+        
+        return { 
+          name: r[0], 
+          role: r[1] || 'Сотрудник', 
+          workDays,
+          workShifts: workShifts % 1 === 0 ? workShifts : workShifts.toFixed(1),
+          monthTotal: monthTotal !== null ? (monthTotal % 1 === 0 ? monthTotal : monthTotal.toFixed(1)) : (workShifts % 1 === 0 ? workShifts : workShifts.toFixed(1))
+        };
+      }).sort((a,b) => parseFloat(b.monthTotal) - parseFloat(a.monthTotal));
       
-      return { name: loc.name, weekDays, workingToday, staffStats, totalStaff: staffRows.length };
+      return { 
+        name: loc.name, 
+        weekDays, 
+        workingToday, 
+        staffStats, 
+        totalStaff: staffRows.length 
+      };
     });
 
     const timeStr = lastUpdateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -533,19 +570,20 @@ async function renderSchedule(forceRefresh = false){
                   </div>
                 `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
                 
-                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
-                ${loc.staffStats.slice(0, 10).map(s => `
+                <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">
+                  Команда за месяц (${loc.staffStats.length})
+                </div>
+                ${loc.staffStats.map(s => `
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                     <div style="flex:1;min-width:0">
                       <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role}</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${s.workDays} дн</div>
                     </div>
                     <div style="text-align:right;margin-left:10px">
                       <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.monthTotal}</div>
                     </div>
                   </div>
                 `).join('')}
-                ${loc.staffStats.length > 10 ? `<div style="text-align:center;padding:8px;color:var(--muted);font-size:12px">и ещё ${loc.staffStats.length - 10} чел</div>` : ''}
                 
               </div>
             </div>
