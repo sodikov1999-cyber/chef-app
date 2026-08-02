@@ -344,27 +344,89 @@ function renderRecipe(){
   `;
 }
 
-function renderSchedule(){
+async function renderSchedule(){
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>График на неделю</h1>
-    ${DATA.shifts.map((s,i) => {
-      const today = new Date().getDay();
-      const dayIndex = today === 0 ? 6 : today - 1;
-      const isToday = i === dayIndex;
-      return `
-      <div class="shift" style="${isToday?'border-left:3px solid var(--accent)':''}">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700;font-size:16px">${s.day}${isToday?' · сегодня':''}</div>
-            <div style="color:var(--muted);font-size:13px;margin-top:2px">${s.time}</div>
-          </div>
-          ${s.type ? `<div style="padding:5px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:700">${s.type==='open'?'ОТКРЫТИЕ':s.type==='mid'?'УСИЛЕНИЕ':'ЗАКРЫТИЕ'}</div>` : '<div style="color:var(--muted);font-size:12px">выходной</div>'}
-        </div>
-        ${s.crew && s.crew.length ? `<div style="margin-top:8px;font-size:13px;color:var(--muted)">👥 ${s.crew.join(', ')}</div>` : ''}
-      </div>
-    `}).join('')}
+    <div class="card" style="text-align:center;padding:30px">
+      <div class="loader-inline" style="width:30px;height:30px;border-width:3px"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка...</div>
+    </div>
   `;
+
+  if(!SHEETS_ID || SHEETS_ID === 'ВСТАВЬ_СЮДА_СВОЙ_ID'){
+    app.innerHTML = `
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>График на неделю</h1>
+      <div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:50px;margin-bottom:14px">📊</div>
+        <div style="font-weight:700;margin-bottom:10px">Таблица не подключена</div>
+        <div style="font-size:13px;color:var(--muted)">Вставь ID таблицы в код</div>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const url = 'https://docs.google.com/spreadsheets/d/' + SHEETS_ID + '/export?format=csv&gid=0';
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Ошибка');
+    const csv = await res.text();
+
+    const rows = csv.split('\n').map(row => {
+      const r = []; let c = ''; let q = false;
+      for(let i=0;i<row.length;i++){
+        const ch = row[i];
+        if(ch==='"'){if(q&&row[i+1]==='"'){c+='"';i++}else q=!q}
+        else if(ch===','&&!q){r.push(c.trim());c=''}
+        else c+=ch;
+      }
+      r.push(c.trim()); return r;
+    }).filter(r=>r.length>0&&r[0]);
+
+    const data = rows.slice(1);
+    const today = new Date().getDay();
+    const dayIdx = today===0?6:today-1;
+    const colors = {'Открытие':'var(--accent)','Усиление':'var(--green)','Закрытие':'var(--blue)'};
+    const labels = {'Открытие':'ОТКРЫТИЕ','Усиление':'УСИЛЕНИЕ','Закрытие':'ЗАКРЫТИЕ'};
+
+    app.innerHTML = `
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>График на неделю</h1>
+      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px;border-radius:10px;margin-bottom:14px;font-size:13px">
+        📊 Данные из Google Таблицы
+      </div>
+      ${data.map((row,i)=>{
+        const [day,date,type,time,crew] = row;
+        const isToday = i===dayIdx;
+        const color = colors[type]||'var(--muted)';
+        const label = labels[type]||type||'ВЫХОДНОЙ';
+        const isOff = type==='Выходной'||!type;
+        return `<div class="shift" style="${isToday?'border-left:3px solid var(--accent)':''}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:700;font-size:16px">${day||''} ${date?'· '+date:''}${isToday?' <span style="color:var(--accent);font-size:12px">· СЕГОДНЯ</span>':''}</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:2px">${time||'-'}</div>
+            </div>
+            <div style="padding:5px 10px;background:rgba(255,255,255,.06);color:${color};border-radius:99px;font-size:11px;font-weight:700">${label}</div>
+          </div>
+          ${!isOff&&crew?`<div style="margin-top:8px;font-size:13px;color:var(--muted)">👥 ${crew}</div>`:''}
+        </div>`;
+      }).join('')}
+      <a href="https://docs.google.com/spreadsheets/d/${SHEETS_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">📝 Редактировать таблицу</a>
+    `;
+  } catch(e){
+    app.innerHTML = `
+      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+      <h1>График на неделю</h1>
+      <div class="card" style="text-align:center;padding:30px">
+        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <div style="font-weight:700;margin-bottom:8px">Ошибка загрузки</div>
+        <div style="font-size:13px;color:var(--muted)">Проверь ID и доступ к таблице</div>
+        <button class="btn btn-sm" style="margin-top:12px" onclick="renderSchedule()">🔄 Повторить</button>
+      </div>
+    `;
+  }
 }
 
 function renderChecklist(){
