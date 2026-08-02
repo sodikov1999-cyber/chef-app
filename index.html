@@ -103,13 +103,13 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     border: none;
     color: var(--muted);
     font-weight: 600;
+    border-radius: 8px;
+    margin-right: 4px;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
 }
 .tab-btn.on {
-    background: rgba(255,138,61,0.1);
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    background: var(--accent);
+    color: #000;
 }
 </style>
 </head>
@@ -126,9 +126,59 @@ const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
-   📦 ЛОКАЛЬНЫЕ ДАННЫЕ (РЕЗЕРВ)
+   📦 ДАННЫЕ (С ЗАГРУЗКОЙ ИЗ ПАМЯТИ)
    ============================================================ */
-const LOCAL_DATA = {
+// Базовые данные (резерв)
+const DEFAULT_RECIPES = [
+  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
+   note:'Срок хранения основы — 12 ч при +2…+6 °C.',
+   ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
+   steps:['Сварить бульон 1,5 часа.','Добавить овощи, варить 15 мин.','Тушить свёклу 25 мин.','Пассеровать лук и морковь.','Довести до вкуса.']},
+  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
+   note:'Собирается при госте.',
+   ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус Цезарь',40,40],['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
+   steps:['Филе обжарить, нарезать.','Айсберг порвать.','Сухарики подсушить 4 мин.','Собрать салат, финиш — пармезан.']},
+  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
+   note:'Классика на желтке, без сливок.',
+   ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20]],
+   steps:['Спагетти al dente.','Вытопить гуанчале.','Смешать желтки с пармезаном.','Эмульгировать всё вместе.']},
+  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
+   note:'Тесто — 24 ч при +2…+6 °C.',
+   ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
+   steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.','Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
+  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
+   note:'Созревание не менее 4 часов.',
+   ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
+   steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.','Чередовать слои.','4 часа в холоде, какао перед подачей.']},
+  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
+   note:'Нарезка — заготовка смены, 6 часов.',
+   ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
+   steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
+  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
+   note:'Не кипятить! Нагрев строго до 70 °C.',
+   ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
+   steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
+  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
+   note:'Заготовка горячего цеха. Срок — 12 ч.',
+   ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
+   steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
+];
+
+const DEFAULT_NEWS = [
+  {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
+  {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
+  {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
+];
+
+const DEFAULT_TEAM = [
+  {name:'Марина К.', role:'Су-шеф', init:'МК'},
+  {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
+  {name:'Даша П.', role:'Кондитер', init:'ДП'},
+  {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
+  {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
+];
+
+const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
   locations: [
     {
@@ -194,59 +244,25 @@ const LOCAL_DATA = {
   ]
 };
 
-const RECIPES = [
-  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96,
-   note:'Срок хранения основы — 12 ч при +2…+6 °C.',
-   ingr:[['Говяжья грудинка',121,80],['Свёкла',80,64],['Картофель',96,81],['Капуста',63,50],['Морковь',25,20],['Лук',24,20]],
-   steps:['Сварить бульон 1,5 часа.','Добавить овощи, варить 15 мин.','Тушить свёклу 25 мин.','Пассеровать лук и морковь.','Довести до вкуса.']},
-  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185,
-   note:'Собирается при госте.',
-   ingr:[['Филе бедра',90,70],['Айсберг',80,72],['Соус Цезарь',40,40],['Черри',40,38],['Сухарики',25,25],['Пармезан',15,14]],
-   steps:['Филе обжарить, нарезать.','Айсберг порвать.','Сухарики подсушить 4 мин.','Собрать салат, финиш — пармезан.']},
-  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265,
-   note:'Классика на желтке, без сливок.',
-   ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40],['Пармезан',20,20]],
-   steps:['Спагетти al dente.','Вытопить гуанчале.','Смешать желтки с пармезаном.','Эмульгировать всё вместе.']},
-  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210,
-   note:'Тесто — 24 ч при +2…+6 °C.',
-   ingr:[['Творог 9%',140,135],['Сметана',30,30],['Мука',25,25],['Яйцо',20,20],['Сахар',15,15],['Масло топл.',10,10]],
-   steps:['Творог + яйцо + сахар + мука.','Шайбы по 55 г.','Жарить по 3 мин с каждой стороны.','Довести в пароконвектомате 160°C — 4 мин.','Отдача: 3 шт + сметана.']},
-  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин + 4 ч', yield:'140 г', kcal:298,
-   note:'Созревание не менее 4 часов.',
-   ingr:[['Маскарпоне',70,70],['Сливки 33%',40,40],['Эспрессо',40,40],['Савоярди',30,30],['Желток',15,15],['Сахар',15,15],['Какао',3,3]],
-   steps:['Желтки + сахар на водяной бане до 72°C.','Маскарпоне + сливки.','Савоярди в эспрессо.','Чередовать слои.','4 часа в холоде, какао перед подачей.']},
-  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122,
-   note:'Нарезка — заготовка смены, 6 часов.',
-   ingr:[['Томаты',90,82],['Огурцы',80,74],['Фета',50,50],['Перец',40,32],['Маслины',25,25],['Лук кр.',15,13],['Оливк. масло',15,15],['Орегано',1,1]],
-   steps:['Томаты долькой, огурцы кружком, перец ромбом.','Масло + орегано.','Горкой, сверху фета и маслины.','Финиш.']},
-  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64,
-   note:'Не кипятить! Нагрев строго до 70 °C.',
-   ingr:[['Вишнёвый сок',200,200],['Апельсин',40,38],['Мёд',15,15],['Корица',2,2],['Бадьян',1,1],['Гвоздика',1,1]],
-   steps:['Сок + специи до 70°C.','Апельсин кружком.','Настоять 5 мин.','Процедить, мёд.']},
-  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118,
-   note:'Заготовка горячего цеха. Срок — 12 ч.',
-   ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло сл.',100,100],['Соль',10,10]],
-   steps:['Картофель кубиком, варить ~25 мин.','Слить, подсушить.','Протереть, молоко + масло.','Пробить.']},
-];
-
-const NEWS = [
-  {tag:'Поставка', title:'Лосось приедет в среду к 10:00', text:'Перенос от поставщика.', date:'Сегодня'},
-  {tag:'Событие', title:'Дегустация — пятница, 16:00', text:'Каждому цеху — по одной позиции.', date:'Вчера'},
-  {tag:'Важно', title:'Обновлены ТТК по десертам', text:'Тирамису: сливки 35% → 33%.', date:'2 дня назад'}
-];
-
-const TEAM = [
-  {name:'Марина К.', role:'Су-шеф', init:'МК'},
-  {name:'Олег С.', role:'Повар гриль-цеха', init:'ОС'},
-  {name:'Даша П.', role:'Кондитер', init:'ДП'},
-  {name:'Сергей Л.', role:'Бариста', init:'СЛ'},
-  {name:'Аня В.', role:'Менеджер зала', init:'АВ'}
-];
-
 const CHECKLISTS = {
   open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
   close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
 };
+
+// === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
+let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+let scheduleData = null;
+let useLocalSchedule = false;
+let isLoading = false;
+
+// Функция сохранения
+function saveData() {
+    localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
+    localStorage.setItem('chef_news', JSON.stringify(NEWS));
+    localStorage.setItem('chef_team', JSON.stringify(TEAM));
+}
 
 /* ============================================================
    ⚙️ ЛОГИКА
@@ -260,9 +276,6 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
-let scheduleData = null;
-let useLocalSchedule = false;
-let isLoading = false;
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -304,7 +317,7 @@ function renderHome(){
   const dayIndex = currentDay - 1;
   
   let todayShifts = [];
-  const source = scheduleData || LOCAL_DATA;
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
   
   if(source && source.locations) {
       source.locations.forEach(loc => {
@@ -428,19 +441,15 @@ function renderRecipe(){
 async function fetchScheduleData(force = false) {
     if (isLoading) return;
     isLoading = true;
-
     if (!force && scheduleData) {
         isLoading = false;
         return;
     }
-
     try {
         const response = await fetch(SHEET_URL + '&t=' + Date.now());
         if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
-        
         const text = await response.text();
         const parsed = parseComplexCSV(text);
-        
         if (parsed && parsed.locations && parsed.locations.length > 0) {
             scheduleData = parsed;
             useLocalSchedule = false;
@@ -451,7 +460,7 @@ async function fetchScheduleData(force = false) {
     } catch (e) {
         console.warn('Онлайн загрузка не удалась:', e);
         if (!scheduleData) {
-            scheduleData = LOCAL_DATA;
+            scheduleData = DEFAULT_LOCAL_DATA;
             useLocalSchedule = true;
         }
         toast('Нет связи с сервером. Показаны локальные данные.', 'error');
@@ -481,7 +490,6 @@ function parseComplexCSV(csvText) {
     }).filter(r => r.length > 2);
 
     if (rows.length < 5) return null;
-
     const locations = [];
     let currentLoc = null;
     
@@ -496,7 +504,6 @@ function parseComplexCSV(csvText) {
         }
 
         const secondCell = (row[1] || '').trim();
-        
         if (secondCell === 'Должность' || secondCell === '') {
              if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
                  currentLoc = { name: row[0].trim(), staff: [] };
@@ -505,28 +512,18 @@ function parseComplexCSV(csvText) {
         } else if (currentLoc) {
             const name = row[0].trim();
             const role = secondCell;
-            
             const shifts = [];
             for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
                 let val = row[d];
                 if (val && val.includes(',')) val = val.replace(',', '.');
-                
                 let num = parseFloat(val);
                 if (isNaN(num)) num = 0;
                 shifts.push(num);
             }
-            
             const total = shifts.reduce((a, b) => a + b, 0);
-
-            currentLoc.staff.push({
-                name: name,
-                role: role,
-                shifts: shifts,
-                total: total
-            });
+            currentLoc.staff.push({ name, role, shifts, total });
         }
     }
-
     if (locations.length === 0) return null;
     return { month: 'Август 2026', locations: locations };
 }
@@ -546,14 +543,11 @@ async function renderSchedule(){
       <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
     </div>
   `;
-
     await fetchScheduleData(true);
     renderScheduleContent();
 }
 
-function handleRefresh() {
-    renderSchedule();
-}
+function handleRefresh() { renderSchedule(); }
 
 function renderScheduleContent() {
     const today = new Date();
@@ -561,12 +555,10 @@ function renderScheduleContent() {
     const dayIndex = currentDay - 1;
     const dowShort = ['вск','пн','вт','ср','чт','пт','сб'];
     const currentDow = dowShort[today.getDay()];
-
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const monday = new Date(today);
     monday.setDate(today.getDate() + mondayOffset);
-
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(monday);
@@ -574,7 +566,6 @@ function renderScheduleContent() {
         const dayNum = d.getDate();
         const idx = Math.min(dayNum - 1, 30); 
         const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        
         let count = 0;
         if(scheduleData && scheduleData.locations) {
             scheduleData.locations.forEach(loc => {
@@ -583,13 +574,7 @@ function renderScheduleContent() {
             });
             });
         }
-        
-        weekDays.push({
-        dayNum,
-        isToday,
-        count,
-        dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
-        });
+        weekDays.push({ dayNum, isToday, count, dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] });
     }
 
     app.innerHTML = `
@@ -600,7 +585,6 @@ function renderScheduleContent() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
     </div>
-    
     ${useLocalSchedule ? `
       <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
         ⚠️ <b>Локальные данные</b><br>
@@ -612,7 +596,6 @@ function renderScheduleContent() {
         <span style="color:var(--muted)">Сегодня ${currentDay} число · ${currentDow}</span>
       </div>
     `}
-    
     <h2>Эта неделя</h2>
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
@@ -623,14 +606,11 @@ function renderScheduleContent() {
         </div>
       `).join('')}
     </div>
-    
     ${scheduleData && scheduleData.locations ? scheduleData.locations.map(loc => {
       if(!loc.staff || loc.staff.length === 0) return '';
-      
       const isOpen = expandedLocations.has(loc.name);
       const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
-      
       return `
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
           <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -644,10 +624,8 @@ function renderScheduleContent() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </button>
-          
           <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
             <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-              
               <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Сегодня на смене (${workingToday.length})</div>
               ${workingToday.length > 0 ? workingToday.map(p => `
                 <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
@@ -658,7 +636,6 @@ function renderScheduleContent() {
                   </div>
                 </div>
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-              
               <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
               ${staffStats.map(s => {
                 let workDays = 0;
@@ -675,13 +652,11 @@ function renderScheduleContent() {
                   </div>
                 `;
               }).join('')}
-              
             </div>
           </div>
         </div>
       `;
     }).join('') : '<div class="card">Нет данных о локациях</div>'}
-    
     <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
       📝 Открыть таблицу
     </a>
@@ -702,7 +677,6 @@ function renderChecklist(){
   const items = CHECKLISTS[key];
   const done = saved.length;
   const total = items.length;
-
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Чек-листы</h1>
@@ -761,13 +735,11 @@ function renderTeam(){
 }
 
 /* ============================================================
-   🔐 АДМИНКА
+   🔐 АДМИНКА (С СОХРАНЕНИЕМ)
    ============================================================ */
 let adminTab = 'recipes';
 
-function openAdmin(){
-  showAdminModal();
-}
+function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
   adminTab = adminTab || 'recipes';
@@ -775,7 +747,6 @@ function showAdminModal(){
   modal.className = 'modal-bg';
   modal.id = 'admin-modal';
   modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-  
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
@@ -797,7 +768,6 @@ function showAdminModal(){
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
   if(!c) return;
-  
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
@@ -858,7 +828,6 @@ function renderAdminContent(){
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
-  
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
   modal.id = 'edit-modal';
@@ -879,23 +848,15 @@ function editRecipe(id){
         <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
         <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
       </div>
-      
       <div class="form-field">
         <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
-        <div id="ingr-list">
-          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
-        </div>
+        <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
       </div>
-      
       <div class="form-field">
         <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
-        <div id="steps-list">
-          ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
-        </div>
+        <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
       </div>
-      
       <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
-      
       <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
     </div>
   `;
@@ -923,7 +884,6 @@ window.addIngr = function(){
   const idx = list.querySelectorAll('.ing-editor').length;
   list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
 };
-
 window.addStep = function(){
   const list = document.getElementById('steps-list');
   const idx = list.querySelectorAll('[data-step]').length;
@@ -957,6 +917,7 @@ window.saveRecipe = function(editId){
   } else {
     RECIPES.push(r);
   }
+  saveData(); // <-- СОХРАНЕНИЕ
   document.getElementById('edit-modal').remove();
   toast('Сохранено ✓', 'success');
   renderAdminContent();
@@ -966,6 +927,7 @@ window.deleteRecipe = function(id){
   if(!confirm('Удалить техкарту?')) return;
   const idx = RECIPES.findIndex(r=>r.id===id);
   if(idx>=0) RECIPES.splice(idx,1);
+  saveData(); // <-- СОХРАНЕНИЕ
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -996,6 +958,7 @@ window.saveNews = function(i){
   const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
   if(!n.title){ toast('Введите заголовок', 'error'); return; }
   if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
+  saveData(); // <-- СОХРАНЕНИЕ
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1004,6 +967,7 @@ window.saveNews = function(i){
 window.deleteNews = function(i){
   if(!confirm('Удалить новость?')) return;
   NEWS.splice(i,1);
+  saveData(); // <-- СОХРАНЕНИЕ
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1033,6 +997,7 @@ window.saveTeamMember = function(i){
   const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
   if(!u.name){ toast('Введите имя', 'error'); return; }
   if(i !== null) TEAM[i] = u; else TEAM.push(u);
+  saveData(); // <-- СОХРАНЕНИЕ
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1041,6 +1006,7 @@ window.saveTeamMember = function(i){
 window.deleteTeamMember = function(i){
   if(!confirm('Удалить сотрудника?')) return;
   TEAM.splice(i,1);
+  saveData(); // <-- СОХРАНЕНИЕ
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1050,6 +1016,5 @@ window.deleteTeamMember = function(i){
    ============================================================ */
 render();
 </script>
-
 </body>
 </html>
