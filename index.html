@@ -548,7 +548,10 @@ function renderAdminContent(){
 
 /* ============ РЕДАКТОРЫ ============ */
 function editRecipe(id){
-  const r = id ? DATA.recipes.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
+  const r = id ? DATA.recipes.find(x=>x.id===id) : {
+    id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, 
+    note:'', ingr:[['',0,0]], steps:[''], photo:''
+  };
   const isEdit = !!id;
   
   const modal = document.createElement('div');
@@ -557,56 +560,93 @@ function editRecipe(id){
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новая'} техкарта</div>
+        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
       </div>
-      <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
-      <div class="form-field"><label class="form-label">Категория</label>
-        <select class="form-select" id="r-cat">
-          ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}" placeholder="30 мин"></div>
-        <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}" placeholder="200 г"></div>
-      </div>
-      <div class="form-field"><label class="form-label">Калории (ккал)</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
       
-      <div class="form-field">
-        <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
-        <div id="ingr-list">
-          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
+      <!-- ОСНОВНАЯ ИНФОРМАЦИЯ -->
+      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
+        <div style="font-weight:700;margin-bottom:12px">📋 Основная информация</div>
+        <div class="form-field"><label class="form-label">Название блюда</label>
+          <input class="form-input" id="r-name" value="${r.name}" placeholder="Например: Борщ с говядиной"></div>
+        <div class="form-field"><label class="form-label">Категория</label>
+          <select class="form-select" id="r-cat">
+            <option value="Горячее" ${r.cat==='Горячее'?'selected':''}>🍲 Горячее</option>
+            <option value="Салаты" ${r.cat==='Салаты'?'selected':''}>🥗 Салаты</option>
+            <option value="Десерты" ${r.cat==='Десерты'?'selected':''}>🍰 Десерты</option>
+            <option value="Напитки" ${r.cat==='Напитки'?'selected':''}>🍷 Напитки</option>
+            <option value="Заготовки" ${r.cat==='Заготовки'?'selected':''}>🥔 Заготовки</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="form-field"><label class="form-label">Время</label>
+            <input class="form-input" id="r-time" value="${r.time}" placeholder="30 мин"></div>
+          <div class="form-field"><label class="form-label">Выход</label>
+            <input class="form-input" id="r-yield" value="${r.yield}" placeholder="200 г"></div>
+          <div class="form-field"><label class="form-label">Ккал</label>
+            <input class="form-input" id="r-kcal" type="number" value="${r.kcal}" placeholder="150"></div>
         </div>
       </div>
       
-      <div class="form-field">
-        <label class="form-label">Шаги приготовления <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
+      <!-- ИНГРЕДИЕНТЫ -->
+      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:700">🥕 Ингредиенты</div>
+          <button class="btn btn-sm" onclick="addIngr()">+ Добавить</button>
+        </div>
+        <div id="ingr-list">
+          ${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          💡 Брутто — вес до обработки, нетто — после
+        </div>
+      </div>
+      
+      <!-- ШАГИ ПРИГОТОВЛЕНИЯ -->
+      <div style="background:var(--card);padding:16px;border-radius:12px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-weight:700">👨‍🍳 Шаги приготовления</div>
+          <button class="btn btn-sm" onclick="addStep()">+ Добавить шаг</button>
+        </div>
         <div id="steps-list">
           ${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}
         </div>
       </div>
       
-      <div class="form-field"><label class="form-label">Важное примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
+      <!-- ПРИМЕЧАНИЕ -->
+      <div class="form-field">
+        <label class="form-label">📝 Важное примечание (срок хранения и т.д.)</label>
+        <textarea class="form-textarea" id="r-note" placeholder="Срок хранения — 12 часов при +2…+6°C">${r.note||''}</textarea>
+      </div>
       
-      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
+      <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})" style="margin-top:8px">
+        💾 Сохранить техкарту
+      </button>
     </div>
   `;
   document.body.appendChild(modal);
 }
 
 function ingrRow(i, idx){
-  return `<div class="ing-editor"><div class="ing-row">
-    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
-    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
-    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-  </div></div>`;
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr;gap:6px">
+      <input class="form-input" placeholder="🥩 Название продукта" data-ing="${idx}" data-f="name" value="${i[0]||''}" style="font-weight:600">
+      <div style="display:grid;grid-template-columns:1fr 1fr 32px;gap:6px">
+        <input class="form-input" placeholder="Брутто (г)" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
+        <input class="form-input" placeholder="Нетто (г)" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
+        <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()" title="Удалить">🗑</button>
+      </div>
+    </div>
+  </div>`;
 }
 
 function stepRow(s, idx){
-  return `<div class="step-editor">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}">${s||''}</textarea>
-    <button class="icon-btn danger" onclick="this.closest('.step-editor').remove()">✕</button>
+  return `<div class="step-editor" style="background:rgba(255,255,255,.03);padding:10px;border-radius:10px;margin-bottom:8px;border-left:3px solid var(--accent)">
+    <div style="display:flex;gap:8px;align-items:flex-start">
+      <div style="background:var(--accent);color:#000;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${idx+1}</div>
+      <textarea class="form-textarea" data-step="${idx}" placeholder="Описание шага..." style="flex:1;min-height:50px">${s||''}</textarea>
+      <button class="icon-btn danger" onclick="this.closest('.step-editor').remove()" title="Удалить">🗑</button>
+    </div>
   </div>`;
 }
 
