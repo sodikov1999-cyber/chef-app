@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF;--red:#FF6B5E}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent}
 h1{font-weight:800;font-size:26px;margin-bottom:16px}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
@@ -1088,18 +1088,41 @@ window.toggleCheckItem = function(loc, type, i){
 
 function renderTeam(){
   const user = tg?.initDataUnsafe?.user;
+  
+  // Собираем всех уникальных сотрудников из графика
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
+  let allStaff = [];
+  
+  if (source && source.locations) {
+      source.locations.forEach(loc => {
+          if (loc.staff) {
+              loc.staff.forEach(person => {
+                  // Проверяем, нет ли уже такого человека в списке (по имени)
+                  if (!allStaff.some(s => s.name === person.name)) {
+                      allStaff.push(person);
+                  }
+              });
+          }
+      });
+  }
+  
+  // Если данных из графика нет, используем дефолтный TEAM
+  if (allStaff.length === 0) {
+      allStaff = TEAM.map(t => ({...t, shifts: [], total: 0}));
+  }
+
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
       <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
       </div>
     ` : ''}
-    ${TEAM.map(u => `
+    ${allStaff.map(u => `
       <div class="user">
-        <div class="avatar">${u.init}</div>
+        <div class="avatar">${u.init || u.name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
         <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
       </div>
     `).join('')}
