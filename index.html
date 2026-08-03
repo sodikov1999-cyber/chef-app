@@ -516,7 +516,32 @@ function saveData() {
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
     localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
+    // Задача 5: Эмитим событие для синхронизации между вкладками/окнами
+    window.dispatchEvent(new Event('local-storage-update'));
 }
+
+// Задача 5: Слушаем изменения в других вкладках
+window.addEventListener('storage', () => {
+    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
+    if(currentView === 'home') renderHome();
+    if(currentView === 'ttk') renderTTK();
+    if(currentView === 'team') renderTeam();
+    if(currentView === 'matrix') renderMatrix();
+});
+// Задача 5: Слушаем наше кастомное событие для текущей вкладки
+window.addEventListener('local-storage-update', () => {
+    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
+    if(currentView === 'home') renderHome();
+    if(currentView === 'ttk') renderTTK();
+    if(currentView === 'team') renderTeam();
+    if(currentView === 'matrix') renderMatrix();
+});
 
 /* ============================================================
    ⚙️ ЛОГИКА
@@ -637,35 +662,75 @@ function renderHome(){
   `;
 }
 
+// Задача 4: Исправление потери фокуса input в ТТК
 function renderTTK(){
   const cats = ['Все', ...new Set(RECIPES.map(r=>r.cat))];
   window._ttkCat = window._ttkCat || 'Все';
   window._ttkQ = window._ttkQ || '';
   const q = window._ttkQ.toLowerCase();
+  
+  // Фильтрация
   const items = RECIPES.filter(r => 
     (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
     (!q || r.name.toLowerCase().includes(q))
   );
 
-  // Задача 4: Input не теряет фокус, так как мы не перерисовываем его полностью, а меняем только значение через value в HTML
-  // и используем window._ttkQ для хранения состояния.
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Техкарты</h1>
-    <input type="search" placeholder="🔍 Поиск блюда..." 
-           value="${window._ttkQ}" 
-           oninput="window._ttkQ=this.value;renderTTK()"
-           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none">
-    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
-      ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
-    </div>
-    ${items.length ? items.map(r => `
-      <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-        <div class="recipe-name">${r.name}</div>
-        <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
-      </button>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
-  `;
+  // Рендерим только если элемента поиска еще нет (первый вход)
+  const existingSearch = document.getElementById('ttk-search-input');
+  
+  if (!existingSearch) {
+      // Первый рендер - строим всё
+      let html = `
+        <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+        <h1>Техкарты</h1>
+        <input type="search" id="ttk-search-input" placeholder="🔍 Поиск блюда..." 
+               value="${window._ttkQ}" 
+               style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none">
+        <div id="ttk-controls" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
+          ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
+        </div>
+        <div id="ttk-list">
+            ${items.length ? items.map(r => `
+              <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
+                <div class="recipe-name">${r.name}</div>
+                <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
+              </button>
+            `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+        </div>
+      `;
+      app.innerHTML = html;
+      
+      // Навешиваем обработчик один раз после создания
+      const input = document.getElementById('ttk-search-input');
+      input.addEventListener('input', (e) => {
+          window._ttkQ = e.target.value;
+          updateTTKList(); // Обновляем только список, не трогая input
+      });
+  } else {
+      // Уже существует - обновляем только кнопки категорий и список
+      // Обновляем кнопки категорий (если категория могла измениться программно, хотя тут она меняется через onclick)
+      // Но нам нужно перерисовать список
+      updateTTKList();
+  }
+}
+
+// Вынесенная функция обновления только списка рецептов
+function updateTTKList() {
+    const q = window._ttkQ.toLowerCase();
+    const items = RECIPES.filter(r => 
+        (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
+        (!q || r.name.toLowerCase().includes(q))
+    );
+    
+    const listContainer = document.getElementById('ttk-list');
+    if(listContainer) {
+        listContainer.innerHTML = items.length ? items.map(r => `
+          <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
+            <div class="recipe-name">${r.name}</div>
+            <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
+          </button>
+        `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+    }
 }
 
 function renderRecipe(){
@@ -1043,20 +1108,19 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
-  // Получаем сотрудников на сегодня для этой локации
+  // Задача 1: Получаем ВСЕХ сотрудников локации, фильтруем по роли (Су-шеф, ИО, Верховный), игнорируя график на сегодня
   const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let todayStaff = [];
-  const dayIndex = new Date().getDate() - 1;
+  let allManagers = [];
   
   if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
     if(locData && locData.staff) {
-      todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      // Берем всех, у кого роль подходит, независимо от shifts
+      allManagers = locData.staff.filter(p => 
+          p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный')
+      );
     }
   }
-  
-  // Задача 1: Фильтруем только Су-шефов, ИО и Верховных
-  const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
@@ -1066,7 +1130,7 @@ function renderChecklist(){
       <div class="form-label">Ответственный сегодня</div>
       <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
         <option value="">-- Не выбран --</option>
-        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
+        ${allManagers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
       </select>
       ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
     </div>
