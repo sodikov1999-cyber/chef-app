@@ -140,47 +140,29 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
 
-/* Навигация по неделям */
-.week-nav {
+/* Стили для календаря */
+.calendar-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
     gap: 10px;
 }
-.week-nav-btn {
+.calendar-nav button {
     background: rgba(255,255,255,0.1);
     border: none;
     color: var(--text);
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 18px;
 }
-.week-nav-btn:active { background: var(--accent); color: #000; }
-.week-title {
-    font-weight: 700;
-    font-size: 14px;
-    text-align: center;
-    flex: 1;
-    color: var(--muted);
-}
-.today-btn {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.today-btn:active { background: var(--accent); color: #000; border-color: var(--accent); }
-
+.calendar-nav button:active { background: var(--accent); color: #000; }
+.calendar-title { font-weight: 700; font-size: 16px; text-align: center; flex: 1; }
 .day-card {
     flex: 1;
     text-align: center;
@@ -193,19 +175,12 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     border: 2px solid transparent;
 }
 .day-card:active { transform: scale(0.95); }
-.day-card.selected {
-    background: var(--accent);
-    color: #000;
-    border-color: #fff;
-}
-.day-card.today {
-    border-color: var(--green);
-}
-.day-card .dow-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-.day-card.selected .dow-name { color: #000; }
-.day-card .day-num { font-weight: 800; font-size: 17px; margin: 3px 0; }
-.day-card .count { font-size: 11px; color: var(--muted); }
-.day-card.selected .count { color: #000; }
+.day-card.selected { border-color: var(--accent); background: rgba(255,138,61,0.15); }
+.day-card.today { background: var(--accent); color: #000; }
+.day-card.today .dow-name, .day-card.today .day-count { color: #000; }
+.dow-name { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.day-num { font-weight: 800; font-size: 17px; margin: 2px 0; }
+.day-count { font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -246,12 +221,11 @@ const DEFAULT_TEAM = [
   {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
-// Матрица заявок
-const DEFAULT_MATRIX = [
+const MATRIX_DATA = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
-    items: [ {name: "Лаваш традиционный", unit: "шт", limit: 40} ]
+    items: [{name: "Лаваш традиционный", unit: "шт", limit: 40}]
   },
   {
     supplier: "Булочная Пирогов",
@@ -486,7 +460,6 @@ const CHECKLISTS = {
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-let MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
@@ -495,7 +468,6 @@ function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
 }
 
 /* ============================================================
@@ -511,9 +483,9 @@ let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
 
-// Переменные для навигации по графику
-let currentWeekStart = null; // Дата начала текущей отображаемой недели
-let selectedDayIndex = null; // Индекс дня (0-30) внутри месяца, который выбран пользователем
+// Переменные для графика
+let currentWeekStart = null;
+let selectedDayIndex = null; // Индекс дня в месяце (0-30)
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -556,6 +528,7 @@ function renderHome(){
   const dayIndex = currentDay - 1;
   
   let todayShifts = [];
+  // Используем загруженные данные или локальные
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   
   if(source && source.locations) {
@@ -697,7 +670,8 @@ async function fetchScheduleData(force = false) {
         if (parsed && parsed.locations && parsed.locations.length > 0) {
             scheduleData = parsed;
             useLocalSchedule = false;
-            toast('Данные обновлены', 'success');
+            // Не показываем тост при автозагрузке, чтобы не мешать
+            if(force) toast('Данные обновлены', 'success');
         } else {
             throw new Error('Неверный формат данных');
         }
@@ -707,9 +681,14 @@ async function fetchScheduleData(force = false) {
             scheduleData = DEFAULT_LOCAL_DATA;
             useLocalSchedule = true;
         }
-        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+        if(force) toast('Нет связи с сервером. Показаны локальные данные.', 'error');
     } finally {
         isLoading = false;
+        // Если мы на главной или в графике, перерисовываем, чтобы обновить цифры
+        if(currentView === 'home' || currentView === 'schedule') {
+             if(currentView === 'home') renderHome();
+             else renderScheduleContent();
+        }
     }
 }
 
@@ -773,7 +752,7 @@ function parseComplexCSV(csvText) {
 }
 
 async function renderSchedule(){
-    // Инициализация недели сегодня при первом входе
+    // Инициализация недели, если еще не задана
     if (!currentWeekStart) {
         const today = new Date();
         const dayOfWeek = today.getDay();
@@ -800,100 +779,92 @@ async function renderSchedule(){
     renderScheduleContent();
 }
 
-function handleRefresh() { 
-    currentWeekStart = null; 
-    selectedDayIndex = null;
-    renderSchedule(); 
-}
+function handleRefresh() { renderSchedule(); }
 
 function renderScheduleContent() {
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
     const today = new Date();
     const currentDay = today.getDate();
     
-    // Если неделя не установлена (первый вход), устанавливаем текущую
-    if (!currentWeekStart) {
-        const dayOfWeek = today.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        currentWeekStart = new Date(today);
-        currentWeekStart.setDate(today.getDate() + mondayOffset);
-        if (selectedDayIndex === null) selectedDayIndex = currentDay - 1;
-    }
-
-    // Генерация дней недели
+    // Навигация по неделям
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(currentWeekStart);
         d.setDate(currentWeekStart.getDate() + i);
         const dayNum = d.getDate();
-        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+        const idx = dayNum - 1; // Индекс в массиве смен (0-30)
         
-        // Индекс дня в месяце (0-30)
-        const dayIdx = dayNum - 1;
+        // Проверка: день в этом месяце?
+        if(d.getMonth() !== today.getMonth()) continue;
+
+        const isToday = dayNum === currentDay;
+        const isSelected = selectedDayIndex === idx;
         
         let count = 0;
-        const source = scheduleData || DEFAULT_LOCAL_DATA;
         if(source && source.locations) {
             source.locations.forEach(loc => {
                 loc.staff.forEach(p => {
-                    if(p.shifts && p.shifts[dayIdx] && Number(p.shifts[dayIdx]) > 0) count++;
+                    if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
                 });
             });
         }
         
-        weekDays.push({ 
-            dayNum, 
-            isToday, 
-            count, 
-            isSelected: selectedDayIndex === dayIdx,
-            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] 
+        weekDays.push({
+            dayNum,
+            idx,
+            isToday,
+            isSelected,
+            count,
+            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i]
         });
     }
 
-    // Определяем диапазон дат для заголовка
-    const lastDay = new Date(currentWeekStart);
-    lastDay.setDate(currentWeekStart.getDate() + 6);
-    const rangeStr = `${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru', {month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru', {month:'long'})}`;
+    const startStr = currentWeekStart.getDate();
+    const endStr = weekEnd.getDate();
+    const monthName = today.toLocaleString('ru', { month: 'long' });
 
-    // Получаем данные для выбранного дня
-    const activeDayIndex = selectedDayIndex !== null ? selectedDayIndex : currentDay - 1;
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    
-    let html = `
+    app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
-        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+        <h1 style="margin:0">${source.month}</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')" style="margin-left:10px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
     </div>
     
-    <div class="week-nav">
-        <button class="week-nav-btn" onclick="changeWeek(-1);haptic()">←</button>
-        <div class="week-title">${rangeStr}</div>
-        <button class="week-nav-btn" onclick="changeWeek(1);haptic()">→</button>
+    <div class="calendar-nav">
+        <button onclick="changeWeek(-1);haptic()">←</button>
+        <div class="calendar-title">${startStr} — ${endStr} ${monthName}</div>
+        <button onclick="changeWeek(1);haptic()">→</button>
     </div>
     <div style="text-align:center;margin-bottom:16px">
-        <button class="today-btn" onclick="goToToday();haptic()">Сегодня</button>
+        <button class="btn btn-sm btn-sec" onclick="resetToToday();haptic()">Сегодня</button>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
-        <div class="day-card ${d.isSelected ? 'selected' : ''} ${d.isToday ? 'today' : ''}" 
-             onclick="selectDay(${d.dayNum - 1});haptic()">
+        <div class="day-card ${d.isToday?'today':''} ${d.isSelected?'selected':''}" 
+             onclick="selectDay(${d.idx});haptic()">
           <div class="dow-name">${d.dowName}</div>
           <div class="day-num">${d.dayNum}</div>
-          <div class="count">${d.count} чел</div>
+          <div class="day-count">${d.count} чел</div>
         </div>
       `).join('')}
     </div>
     
-    <h2>Сотрудники (${new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), activeDayIndex + 1).getDate()} августа)</h2>
+    <div style="margin-bottom:10px;font-size:13px;color:var(--muted)">
+        Нажмите на день, чтобы увидеть список сотрудников
+    </div>
+
     ${source && source.locations ? source.locations.map(loc => {
       if(!loc.staff || loc.staff.length === 0) return '';
       const isOpen = expandedLocations.has(loc.name);
       
-      // Фильтруем сотрудников, работающих в ВЫБРАННЫЙ день (activeDayIndex)
-      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[activeDayIndex] && Number(p.shifts[activeDayIndex]) > 0);
+      // Фильтруем сотрудников для ВЫБРАННОГО дня (selectedDayIndex), а не сегодня
+      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
       
       return `
@@ -902,7 +873,7 @@ function renderScheduleContent() {
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
               <div style="font-size:12px;color:var(--muted)">
-                👥 На смене: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+                👥 ${selectedDayIndex === (today.getDate()-1) ? 'Сегодня' : `${selectedDayIndex+1} числа`}: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
               </div>
             </div>
             <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
@@ -917,12 +888,12 @@ function renderScheduleContent() {
                   <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
                   <div style="flex:1;min-width:0">
                     <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[activeDayIndex]} см</div>
+                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[selectedDayIndex]} ч</div>
                   </div>
                 </div>
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
               
-              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Статистика за месяц</div>
+              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
               ${staffStats.map(s => {
                 let workDays = 0;
                 if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
@@ -948,34 +919,30 @@ function renderScheduleContent() {
       📝 Открыть таблицу
     </a>
   `;
-  
-  app.innerHTML = html;
 }
 
-// Функции навигации
-window.changeWeek = function(offset) {
-    if (!currentWeekStart) return;
+function changeWeek(offset) {
     const newDate = new Date(currentWeekStart);
-    newDate.setDate(currentWeekStart.getDate() + (offset * 7));
+    newDate.setDate(newDate.getDate() + (offset * 7));
     
-    // Простая проверка на выход за пределы августа 2026 (можно расширить)
-    if (newDate.getMonth() !== 7 && newDate.getMonth() !== 6 && newDate.getMonth() !== 8) {
-        // Если уходим сильно далеко, можно добавить тост
-        // toast('Нет данных за этот период', 'error');
-        // return;
+    // Проверка границ месяца (Август 2026)
+    const today = new Date(); // Для примера считаем текущий месяц
+    if(newDate.getMonth() !== today.getMonth()) {
+        toast('Нет данных за этот период', 'error');
+        return;
     }
     
     currentWeekStart = newDate;
-    selectedDayIndex = null; // Сбрасываем выбор дня при смене недели
+    // Сбрасываем выбранный день на первый день новой недели или оставляем логику?
+    // Лучше оставить выбранный день, если он попадает в неделю, иначе сбросить на первый
+    const dayOfWeek = newDate.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    // selectedDayIndex остается прежним, но при рендере он может не подсветиться, если не в этой неделе
+    
     renderScheduleContent();
-};
+}
 
-window.selectDay = function(dayIndex) {
-    selectedDayIndex = dayIndex;
-    renderScheduleContent();
-};
-
-window.goToToday = function() {
+function resetToToday() {
     const today = new Date();
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -983,7 +950,25 @@ window.goToToday = function() {
     currentWeekStart.setDate(today.getDate() + mondayOffset);
     selectedDayIndex = today.getDate() - 1;
     renderScheduleContent();
-};
+}
+
+function selectDay(idx) {
+    selectedDayIndex = idx;
+    // Обновляем неделю, если выбранный день не в текущей видимой неделе
+    const selectedDate = new Date();
+    selectedDate.setDate(idx + 1);
+    const dayOfWeek = selectedDate.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStartOfSelected = new Date(selectedDate);
+    weekStartOfSelected.setDate(selectedDate.getDate() + mondayOffset);
+    
+    // Если неделя отличается, переключаем
+    if(weekStartOfSelected.getTime() !== currentWeekStart.getTime()) {
+        currentWeekStart = weekStartOfSelected;
+    }
+    
+    renderScheduleContent();
+}
 
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
@@ -992,7 +977,6 @@ function toggleLoc(name) {
 }
 
 function renderChecklist(){
-  // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
@@ -1018,7 +1002,6 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
-  // Получаем сотрудников на сегодня для этой локации
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   let todayStaff = [];
   const dayIndex = new Date().getDate() - 1;
@@ -1029,7 +1012,6 @@ function renderChecklist(){
       todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
     }
   }
-  // Фильтруем только Су-шефов и ИО
   const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
@@ -1110,9 +1092,6 @@ function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
   
-  const searchInputId = 'matrix-search-input';
-  
-  // Фильтрация
   const filteredSuppliers = MATRIX_DATA.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
     if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
@@ -1124,8 +1103,14 @@ function renderMatrix(){
     return null;
   }).filter(s => s !== null);
 
-  // Рендерим HTML, но поле ввода будем обновлять отдельно, чтобы не терять фокус
-  const listHtml = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Матрица заявок</h1>
+    <input type="search" id="matrix-search" placeholder="🔍 Поиск продукта или поставщика..." 
+           value="${window._matrixQ}" 
+           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
+    
+    ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
           <div class="supplier-name">${sup.supplier}</div>
@@ -1143,34 +1128,11 @@ function renderMatrix(){
           `).join('')}
         </div>
       </div>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
-
-  // Проверяем, существует ли уже поле ввода в DOM
-  const existingInput = document.getElementById(searchInputId);
-  
-  if (existingInput) {
-      // Если поле есть, обновляем только список ниже, не трогая input
-      const listContainer = document.getElementById('matrix-list-container');
-      if (listContainer) listContainer.innerHTML = listHtml;
-      return;
-  }
-
-  // Если поля нет (первый рендер), создаем всё полностью
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Матрица заявок</h1>
-    <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
-           value="${window._matrixQ}" 
-           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
-    
-    <div id="matrix-list-container">
-        ${listHtml}
-    </div>
+    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
   `;
   
-  // Добавляем обработчик события после создания элемента
-  const input = document.getElementById(searchInputId);
-  if (input) {
+  const input = document.getElementById('matrix-search');
+  if(input) {
       input.addEventListener('input', (e) => {
           window._matrixQ = e.target.value;
           renderMatrix();
@@ -1272,122 +1234,10 @@ function renderAdminContent(){
       `).join('')}
     `;
   } else if(adminTab === 'matrix'){
-      c.innerHTML = `
-        <button class="btn" onclick="editSupplier()">+ Добавить поставщика</button>
-        ${MATRIX_DATA.map((s, i) => `
-            <div class="item-card">
-                <div class="item-card-head">
-                    <div>
-                        <div class="item-card-title">${s.supplier}</div>
-                        <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.items.length} товаров</div>
-                    </div>
-                    <div>
-                        <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
-                        <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
-                    </div>
-                </div>
-            </div>
-        `).join('')}
-      `;
+      c.innerHTML = `<div class="card" style="text-align:center;color:var(--muted)">Редактирование матрицы доступно в исходном файле данных.</div>`;
   }
 }
 
-// --- Функции редактирования Матрицы ---
-window.editSupplier = function(index) {
-    const isEdit = index !== undefined;
-    const s = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-bg';
-    modal.id = 'edit-supplier-modal';
-    
-    let itemsHtml = s.items.map((it, idx) => `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
-                <input class="form-input" placeholder="Продукт" value="${it.name}" data-midx="${idx}" data-f="name">
-                <input class="form-input" placeholder="Ед." value="${it.unit}" data-midx="${idx}" data-f="unit">
-                <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" data-midx="${idx}" data-f="limit">
-                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-            </div>
-        </div>
-    `).join('');
-
-    modal.innerHTML = `
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">${isEdit ? '✏️ Редактировать' : '✨ Новый'} поставщик</div>
-                <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove()"></button>
-            </div>
-            <div class="modal-body" style="padding:0 20px">
-                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${s.supplier}"></div>
-                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="m-schedule" value="${s.schedule}"></div>
-                
-                <div class="form-field">
-                    <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Добавить</button></label>
-                    <div id="matrix-items-list">${itemsHtml}</div>
-                </div>
-                
-                <button class="btn" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-};
-
-window.addMatrixItem = function() {
-    const list = document.getElementById('matrix-items-list');
-    const idx = list.querySelectorAll('.ing-editor').length;
-    const html = `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
-                <input class="form-input" placeholder="Продукт" data-midx="${idx}" data-f="name" value="">
-                <input class="form-input" placeholder="Ед." data-midx="${idx}" data-f="unit" value="">
-                <input class="form-input" placeholder="Лимит" type="number" data-midx="${idx}" data-f="limit" value="">
-                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-            </div>
-        </div>`;
-    list.insertAdjacentHTML('beforeend', html);
-};
-
-window.saveSupplier = function(index) {
-    const supplierName = $('#m-supplier').value;
-    const schedule = $('#m-schedule').value;
-    
-    if(!supplierName) { toast('Введите название поставщика', 'error'); return; }
-    
-    const items = Array.from(document.querySelectorAll('[data-midx]')).reduce((acc, el) => {
-        const idx = el.dataset.midx;
-        const f = el.dataset.f;
-        acc[idx] = acc[idx] || {};
-        let val = el.value;
-        if (f === 'limit') val = val === '' ? null : parseFloat(val);
-        acc[idx][f] = val;
-        return acc;
-    }, []).filter(x => x.name && x.name.trim() !== '');
-    
-    const newSupplier = { supplier: supplierName, schedule: schedule, items: items };
-    
-    if (index !== null) {
-        MATRIX_DATA[index] = newSupplier;
-    } else {
-        MATRIX_DATA.push(newSupplier);
-    }
-    
-    saveData();
-    document.getElementById('edit-supplier-modal').remove();
-    toast('Сохранено', 'success');
-    renderAdminContent();
-};
-
-window.deleteSupplier = function(index) {
-    if(!confirm('Удалить поставщика и все его товары?')) return;
-    MATRIX_DATA.splice(index, 1);
-    saveData();
-    renderAdminContent();
-    toast('Удалено', 'success');
-};
-
-// --- Остальные функции админки (Рецепты, Новости, Команда) ---
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
@@ -1583,6 +1433,8 @@ window.deleteTeamMember = function(i){
 /* ============================================================
    🚀 СТАРТ
    ============================================================ */
+// Загружаем данные графика сразу при старте
+fetchScheduleData(false);
 render();
 </script>
 </body>
