@@ -139,17 +139,24 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .matrix-meta { text-align: right; flex-shrink: 0; }
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
-.cat-tag {
-    display: inline-block;
-    padding: 4px 8px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 6px;
-    font-size: 11px;
-    margin-right: 6px;
-    margin-bottom: 4px;
+
+/* Стили для категорий ТТК */
+.cat-editor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    margin-bottom: 8px;
 }
-.cat-tag.on { background: var(--accent); color: #000; }
-.cat-edit-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.cat-order-btns { display: flex; gap: 4px; }
+.cat-order-btn {
+    width: 24px; height: 24px; border-radius: 4px; border: none;
+    background: rgba(255,255,255,0.1); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+.cat-order-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -167,6 +174,7 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 /* ============================================================
    📦 ДАННЫЕ
    ============================================================ */
+// Категории по умолчанию
 const DEFAULT_CATEGORIES = ['Горячее', 'Салаты', 'Десерты', 'Напитки', 'Заготовки'];
 
 const DEFAULT_RECIPES = [
@@ -529,11 +537,11 @@ const CHECKLISTS = {
 };
 
 // === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
-let CATEGORIES = JSON.parse(localStorage.getItem('chef_categories')) || DEFAULT_CATEGORIES;
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-let MATRIX = JSON.parse(localStorage.getItem('chef_matrix')) || MATRIX_DATA;
+let CATEGORIES = JSON.parse(localStorage.getItem('chef_categories')) || DEFAULT_CATEGORIES;
+let MATRIX_CUSTOM = JSON.parse(localStorage.getItem('chef_matrix_custom')) || []; // Пользовательские изменения матрицы
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
@@ -543,7 +551,7 @@ function saveData() {
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
     localStorage.setItem('chef_categories', JSON.stringify(CATEGORIES));
-    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX));
+    localStorage.setItem('chef_matrix_custom', JSON.stringify(MATRIX_CUSTOM));
 }
 
 /* ============================================================
@@ -558,8 +566,10 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
+
+// Переменные для навигации по неделям и выбора дня
 let currentWeekStart = null;
-let selectedDayIndex = null;
+let selectedDayIndex = null; // Индекс дня в месяце (0-30)
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -591,12 +601,6 @@ function render(){
   else if(currentView === 'matrix') renderMatrix();
   app.classList.add('fade');
   setTimeout(()=>app.classList.remove('fade'), 300);
-}
-
-async function initApp() {
-    // Фоновая загрузка графика при старте
-    await fetchScheduleData(false);
-    render();
 }
 
 function renderHome(){
@@ -688,7 +692,7 @@ function renderTTK(){
     <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
       ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
     </div>
-    <div id="ttk-list">
+    <div id="ttk-results">
     ${items.length ? items.map(r => `
       <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
         <div class="recipe-name">${r.name}</div>
@@ -698,16 +702,18 @@ function renderTTK(){
     </div>
   `;
   
+  // Добавляем обработчик поиска отдельно, чтобы не пересоздавать input
   const searchInput = document.getElementById('ttk-search');
   searchInput.addEventListener('input', (e) => {
       window._ttkQ = e.target.value;
+      // Перерисовываем только список результатов
       const q = window._ttkQ.toLowerCase();
       const items = RECIPES.filter(r => 
         (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
         (!q || r.name.toLowerCase().includes(q))
       );
-      const list = document.getElementById('ttk-list');
-      list.innerHTML = items.length ? items.map(r => `
+      const resultsDiv = document.getElementById('ttk-results');
+      resultsDiv.innerHTML = items.length ? items.map(r => `
         <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
           <div class="recipe-name">${r.name}</div>
           <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
@@ -767,8 +773,7 @@ async function fetchScheduleData(force = false) {
         if (parsed && parsed.locations && parsed.locations.length > 0) {
             scheduleData = parsed;
             useLocalSchedule = false;
-            // Не показываем тост при фоновой загрузке, чтобы не спамить
-            if(force) toast('Данные обновлены', 'success');
+            toast('Данные обновлены', 'success');
         } else {
             throw new Error('Неверный формат данных');
         }
@@ -778,7 +783,7 @@ async function fetchScheduleData(force = false) {
             scheduleData = DEFAULT_LOCAL_DATA;
             useLocalSchedule = true;
         }
-        if(force) toast('Нет связи с сервером. Показаны локальные данные.', 'error');
+        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
     } finally {
         isLoading = false;
     }
@@ -844,14 +849,16 @@ function parseComplexCSV(csvText) {
 }
 
 async function renderSchedule(){
-    // Инициализация недели (понедельник текущей недели)
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() + mondayOffset);
-    selectedDayIndex = today.getDate() - 1; // По умолчанию сегодня
-    
+    // Инициализация недели и дня при первом входе
+    if (!currentWeekStart) {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        currentWeekStart = new Date(today);
+        currentWeekStart.setDate(today.getDate() + mondayOffset);
+        selectedDayIndex = today.getDate() - 1;
+    }
+
     app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -875,157 +882,115 @@ function renderScheduleContent() {
     const today = new Date();
     const currentDay = today.getDate();
     
-    // Расчет дней недели для текущей выбранной недели
+    // Навигация по неделям
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(currentWeekStart);
         d.setDate(currentWeekStart.getDate() + i);
         const dayNum = d.getDate();
-        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        
-        // Индекс дня в массиве смен (0-30)
         const idx = dayNum - 1; 
+        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+        const isSelected = idx === selectedDayIndex;
         
         let count = 0;
-        if(scheduleData && scheduleData.locations) {
-            scheduleData.locations.forEach(loc => {
+        const source = scheduleData || DEFAULT_LOCAL_DATA;
+        if(source && source.locations) {
+            source.locations.forEach(loc => {
                 loc.staff.forEach(p => {
                     if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
                 });
             });
         }
-        
-        weekDays.push({ 
-            dayNum, 
-            isToday, 
-            count, 
-            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i],
-            isSelected: (selectedDayIndex === idx)
-        });
+        weekDays.push({ dayNum, idx, isToday, isSelected, count, dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] });
     }
 
-    // Определение диапазона дат для заголовка
-    const lastDay = new Date(currentWeekStart);
-    lastDay.setDate(currentWeekStart.getDate() + 6);
-    const rangeStr = `${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru', {month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru', {month:'long'})}`;
-
-    // Получение списка сотрудников для выбранного дня
+    // Определяем сотрудников для выбранного дня
     const source = scheduleData || DEFAULT_LOCAL_DATA;
-    let locationsWithStaff = [];
+    let workingStaffByLoc = {};
     
-    if (source && source.locations) {
-        locationsWithStaff = source.locations.map(loc => {
-            const workingToday = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
-            const allStaffSorted = [...loc.staff].sort((a,b) => b.total - a.total);
-            return { ...loc, workingToday, allStaffSorted };
+    if (selectedDayIndex !== null && source && source.locations) {
+        source.locations.forEach(loc => {
+            const staffOnDay = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
+            if(staffOnDay.length > 0) {
+                workingStaffByLoc[loc.name] = staffOnDay;
+            }
         });
     }
 
     app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">График</h1>
-        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        </button>
+        <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
+        <div style="display:flex;gap:8px">
+            <button class="icon-btn" onclick="changeWeek(-1);haptic()">←</button>
+            <button class="icon-btn" onclick="resetWeek();haptic()">📅</button>
+            <button class="icon-btn" onclick="changeWeek(1);haptic()">→</button>
+        </div>
     </div>
     
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px">
-        <button class="icon-btn" onclick="changeWeek(-1);haptic()">←</button>
-        <div style="text-align:center;flex:1">
-            <div style="font-size:13px;color:var(--muted);font-weight:600">${rangeStr}</div>
-            <button class="btn-sm btn-sec" style="margin-top:4px" onclick="resetToToday();haptic()">Сегодня</button>
-        </div>
-        <button class="icon-btn" onclick="changeWeek(1);haptic()">→</button>
+    <div style="text-align:center;margin-bottom:12px;font-weight:600;color:var(--muted)">
+        ${currentWeekStart.getDate()} ${getMonthName(currentWeekStart.getMonth())} — ${weekEnd.getDate()} ${getMonthName(weekEnd.getMonth())}
     </div>
 
-    ${useLocalSchedule ? `
-      <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-        ⚠️ <b>Локальные данные</b><br>
-        <span style="color:var(--muted)">Google недоступен. Данные из файла</span>
-      </div>
-    ` : `
-      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-         <b>Данные из Google Таблицы</b><br>
-        <span style="color:var(--muted)">Выбрано: ${weekDays.find(d=>d.isSelected)?.dayNum || '?'} число</span>
-      </div>
-    `}
-    
-    <h2>Неделя</h2>
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
-        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isSelected?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isSelected?'#000':'var(--text)'};cursor:pointer" onclick="selectDay(${d.dayNum-1});haptic()">
+        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isSelected?'var(--accent)':(d.isToday?'rgba(255,138,61,0.2)':'var(--card)')};border-radius:10px;color:${d.isSelected?'#000':'var(--text)'};cursor:pointer" onclick="selectDay(${d.idx});haptic()">
           <div style="font-size:10px;font-weight:700;color:${d.isSelected?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
           <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
-          <div style="font-size:11px;color:${d.isSelected?'#000':'var(--muted)'}">${d.count} чел</div>
+          <div style="font-size:11px;color:${d.isSelected?'#000':'var(--muted)'}">${d.count}</div>
         </div>
       `).join('')}
     </div>
     
-    <h2>Локации (${selectedDayIndex+1} число)</h2>
-    ${locationsWithStaff.length > 0 ? locationsWithStaff.map(loc => {
-      const isOpen = expandedLocations.has(loc.name);
-      return `
-        <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-          <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
-              <div style="font-size:12px;color:var(--muted)">
-                👥 На смене: <span style="color:var(--accent);font-weight:700">${loc.workingToday.length}</span> из ${loc.allStaffSorted.length}
-              </div>
-            </div>
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-          </button>
-          <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-            <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-              <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">На смене (${loc.workingToday.length})</div>
-              ${loc.workingToday.length > 0 ? loc.workingToday.map(p => `
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[selectedDayIndex]} см</div>
-                  </div>
+    ${selectedDayIndex !== null ? `
+        <h2>Смена ${selectedDayIndex + 1} числа</h2>
+        ${Object.keys(workingStaffByLoc).length > 0 ? Object.keys(workingStaffByLoc).map(locName => {
+            const staff = workingStaffByLoc[locName];
+            const isOpen = expandedLocations.has(locName);
+            return `
+            <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+                <button onclick="toggleLoc('${locName}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+                    <div style="font-weight:700;font-size:16px">${locName}</div>
+                    <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                </button>
+                <div style="max-height:${isOpen?'2000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+                    <div style="padding:0 16px 16px">
+                        ${staff.map(p => `
+                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                                <div>
+                                    <div style="font-weight:600">${p.name}</div>
+                                    <div style="font-size:12px;color:var(--muted)">${p.role}</div>
+                                </div>
+                                <div style="font-weight:700;color:var(--accent)">${p.shifts[selectedDayIndex]} см</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-              `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-              
-              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Вся команда (месяц)</div>
-              ${loc.allStaffSorted.map(s => {
-                let workDays = 0;
-                if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
-                return `
-                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div style="flex:1;min-width:0">
-                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
-                    </div>
-                    <div style="text-align:right;margin-left:10px">
-                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
             </div>
-          </div>
-        </div>
-      `;
-    }).join('') : '<div class="card">Нет данных о локациях</div>'}
-    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
-      📝 Открыть таблицу
-    </a>
+            `;
+        }).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Нет сотрудников на эту дату</div>'}
+    ` : '<div class="card" style="text-align:center;color:var(--muted)">Выберите день</div>'}
+    
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">📝 Открыть таблицу</a>
   `;
+}
+
+function getMonthName(monthIndex) {
+    return ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][monthIndex];
 }
 
 function changeWeek(offset) {
     currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 7));
-    // Сбрасываем выбранный день на понедельник новой недели, чтобы не было путаницы
-    selectedDayIndex = currentWeekStart.getDate() - 1;
+    selectedDayIndex = null; // Сброс выбора дня при смене недели
     renderScheduleContent();
 }
 
-function resetToToday() {
+function resetWeek() {
     const today = new Date();
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -1049,11 +1014,12 @@ function toggleLoc(name) {
 function renderChecklist(){
   // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
       <h1>Чек-листы</h1>
       <div style="display:grid;gap:10px">
-        ${DEFAULT_LOCAL_DATA.locations.map(loc => `
+        ${source.locations.map(loc => `
           <button class="tile" onclick="window._clLoc='${loc.name}';renderChecklist();haptic()">
             <div class="tile-title">${loc.name}</div>
             <div class="tile-desc">Открыть чек-лист локации</div>
@@ -1073,19 +1039,24 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
-  // Получаем сотрудников на сегодня для этой локации
+  // Получаем ВСЕХ сотрудников локации из графика (не фильтруя по смене)
   const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let todayStaff = [];
-  const dayIndex = new Date().getDate() - 1;
+  let allStaff = [];
   
   if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
     if(locData && locData.staff) {
-      todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      allStaff = locData.staff;
     }
   }
-  // Фильтруем только Су-шефов и ИО
-  const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
+  
+  // Если данных графика нет, используем TEAM как fallback
+  if(allStaff.length === 0) {
+      allStaff = TEAM.map(t => ({name: t.name, role: t.role}));
+  }
+
+  // Фильтруем только руководящий состав для выбора
+  const managers = allStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный') || p.role.includes('Шеф'));
 
   app.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
@@ -1095,7 +1066,7 @@ function renderChecklist(){
       <div class="form-label">Ответственный сегодня</div>
       <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
         <option value="">-- Не выбран --</option>
-        ${managers.length > 0 ? managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('') : '<option disabled>Нет сотрудников на смене</option>'}
+        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
       </select>
       ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
     </div>
@@ -1165,14 +1136,16 @@ function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
   
-  // Фильтрация поставщиков и товаров
-  const filteredSuppliers = MATRIX.map(sup => {
+  // Объединяем стандартные и пользовательские данные (если нужно)
+  const allData = [...MATRIX_DATA, ...MATRIX_CUSTOM];
+
+  const filteredSuppliers = allData.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-    if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
-      if(q && !sup.supplier.toLowerCase().includes(q)) {
-         return {...sup, items: items};
-      }
-      return sup;
+    if(sup.supplier.toLowerCase().includes(q)) {
+      return sup; // Показать всего поставщика
+    }
+    if(items.length > 0) {
+      return {...sup, items: items}; // Показать только найденные товары
     }
     return null;
   }).filter(s => s !== null);
@@ -1184,7 +1157,7 @@ function renderMatrix(){
            value="${window._matrixQ}" 
            style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
     
-    <div id="matrix-list">
+    <div id="matrix-results">
     ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
@@ -1211,19 +1184,16 @@ function renderMatrix(){
   searchInput.addEventListener('input', (e) => {
       window._matrixQ = e.target.value;
       const q = window._matrixQ.toLowerCase();
-      const filteredSuppliers = MATRIX.map(sup => {
+      const allData = [...MATRIX_DATA, ...MATRIX_CUSTOM];
+      const filteredSuppliers = allData.map(sup => {
         const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-        if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
-          if(q && !sup.supplier.toLowerCase().includes(q)) {
-             return {...sup, items: items};
-          }
-          return sup;
-        }
+        if(sup.supplier.toLowerCase().includes(q)) return sup;
+        if(items.length > 0) return {...sup, items: items};
         return null;
       }).filter(s => s !== null);
       
-      const list = document.getElementById('matrix-list');
-      list.innerHTML = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
+      const resultsDiv = document.getElementById('matrix-results');
+      resultsDiv.innerHTML = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
         <div class="supplier-block">
           <div class="supplier-header">
             <div class="supplier-name">${sup.supplier}</div>
@@ -1304,23 +1274,20 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if(adminTab === 'categories'){
-    c.innerHTML = `
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input class="form-input" id="new-cat-name" placeholder="Новая категория" style="flex:1">
-        <button class="btn" style="width:auto;margin:0" onclick="addCategory()">+</button>
-      </div>
-      ${CATEGORIES.map((cat, i) => `
-        <div class="cat-edit-row">
-          <span>${cat}</span>
-          <div style="display:flex;gap:6px">
-            <button class="icon-btn" onclick="moveCat(${i}, -1)">↑</button>
-            <button class="icon-btn" onclick="moveCat(${i}, 1)">↓</button>
-            <button class="icon-btn danger" onclick="deleteCat(${i})">🗑</button>
-          </div>
-        </div>
-      `).join('')}
-    `;
+  } else if (adminTab === 'categories') {
+      c.innerHTML = `
+        <button class="btn" onclick="addCategory()">+ Добавить категорию</button>
+        ${CATEGORIES.map((cat, i) => `
+            <div class="cat-editor-item">
+                <span style="font-weight:600">${cat}</span>
+                <div class="cat-order-btns">
+                    <button class="cat-order-btn" ${i===0?'disabled':''} onclick="moveCategory(${i}, -1)">↑</button>
+                    <button class="cat-order-btn" ${i===CATEGORIES.length-1?'disabled':''} onclick="moveCategory(${i}, 1)">↓</button>
+                    <button class="icon-btn danger" style="width:24px;height:24px;margin-left:4px" onclick="deleteCategory(${i})">🗑</button>
+                </div>
+            </div>
+        `).join('')}
+      `;
   } else if(adminTab === 'news'){
     c.innerHTML = `
       <button class="btn" onclick="editNews()">+ Добавить новость</button>
@@ -1357,158 +1324,104 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if(adminTab === 'matrix'){
+  } else if (adminTab === 'matrix') {
       c.innerHTML = `
-        <button class="btn" onclick="editSupplier()">+ Добавить поставщика</button>
-        ${MATRIX.map((sup, i) => `
-          <div class="item-card">
-            <div class="item-card-head">
-              <div>
-                <div class="item-card-title">${sup.supplier}</div>
-                <div style="font-size:12px;color:var(--muted);margin-top:3px">${sup.items.length} товаров</div>
-              </div>
-              <div>
-                <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
-                <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
-              </div>
+        <button class="btn" onclick="addSupplier()">+ Добавить поставщика</button>
+        ${[...MATRIX_DATA, ...MATRIX_CUSTOM].map((sup, i) => `
+            <div class="item-card">
+                <div class="item-card-head">
+                    <div>
+                        <div class="item-card-title">${sup.supplier}</div>
+                        <div style="font-size:12px;color:var(--muted)">${sup.items.length} товаров</div>
+                    </div>
+                    <div>
+                        <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
+                        ${i >= MATRIX_DATA.length ? `<button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>` : ''}
+                    </div>
+                </div>
             </div>
-          </div>
         `).join('')}
       `;
   }
 }
 
 // --- Логика категорий ---
-window.addCategory = function(){
-    const name = document.getElementById('new-cat-name').value.trim();
-    if(!name) { toast('Введите название', 'error'); return; }
-    if(CATEGORIES.includes(name)) { toast('Такая категория уже есть', 'error'); return; }
-    CATEGORIES.push(name);
-    saveData();
-    renderAdminContent();
-    toast('Категория добавлена', 'success');
+window.addCategory = function() {
+    const name = prompt("Название новой категории:");
+    if(name && name.trim() !== "") {
+        if(CATEGORIES.includes(name)) {
+            toast('Такая категория уже есть', 'error');
+            return;
+        }
+        CATEGORIES.push(name);
+        saveData();
+        renderAdminContent();
+        toast('Категория добавлена', 'success');
+    }
 };
 
-window.moveCat = function(idx, dir){
-    if(idx + dir < 0 || idx + dir >= CATEGORIES.length) return;
-    const temp = CATEGORIES[idx];
-    CATEGORIES[idx] = CATEGORIES[idx+dir];
-    CATEGORIES[idx+dir] = temp;
+window.moveCategory = function(index, direction) {
+    const newIndex = index + direction;
+    if(newIndex < 0 || newIndex >= CATEGORIES.length) return;
+    const temp = CATEGORIES[index];
+    CATEGORIES[index] = CATEGORIES[newIndex];
+    CATEGORIES[newIndex] = temp;
     saveData();
     renderAdminContent();
 };
 
-window.deleteCat = function(idx){
-    const cat = CATEGORIES[idx];
+window.deleteCategory = function(index) {
+    const cat = CATEGORIES[index];
     const hasRecipes = RECIPES.some(r => r.cat === cat);
     if(hasRecipes) {
-        toast('Нельзя удалить категорию с техкартами', 'error');
+        toast(`Нельзя удалить: в категории "${cat}" есть техкарты`, 'error');
         return;
     }
-    if(!confirm(`Удалить категорию "${cat}"?`)) return;
-    CATEGORIES.splice(idx, 1);
-    saveData();
-    renderAdminContent();
-    toast('Категория удалена', 'success');
-};
-
-// --- Логика матрицы ---
-window.editSupplier = function(idx){
-    const sup = idx !== undefined ? MATRIX[idx] : {supplier: '', schedule: '', items: []};
-    const isEdit = idx !== undefined;
-    const modal = document.createElement('div');
-    modal.className = 'modal-bg';
-    modal.id = 'edit-sup-modal';
-    
-    let itemsHtml = sup.items.map((it, i) => `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:10px;border-radius:8px;margin-bottom:6px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px">
-                <input class="form-input" placeholder="Продукт" value="${it.name}" id="mat-name-${i}">
-                <input class="form-input" placeholder="Ед." value="${it.unit}" id="mat-unit-${i}">
-                <input class="form-input" placeholder="Лимит" type="number" value="${it.limit!==null?it.limit:''}" id="mat-lim-${i}">
-                <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">✕</button>
-            </div>
-        </div>
-    `).join('');
-
-    modal.innerHTML = `
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новый'} поставщик</div>
-                <button class="modal-close" onclick="document.getElementById('edit-sup-modal').remove()"></button>
-            </div>
-            <div class="modal-body" style="padding:0 20px">
-                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="sup-name" value="${sup.supplier}"></div>
-                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="sup-sched" value="${sup.schedule}"></div>
-                
-                <div class="form-field">
-                    <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Товар</button></label>
-                    <div id="matrix-items-list">${itemsHtml}</div>
-                </div>
-                
-                <button class="btn" onclick="saveSupplier(${isEdit?idx:'null'})">💾 Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-};
-
-window.addMatrixItem = function(){
-    const list = document.getElementById('matrix-items-list');
-    const idx = list.querySelectorAll('.ing-editor').length;
-    list.insertAdjacentHTML('beforeend', `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:10px;border-radius:8px;margin-bottom:6px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px">
-                <input class="form-input" placeholder="Продукт" id="mat-name-${idx}">
-                <input class="form-input" placeholder="Ед." id="mat-unit-${idx}">
-                <input class="form-input" placeholder="Лимит" type="number" id="mat-lim-${idx}">
-                <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">✕</button>
-            </div>
-        </div>
-    `);
-};
-
-window.saveSupplier = function(idx){
-    const name = document.getElementById('sup-name').value.trim();
-    const sched = document.getElementById('sup-sched').value.trim();
-    if(!name) { toast('Введите название поставщика', 'error'); return; }
-    
-    const items = [];
-    document.querySelectorAll('#matrix-items-list .ing-editor').forEach((el, i) => {
-        const n = document.getElementById(`mat-name-${i}`).value.trim();
-        const u = document.getElementById(`mat-unit-${i}`).value.trim();
-        const l = document.getElementById(`mat-lim-${i}`).value;
-        if(n) {
-            items.push({
-                name: n,
-                unit: u || 'шт',
-                limit: l === '' ? null : parseFloat(l)
-            });
-        }
-    });
-    
-    const supObj = { supplier: name, schedule: sched, items: items };
-    
-    if(idx !== null) {
-        MATRIX[idx] = supObj;
-    } else {
-        MATRIX.push(supObj);
+    if(confirm(`Удалить категорию "${cat}"?`)) {
+        CATEGORIES.splice(index, 1);
+        saveData();
+        renderAdminContent();
+        toast('Категория удалена', 'success');
     }
-    
-    saveData();
-    document.getElementById('edit-sup-modal').remove();
-    toast('Сохранено', 'success');
-    renderAdminContent();
 };
 
-window.deleteSupplier = function(idx){
-    if(!confirm('Удалить поставщика и все его товары?')) return;
-    MATRIX.splice(idx, 1);
-    saveData();
-    renderAdminContent();
-    toast('Удалено', 'success');
+// --- Логика матрицы (упрощенная) ---
+window.addSupplier = function() {
+    const name = prompt("Название поставщика:");
+    if(name) {
+        const schedule = prompt("График доставки:");
+        MATRIX_CUSTOM.push({ supplier: name, schedule: schedule || '', items: [] });
+        saveData();
+        renderAdminContent();
+    }
 };
 
+window.editSupplier = function(index) {
+    // Для краткости просто редактируем имя
+    const all = [...MATRIX_DATA, ...MATRIX_CUSTOM];
+    const sup = all[index];
+    if(index < MATRIX_DATA.length) {
+        toast('Стандартных поставщиков редактировать нельзя, только добавлять новые', 'error');
+        return;
+    }
+    const newName = prompt("Название поставщика:", sup.supplier);
+    if(newName) {
+        const realIndex = index - MATRIX_DATA.length;
+        MATRIX_CUSTOM[realIndex].supplier = newName;
+        saveData();
+        renderAdminContent();
+    }
+};
+
+window.deleteSupplier = function(index) {
+    if(index < MATRIX_DATA.length) return;
+    if(confirm("Удалить поставщика?")) {
+        const realIndex = index - MATRIX_DATA.length;
+        MATRIX_CUSTOM.splice(realIndex, 1);
+        saveData();
+        renderAdminContent();
+    }
+};
 
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:CATEGORIES[0]||'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
@@ -1705,7 +1618,9 @@ window.deleteTeamMember = function(i){
 /* ============================================================
    🚀 СТАРТ
    ============================================================ */
-initApp();
+// Загружаем данные графика сразу при старте
+fetchScheduleData(false);
+render();
 </script>
 </body>
 </html>
