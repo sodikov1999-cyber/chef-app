@@ -106,6 +106,7 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     border-radius: 8px;
     margin-right: 4px;
     cursor: pointer;
+    white-space: nowrap;
 }
 .tab-btn.on {
     background: var(--accent);
@@ -160,6 +161,7 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     justify-content: center;
     cursor: pointer;
     font-size: 18px;
+    flex-shrink: 0;
 }
 .week-nav-btn:active { background: var(--accent); color: #000; }
 .week-nav-title {
@@ -167,17 +169,19 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     font-size: 16px;
     text-align: center;
     flex: 1;
+    white-space: nowrap;
 }
 .day-cell {
     flex: 1;
     text-align: center;
-    padding: 8px 4px;
+    padding: 8px 2px;
     background: var(--card);
     border-radius: 10px;
     color: var(--text);
     cursor: pointer;
     transition: all 0.2s;
     border: 2px solid transparent;
+    min-width: 40px;
 }
 .day-cell.active {
     background: var(--accent);
@@ -187,10 +191,10 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .day-cell.today {
     border-color: var(--green);
 }
-.day-cell .dow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.day-cell .dow { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
 .day-cell.active .dow { color: #000; }
-.day-cell .num { font-weight: 800; font-size: 17px; margin: 3px 0; }
-.day-cell .count { font-size: 11px; color: var(--muted); }
+.day-cell .num { font-weight: 800; font-size: 16px; margin: 2px 0; }
+.day-cell .count { font-size: 10px; color: var(--muted); }
 .day-cell.active .count { color: #000; }
 </style>
 </head>
@@ -639,7 +643,6 @@ function renderScheduleContent() {
     const rangeTitle = `${currentWeekStart.getDate()} — ${endOfWeek.getDate()} августа`;
 
     // Получение списка сотрудников для выбранного дня
-    let staffForSelectedDay = [];
     let locationsWithStaff = [];
     
     if (selectedDayIndex !== null && source && source.locations) {
@@ -673,13 +676,13 @@ function renderScheduleContent() {
         <button class="btn-sm btn-sec" onclick="resetToToday();haptic()">Сегодня</button>
     </div>
 
-    <div style="display:flex;gap:6px;margin-bottom:16px">
+    <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
       ${weekDays.map(d => `
         <div class="day-cell ${d.isSelected ? 'active' : ''} ${d.isToday ? 'today' : ''}" 
              onclick="selectDay(${d.idx});haptic()">
           <div class="dow">${d.dowName}</div>
           <div class="num">${d.dayNum}</div>
-          <div class="count">${d.count} чел</div>
+          <div class="count">${d.count}</div>
         </div>
       `).join('')}
     </div>
@@ -746,11 +749,11 @@ function renderScheduleContent() {
 function changeWeek(delta) {
     const newStart = new Date(currentWeekStart);
     newStart.setDate(currentWeekStart.getDate() + (delta * 7));
-    // Ограничение: август 2026 (1-31)
-    if (newStart.getMonth() !== 7) return; // Только август (месяц 7 в JS)
+    // Ограничение: август 2026 (месяц 7 в JS)
+    if (newStart.getMonth() !== 7) return; 
     
     currentWeekStart = newStart;
-    // Если выбранный день выходит за пределы новой недели, сбрасываем выбор или выбираем первый день
+    // Если выбранный день выходит за пределы новой недели, выбираем первый день новой недели
     const endOfWeek = new Date(currentWeekStart);
     endOfWeek.setDate(currentWeekStart.getDate() + 6);
     
@@ -1181,7 +1184,6 @@ window.editSupplier = function(index) {
 
 window.addMatrixItem = function() {
     const list = document.getElementById('mat-items-list');
-    const idx = list.querySelectorAll('.form-input').length / 3; // Примерно
     const div = document.createElement('div');
     div.style.cssText = "background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;";
     div.innerHTML = `
