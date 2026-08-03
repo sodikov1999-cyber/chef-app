@@ -139,6 +139,7 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .matrix-meta { text-align: right; flex-shrink: 0; }
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
+
 /* Навигация по неделям */
 .week-nav {
     display: flex;
@@ -162,11 +163,11 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 }
 .week-nav-btn:active { background: var(--accent); color: #000; }
 .week-title {
+    font-weight: 700;
     font-size: 14px;
-    font-weight: 600;
     text-align: center;
     flex: 1;
-    white-space: nowrap;
+    color: var(--muted);
 }
 .today-btn {
     background: rgba(255,255,255,0.05);
@@ -179,15 +180,32 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     cursor: pointer;
 }
 .today-btn:active { background: var(--accent); color: #000; border-color: var(--accent); }
-.day-card-active {
+
+.day-card {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    background: var(--card);
+    border-radius: 10px;
+    color: var(--text);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    border: 2px solid transparent;
 }
-.day-card-active:active {
-    transform: scale(0.95);
-    background: var(--accent) !important;
-    color: #000 !important;
+.day-card:active { transform: scale(0.95); }
+.day-card.selected {
+    background: var(--accent);
+    color: #000;
+    border-color: #fff;
 }
+.day-card.today {
+    border-color: var(--green);
+}
+.day-card .dow-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.day-card.selected .dow-name { color: #000; }
+.day-card .day-num { font-weight: 800; font-size: 17px; margin: 3px 0; }
+.day-card .count { font-size: 11px; color: var(--muted); }
+.day-card.selected .count { color: #000; }
 </style>
 </head>
 <body>
@@ -233,72 +251,48 @@ const DEFAULT_MATRIX = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
-    items: [{name: "Лаваш традиционный", unit: "шт", limit: 40}]
+    items: [ {name: "Лаваш традиционный", unit: "шт", limit: 40} ]
   },
   {
     supplier: "Булочная Пирогов",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Панини", unit: "шт", limit: 10},
-      {name: "Чиабатта", unit: "шт", limit: 10},
-      {name: "Багет французский", unit: "шт", limit: 10},
-      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
-      {name: "Хлеб Датский", unit: "шт", limit: 10},
-      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
+      {name: "Панини", unit: "шт", limit: 10}, {name: "Чиабатта", unit: "шт", limit: 10},
+      {name: "Багет французский", unit: "шт", limit: 10}, {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
+      {name: "Хлеб Датский", unit: "шт", limit: 10}, {name: "Пампушки Бородинские", unit: "шт", limit: 40}
     ]
   },
   {
     supplier: "Пионер (Заготовки)",
     schedule: "Заявка в воскресенье, отгрузка в чт-пт",
     items: [
-      {name: "Ребра запеченые", unit: "кг", limit: 10},
-      {name: "Щечки томленые", unit: "кг", limit: 10},
-      {name: "Фарш штат", unit: "кг", limit: 10},
-      {name: "Фарш 70/30", unit: "кг", limit: 10},
-      {name: "Ростбиф", unit: "кг", limit: 10},
-      {name: "Смалец", unit: "кг", limit: 2}
+      {name: "Ребра запеченые", unit: "кг", limit: 10}, {name: "Щечки томленые", unit: "кг", limit: 10},
+      {name: "Фарш штат", unit: "кг", limit: 10}, {name: "Фарш 70/30", unit: "кг", limit: 10},
+      {name: "Ростбиф", unit: "кг", limit: 10}, {name: "Смалец", unit: "кг", limit: 2}
     ]
   },
   {
     supplier: "Партнер",
     schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
     items: [
-      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
-      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
-      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
-      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
-      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
-      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
-      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
-      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
-      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
-      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
-      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
-      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
-      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
-      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
-      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
-      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
-      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
-      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
-      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
-      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
-      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
-      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
-      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
-      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
-      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
-      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
-      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
-      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
-      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
-      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
-      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
+      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2}, {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
+      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1}, {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6}, {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
+      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10}, {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
+      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2}, {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2}, {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
+      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10}, {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
+      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1}, {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6}, {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
+      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4}, {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
+      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36}, {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
+      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3}, {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
+      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2}, {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
+      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1}, {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
+      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2}, {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
+      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2}, {name: "СОУС Ворчестер", unit: "шт", limit: 1},
+      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2}, {name: "СОУС соевый 1л", unit: "шт", limit: 2},
+      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1}, {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
       {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
     ]
   },
@@ -306,70 +300,41 @@ const DEFAULT_MATRIX = [
     supplier: "Интегрита",
     schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
     items: [
-      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
-      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
-      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
-      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
-      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
-      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
-      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
-      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
-      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
-      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
-      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
-      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
-      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
-      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
-      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
-      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
-      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
-      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
-      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
-      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
-      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
+      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5}, {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2}, {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
+      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5}, {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
+      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3}, {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2}, {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5}, {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4}, {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
+      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3}, {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5}, {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
+      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24}, {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
+      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3}, {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
+      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6}, {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
+      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
+      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6}, {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
+      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4}, {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
     ]
   },
   {
     supplier: "Восток Запад",
     schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
     items: [
-      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
-      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
-      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
-      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
-      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
-      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
-      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
-      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
-      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
-      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
-      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
-      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
-      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
-      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
-      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
-      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
-      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
-      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
-      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
-      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
-      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
-      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
-      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
+      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1}, {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2}, {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
+      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36}, {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
+      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24}, {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
+      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1}, {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
+      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5}, {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
+      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10}, {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
+      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10}, {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
+      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
+      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3}, {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2}, {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
+      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4}, {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
+      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3}, {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
+      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3}, {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
     ]
   },
   {
@@ -386,68 +351,46 @@ const DEFAULT_MATRIX = [
     supplier: "Мираторг",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Свиная шейка", unit: "кг", limit: 20},
-      {name: "Свиная вырезка", unit: "кг", limit: 15},
-      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
-      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
+      {name: "Свиная шейка", unit: "кг", limit: 20}, {name: "Свиная вырезка", unit: "кг", limit: 15},
+      {name: "Диафрагма толстый край", unit: "кг", limit: 10}, {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
     ]
   },
   {
     supplier: "Вкусная Жизнь",
     schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
     items: [
-      {name: "Мясник толстый край", unit: "кг", limit: 2},
-      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
-      {name: "Колбаски горчичные", unit: "уп", limit: 5},
-      {name: "Колбаски с сыром", unit: "уп", limit: 5}
+      {name: "Мясник толстый край", unit: "кг", limit: 2}, {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
+      {name: "Колбаски горчичные", unit: "уп", limit: 5}, {name: "Колбаски с сыром", unit: "уп", limit: 5}
     ]
   },
   {
     supplier: "ИП Орлов",
     schedule: "Ежедневно",
     items: [
-      {name: "Черная смородина с/м", unit: "кг", limit: 4},
-      {name: "Черника с/м", unit: "кг", limit: 2},
-      {name: "Облепиха", unit: "кг", limit: 1},
-      {name: "Клюква", unit: "кг", limit: 3},
-      {name: "Брусника", unit: "кг", limit: 0.5},
-      {name: "Малина", unit: "кг", limit: 3},
-      {name: "Огурец свежий", unit: "кг", limit: 5},
-      {name: "Томат свежий", unit: "кг", limit: 0},
-      {name: "Томат черри", unit: "кг", limit: 4},
-      {name: "Баклажан", unit: "кг", limit: 0.1},
-      {name: "Цукини", unit: "кг", limit: 5},
-      {name: "Капуста б/к", unit: "кг", limit: 10},
-      {name: "Айсберг", unit: "кг", limit: 5},
-      {name: "Романо", unit: "кг", limit: 2},
-      {name: "Перец Болгарский", unit: "кг", limit: 5},
-      {name: "Перец чили", unit: "кг", limit: 5},
-      {name: "Морковь", unit: "кг", limit: 0.4},
-      {name: "Картофель", unit: "кг", limit: 0.5},
-      {name: "Картофель беби", unit: "кг", limit: 0.5},
-      {name: "Чеснок", unit: "кг", limit: 0.4},
-      {name: "Лук репчатый", unit: "кг", limit: 0.3},
-      {name: "Лук красный", unit: "кг", limit: 0.1},
-      {name: "Лук зелёный", unit: "кг", limit: 0.1},
-      {name: "Петрушка", unit: "шт", limit: 2},
-      {name: "Укроп", unit: "шт", limit: 2},
-      {name: "Кинза", unit: "кг", limit: 1},
-      {name: "Базилик свежий", unit: "шт", limit: 5},
-      {name: "Тимьян", unit: "кг", limit: 1}
+      {name: "Черная смородина с/м", unit: "кг", limit: 4}, {name: "Черника с/м", unit: "кг", limit: 2},
+      {name: "Облепиха", unit: "кг", limit: 1}, {name: "Клюква", unit: "кг", limit: 3},
+      {name: "Брусника", unit: "кг", limit: 0.5}, {name: "Малина", unit: "кг", limit: 3},
+      {name: "Огурец свежий", unit: "кг", limit: 5}, {name: "Томат свежий", unit: "кг", limit: 0},
+      {name: "Томат черри", unit: "кг", limit: 4}, {name: "Баклажан", unit: "кг", limit: 0.1},
+      {name: "Цукини", unit: "кг", limit: 5}, {name: "Капуста б/к", unit: "кг", limit: 10},
+      {name: "Айсберг", unit: "кг", limit: 5}, {name: "Романо", unit: "кг", limit: 2},
+      {name: "Перец Болгарский", unit: "кг", limit: 5}, {name: "Перец чили", unit: "кг", limit: 5},
+      {name: "Морковь", unit: "кг", limit: 0.4}, {name: "Картофель", unit: "кг", limit: 0.5},
+      {name: "Картофель беби", unit: "кг", limit: 0.5}, {name: "Чеснок", unit: "кг", limit: 0.4},
+      {name: "Лук репчатый", unit: "кг", limit: 0.3}, {name: "Лук красный", unit: "кг", limit: 0.1},
+      {name: "Лук зелёный", unit: "кг", limit: 0.1}, {name: "Петрушка", unit: "шт", limit: 2},
+      {name: "Укроп", unit: "шт", limit: 2}, {name: "Кинза", unit: "кг", limit: 1},
+      {name: "Базилик свежий", unit: "шт", limit: 5}, {name: "Тимьян", unit: "кг", limit: 1}
     ]
   },
   {
     supplier: "ИП Филатова",
     schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
     items: [
-      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
-      {name: "Крупа манная 1кг", unit: "уп", limit: null},
-      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
-      {name: "Макароны персонал", unit: "уп", limit: null},
-      {name: "Мука Алейка", unit: "уп", limit: null},
-      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
-      {name: "Соль 1кг", unit: "уп", limit: null},
-      {name: "Сахар песок 1кг", unit: "уп", limit: null},
+      {name: "Крупа гречневая 750г", unit: "уп", limit: null}, {name: "Крупа манная 1кг", unit: "уп", limit: null},
+      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null}, {name: "Макароны персонал", unit: "уп", limit: null},
+      {name: "Мука Алейка", unit: "уп", limit: null}, {name: "Рис пропаренный 750г", unit: "уп", limit: null},
+      {name: "Соль 1кг", unit: "уп", limit: null}, {name: "Сахар песок 1кг", unit: "уп", limit: null},
       {name: "Яйцо С1", unit: "уп", limit: null}
     ]
   },
@@ -455,54 +398,36 @@ const DEFAULT_MATRIX = [
     supplier: "МЕТРО",
     schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
     items: [
-      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
-      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
-      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
-      {name: "Меланж пастеризованный", unit: "кг", limit: null},
-      {name: "Паприка", unit: "кг", limit: null},
-      {name: "Чеснок сушёный", unit: "кг", limit: null},
-      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
-      {name: "Приправа гриль", unit: "шт", limit: null},
-      {name: "Чёрный перец горошек", unit: "бут", limit: null},
-      {name: "Кориандр горошек", unit: "кг", limit: null},
-      {name: "Кориандр молотый", unit: "кг", limit: null},
-      {name: "Соль гималайская розовая", unit: "кг", limit: null},
-      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
-      {name: "Кефир", unit: "л", limit: null},
-      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
-      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
-      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
-      {name: "Сок лимона 1л", unit: "шт", limit: null},
-      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
-      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
-      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
-      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
-      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
-      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
-      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
-      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
+      {name: "Сметана 20% Коровкино", unit: "кг", limit: null}, {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
+      {name: "Яичный желток пастеризованный", unit: "кг", limit: null}, {name: "Меланж пастеризованный", unit: "кг", limit: null},
+      {name: "Паприка", unit: "кг", limit: null}, {name: "Чеснок сушёный", unit: "кг", limit: null},
+      {name: "Чеснок черный ферментированный", unit: "шт", limit: null}, {name: "Приправа гриль", unit: "шт", limit: null},
+      {name: "Чёрный перец горошек", unit: "бут", limit: null}, {name: "Кориандр горошек", unit: "кг", limit: null},
+      {name: "Кориандр молотый", unit: "кг", limit: null}, {name: "Соль гималайская розовая", unit: "кг", limit: null},
+      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null}, {name: "Кефир", unit: "л", limit: null},
+      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null}, {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
+      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null}, {name: "Сок лимона 1л", unit: "шт", limit: null},
+      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null}, {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
+      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null}, {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
+      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null}, {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
+      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null}, {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
     ]
   },
   {
     supplier: "СИБМК",
     schedule: "По наличию",
     items: [
-      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
-      {name: "Кальмар командорский", unit: "кг", limit: null},
-      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
-      {name: "Мидии в двух створках", unit: "кг", limit: null},
-      {name: "Мидии в одной створке", unit: "кг", limit: null},
-      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
+      {name: "Форель с/с Trim-D", unit: "кг", limit: null}, {name: "Кальмар командорский", unit: "кг", limit: null},
+      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null}, {name: "Мидии в двух створках", unit: "кг", limit: null},
+      {name: "Мидии в одной створке", unit: "кг", limit: null}, {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "О Бэйкери (ИП Фоминых)",
     schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
     items: [
-      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
-      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
-      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
-      {name: "Безе весовое", unit: "кг", limit: 0.5},
+      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15}, {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
+      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10}, {name: "Безе весовое", unit: "кг", limit: 0.5},
       {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
     ]
   },
@@ -510,8 +435,7 @@ const DEFAULT_MATRIX = [
     supplier: "Алтайская Птица",
     schedule: "По договору",
     items: [
-      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
-      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
+      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null}, {name: "Крылья куриные рубленые", unit: "кг", limit: null},
       {name: "Филе куриной грудки", unit: "кг", limit: null}
     ]
   },
@@ -519,30 +443,24 @@ const DEFAULT_MATRIX = [
     supplier: "Два Сыровара",
     schedule: "По договору",
     items: [
-      {name: "Качотта", unit: "кг", limit: null},
-      {name: "Рулет", unit: "кг", limit: null},
-      {name: "Адыгейский", unit: "кг", limit: null},
-      {name: "Сулугуни копченый", unit: "кг", limit: null}
+      {name: "Качотта", unit: "кг", limit: null}, {name: "Рулет", unit: "кг", limit: null},
+      {name: "Адыгейский", unit: "кг", limit: null}, {name: "Сулугуни копченый", unit: "кг", limit: null}
     ]
   },
   {
     supplier: "Вяленое мясо",
     schedule: "По договору",
     items: [
-      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
-      {name: "Чипсы из индейки", unit: "уп", limit: null},
-      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
-      {name: "Чипсы из оленины", unit: "уп", limit: null}
+      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null}, {name: "Чипсы из индейки", unit: "уп", limit: null},
+      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null}, {name: "Чипсы из оленины", unit: "уп", limit: null}
     ]
   },
   {
     supplier: "Першин (микрозелень)",
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
-      {name: "Руккола мини", unit: "уп", limit: null},
-      {name: "Шпинат мини", unit: "уп", limit: null},
-      {name: "Щавель микро", unit: "уп", limit: null},
-      {name: "Мята микро", unit: "уп", limit: null},
+      {name: "Руккола мини", unit: "уп", limit: null}, {name: "Шпинат мини", unit: "уп", limit: null},
+      {name: "Щавель микро", unit: "уп", limit: null}, {name: "Мята микро", unit: "уп", limit: null},
       {name: "Фиалки", unit: "уп", limit: null}
     ]
   }
@@ -592,7 +510,10 @@ let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
-let scheduleWeekOffset = 0; // Смещение недели в днях
+
+// Переменные для навигации по графику
+let currentWeekStart = null; // Дата начала текущей отображаемой недели
+let selectedDayIndex = null; // Индекс дня (0-30) внутри месяца, который выбран пользователем
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -852,153 +773,127 @@ function parseComplexCSV(csvText) {
 }
 
 async function renderSchedule(){
-    scheduleWeekOffset = 0; // Сброс при входе
+    // Инициализация недели сегодня при первом входе
+    if (!currentWeekStart) {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        currentWeekStart = new Date(today);
+        currentWeekStart.setDate(today.getDate() + mondayOffset);
+        selectedDayIndex = today.getDate() - 1;
+    }
+    
+    app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h1 style="margin:0">График</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+    </div>
+    <div class="card" style="text-align:center;padding:30px">
+      <div class="loader-inline"></div>
+      <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
+    </div>
+  `;
     await fetchScheduleData(true);
     renderScheduleContent();
 }
 
-function changeWeek(offset) {
-    scheduleWeekOffset += offset;
-    renderScheduleContent();
-}
-
-function goToToday() {
-    scheduleWeekOffset = 0;
-    renderScheduleContent();
+function handleRefresh() { 
+    currentWeekStart = null; 
+    selectedDayIndex = null;
+    renderSchedule(); 
 }
 
 function renderScheduleContent() {
     const today = new Date();
     const currentDay = today.getDate();
     
-    // Расчет даты начала недели с учетом смещения
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const baseMonday = new Date(today);
-    baseMonday.setDate(today.getDate() + mondayOffset + scheduleWeekOffset);
+    // Если неделя не установлена (первый вход), устанавливаем текущую
+    if (!currentWeekStart) {
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        currentWeekStart = new Date(today);
+        currentWeekStart.setDate(today.getDate() + mondayOffset);
+        if (selectedDayIndex === null) selectedDayIndex = currentDay - 1;
+    }
 
+    // Генерация дней недели
     const weekDays = [];
     for(let i=0; i<7; i++){
-        const d = new Date(baseMonday);
-        d.setDate(baseMonday.getDate() + i);
+        const d = new Date(currentWeekStart);
+        d.setDate(currentWeekStart.getDate() + i);
         const dayNum = d.getDate();
-        // Индекс для массива shifts (0-30). Если вышли за пределы месяца, берем последний или 0
-        const idx = Math.max(0, Math.min(dayNum - 1, 30)); 
-        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth() && scheduleWeekOffset === 0;
+        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
+        
+        // Индекс дня в месяце (0-30)
+        const dayIdx = dayNum - 1;
         
         let count = 0;
         const source = scheduleData || DEFAULT_LOCAL_DATA;
         if(source && source.locations) {
             source.locations.forEach(loc => {
                 loc.staff.forEach(p => {
-                    if(p.shifts && p.shifts[idx] && Number(p.shifts[idx]) > 0) count++;
+                    if(p.shifts && p.shifts[dayIdx] && Number(p.shifts[dayIdx]) > 0) count++;
                 });
             });
         }
+        
         weekDays.push({ 
-            dateObj: d,
             dayNum, 
             isToday, 
             count, 
-            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i],
-            idx
+            isSelected: selectedDayIndex === dayIdx,
+            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] 
         });
     }
 
-    // Форматирование диапазона дат
-    const startDay = weekDays[0].dayNum;
-    const endDay = weekDays[6].dayNum;
-    const monthName = weekDays[0].dateObj.toLocaleString('ru', { month: 'long' });
-    const rangeTitle = `${startDay} — ${endDay} ${monthName}`;
+    // Определяем диапазон дат для заголовка
+    const lastDay = new Date(currentWeekStart);
+    lastDay.setDate(currentWeekStart.getDate() + 6);
+    const rangeStr = `${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru', {month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru', {month:'long'})}`;
 
-    // Определение активного дня (по умолчанию сегодня, если смещение 0, иначе первый день недели)
-    let activeDayIdx = -1;
-    if (scheduleWeekOffset === 0) {
-        activeDayIdx = weekDays.findIndex(d => d.isToday);
-    } else {
-        activeDayIdx = 0; // Если другая неделя, показываем первый день по умолчанию или можно хранить состояние
-    }
-    // Для простоты, если пользователь кликнул, мы должны это где-то хранить, но пока просто рендерим список
+    // Получаем данные для выбранного дня
+    const activeDayIndex = selectedDayIndex !== null ? selectedDayIndex : currentDay - 1;
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
     
-    app.innerHTML = `
+    let html = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">График</h1>
-        <button class="refresh-btn" onclick="renderSchedule();haptic('hard')">
+        <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
     </div>
-
-    <!-- Навигация по неделям -->
+    
     <div class="week-nav">
-        <button class="week-nav-btn" onclick="changeWeek(-7);haptic()">←</button>
-        <div class="week-title">${rangeTitle}</div>
-        <button class="week-nav-btn" onclick="changeWeek(7);haptic()">→</button>
+        <button class="week-nav-btn" onclick="changeWeek(-1);haptic()">←</button>
+        <div class="week-title">${rangeStr}</div>
+        <button class="week-nav-btn" onclick="changeWeek(1);haptic()">→</button>
     </div>
-    <div style="text-align:center;margin-bottom:12px">
+    <div style="text-align:center;margin-bottom:16px">
         <button class="today-btn" onclick="goToToday();haptic()">Сегодня</button>
     </div>
 
-    ${useLocalSchedule ? `
-      <div style="background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-        ⚠️ <b>Локальные данные</b><br>
-        <span style="color:var(--muted)">Google недоступен</span>
-      </div>
-    ` : `
-      <div style="background:rgba(95,211,138,.1);border-left:3px solid var(--green);padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;line-height:1.5">
-         <b>Данные из Google Таблицы</b>
-      </div>
-    `}
-    
-    <h2>Эта неделя</h2>
     <div style="display:flex;gap:6px;margin-bottom:16px">
-      ${weekDays.map((d, i) => `
-        <div class="day-card-active" style="flex:1;text-align:center;padding:8px 4px;background:${d.isToday?'var(--accent)':'var(--card)'};border-radius:10px;color:${d.isToday?'#000':'var(--text)'}" onclick="selectDay(${i});haptic('hard')">
-          <div style="font-size:10px;font-weight:700;color:${d.isToday?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
-          <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
-          <div style="font-size:11px;color:${d.isToday?'#000':'var(--muted)'}">${d.count} чел</div>
+      ${weekDays.map(d => `
+        <div class="day-card ${d.isSelected ? 'selected' : ''} ${d.isToday ? 'today' : ''}" 
+             onclick="selectDay(${d.dayNum - 1});haptic()">
+          <div class="dow-name">${d.dowName}</div>
+          <div class="day-num">${d.dayNum}</div>
+          <div class="count">${d.count} чел</div>
         </div>
       `).join('')}
     </div>
-
-    <div id="schedule-details">
-        ${renderLocationList(weekDays[activeDayIdx === -1 ? 0 : activeDayIdx].idx)}
-    </div>
-
-    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
-      📝 Открыть таблицу
-    </a>
-  `;
-
-  // Глобальная функция для выбора дня
-  window.selectDay = function(index) {
-      const dayData = weekDays[index];
-      const detailsDiv = document.getElementById('schedule-details');
-      if(detailsDiv) {
-          detailsDiv.innerHTML = renderLocationList(dayData.idx);
-          // Визуальное выделение
-          const cards = document.querySelectorAll('.day-card-active');
-          cards.forEach((c, i) => {
-              if(i === index) {
-                  c.style.background = 'var(--accent)';
-                  c.style.color = '#000';
-              } else {
-                  c.style.background = 'var(--card)';
-                  c.style.color = 'var(--text)';
-              }
-          });
-      }
-  };
-}
-
-function renderLocationList(dayIndex) {
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    if (!source || !source.locations) return '<div class="card">Нет данных</div>';
-
-    return source.locations.map(loc => {
+    
+    <h2>Сотрудники (${new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), activeDayIndex + 1).getDate()} августа)</h2>
+    ${source && source.locations ? source.locations.map(loc => {
       if(!loc.staff || loc.staff.length === 0) return '';
       const isOpen = expandedLocations.has(loc.name);
-      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      
+      // Фильтруем сотрудников, работающих в ВЫБРАННЫЙ день (activeDayIndex)
+      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[activeDayIndex] && Number(p.shifts[activeDayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
       
       return `
@@ -1007,7 +902,7 @@ function renderLocationList(dayIndex) {
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
               <div style="font-size:12px;color:var(--muted)">
-                👥 Сегодня: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+                👥 На смене: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
               </div>
             </div>
             <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
@@ -1022,13 +917,12 @@ function renderLocationList(dayIndex) {
                   <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
                   <div style="flex:1;min-width:0">
                     <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role}</div>
+                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[activeDayIndex]} см</div>
                   </div>
-                  <div style="font-weight:700;color:var(--accent)">${p.shifts[dayIndex]}</div>
                 </div>
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
               
-              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Команда за месяц</div>
+              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Статистика за месяц</div>
               ${staffStats.map(s => {
                 let workDays = 0;
                 if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
@@ -1048,8 +942,48 @@ function renderLocationList(dayIndex) {
           </div>
         </div>
       `;
-    }).join('');
+    }).join('') : '<div class="card">Нет данных о локациях</div>'}
+    
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      📝 Открыть таблицу
+    </a>
+  `;
+  
+  app.innerHTML = html;
 }
+
+// Функции навигации
+window.changeWeek = function(offset) {
+    if (!currentWeekStart) return;
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(currentWeekStart.getDate() + (offset * 7));
+    
+    // Простая проверка на выход за пределы августа 2026 (можно расширить)
+    if (newDate.getMonth() !== 7 && newDate.getMonth() !== 6 && newDate.getMonth() !== 8) {
+        // Если уходим сильно далеко, можно добавить тост
+        // toast('Нет данных за этот период', 'error');
+        // return;
+    }
+    
+    currentWeekStart = newDate;
+    selectedDayIndex = null; // Сбрасываем выбор дня при смене недели
+    renderScheduleContent();
+};
+
+window.selectDay = function(dayIndex) {
+    selectedDayIndex = dayIndex;
+    renderScheduleContent();
+};
+
+window.goToToday = function() {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() + mondayOffset);
+    selectedDayIndex = today.getDate() - 1;
+    renderScheduleContent();
+};
 
 function toggleLoc(name) {
   if (expandedLocations.has(name)) expandedLocations.delete(name);
@@ -1058,12 +992,13 @@ function toggleLoc(name) {
 }
 
 function renderChecklist(){
+  // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
       <h1>Чек-листы</h1>
       <div style="display:grid;gap:10px">
-        ${(scheduleData || DEFAULT_LOCAL_DATA).locations.map(loc => `
+        ${DEFAULT_LOCAL_DATA.locations.map(loc => `
           <button class="tile" onclick="window._clLoc='${loc.name}';renderChecklist();haptic()">
             <div class="tile-title">${loc.name}</div>
             <div class="tile-desc">Открыть чек-лист локации</div>
@@ -1083,6 +1018,7 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
+  // Получаем сотрудников на сегодня для этой локации
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   let todayStaff = [];
   const dayIndex = new Date().getDate() - 1;
@@ -1093,6 +1029,7 @@ function renderChecklist(){
       todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
     }
   }
+  // Фильтруем только Су-шефов и ИО
   const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
@@ -1173,6 +1110,9 @@ function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
   
+  const searchInputId = 'matrix-search-input';
+  
+  // Фильтрация
   const filteredSuppliers = MATRIX_DATA.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
     if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
@@ -1184,14 +1124,8 @@ function renderMatrix(){
     return null;
   }).filter(s => s !== null);
 
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
-    <h1>Матрица заявок</h1>
-    <input type="search" id="matrix-search" placeholder="🔍 Поиск продукта или поставщика..." 
-           value="${window._matrixQ}" 
-           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
-    
-    ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
+  // Рендерим HTML, но поле ввода будем обновлять отдельно, чтобы не терять фокус
+  const listHtml = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
           <div class="supplier-name">${sup.supplier}</div>
@@ -1209,17 +1143,37 @@ function renderMatrix(){
           `).join('')}
         </div>
       </div>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+
+  // Проверяем, существует ли уже поле ввода в DOM
+  const existingInput = document.getElementById(searchInputId);
+  
+  if (existingInput) {
+      // Если поле есть, обновляем только список ниже, не трогая input
+      const listContainer = document.getElementById('matrix-list-container');
+      if (listContainer) listContainer.innerHTML = listHtml;
+      return;
+  }
+
+  // Если поля нет (первый рендер), создаем всё полностью
+  app.innerHTML = `
+    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <h1>Матрица заявок</h1>
+    <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
+           value="${window._matrixQ}" 
+           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
+    
+    <div id="matrix-list-container">
+        ${listHtml}
+    </div>
   `;
   
-  const searchInput = document.getElementById('matrix-search');
-  if(searchInput) {
-      searchInput.addEventListener('input', (e) => {
+  // Добавляем обработчик события после создания элемента
+  const input = document.getElementById(searchInputId);
+  if (input) {
+      input.addEventListener('input', (e) => {
           window._matrixQ = e.target.value;
           renderMatrix();
-          // Возвращаем фокус
-          const newInput = document.getElementById('matrix-search');
-          if(newInput) newInput.focus();
       });
   }
 }
@@ -1338,96 +1292,102 @@ function renderAdminContent(){
   }
 }
 
-// Функции для редактирования матрицы
-function editSupplier(idx) {
-    const isEdit = idx !== undefined;
-    const s = isEdit ? MATRIX_DATA[idx] : {supplier: '', schedule: '', items: []};
+// --- Функции редактирования Матрицы ---
+window.editSupplier = function(index) {
+    const isEdit = index !== undefined;
+    const s = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
+    
     const modal = document.createElement('div');
     modal.className = 'modal-bg';
-    modal.id = 'edit-modal';
+    modal.id = 'edit-supplier-modal';
     
-    let itemsHtml = s.items.map((it, i) => `
-        <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px">
-            <input class="form-input" placeholder="Название" value="${it.name}" data-mi="${i}" data-f="name">
-            <input class="form-input" placeholder="Ед." value="${it.unit}" data-mi="${i}" data-f="unit">
-            <input class="form-input" type="number" placeholder="Лимит" value="${it.limit || ''}" data-mi="${i}" data-f="limit">
-            <button class="icon-btn danger" onclick="this.parentElement.remove()" style="height:30px">✕</button>
+    let itemsHtml = s.items.map((it, idx) => `
+        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
+                <input class="form-input" placeholder="Продукт" value="${it.name}" data-midx="${idx}" data-f="name">
+                <input class="form-input" placeholder="Ед." value="${it.unit}" data-midx="${idx}" data-f="unit">
+                <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" data-midx="${idx}" data-f="limit">
+                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
+            </div>
         </div>
     `).join('');
 
     modal.innerHTML = `
         <div class="modal">
             <div class="modal-header">
-                <div class="modal-title">${isEdit ? 'Редактировать' : 'Новый'} поставщик</div>
-                <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+                <div class="modal-title">${isEdit ? '✏️ Редактировать' : '✨ Новый'} поставщик</div>
+                <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove()"></button>
             </div>
             <div class="modal-body" style="padding:0 20px">
                 <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${s.supplier}"></div>
-                <div class="form-field"><label class="form-label">График поставки</label><input class="form-input" id="m-schedule" value="${s.schedule}"></div>
+                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="m-schedule" value="${s.schedule}"></div>
                 
                 <div class="form-field">
-                    <label class="form-label">Товары <button class="btn btn-sm btn-sec" onclick="addMatrixItem()">+ Товар</button></label>
-                    <div id="m-items-list">${itemsHtml}</div>
+                    <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Добавить</button></label>
+                    <div id="matrix-items-list">${itemsHtml}</div>
                 </div>
                 
-                <button class="btn" onclick="saveSupplier(${isEdit ? idx : 'null'})">💾 Сохранить</button>
+                <button class="btn" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
-}
-
-window.addMatrixItem = function() {
-    const list = document.getElementById('m-items-list');
-    const idx = list.children.length;
-    const div = document.createElement('div');
-    div.style.cssText = "background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px";
-    div.innerHTML = `
-        <input class="form-input" placeholder="Название" data-mi="${idx}" data-f="name">
-        <input class="form-input" placeholder="Ед." data-mi="${idx}" data-f="unit">
-        <input class="form-input" type="number" placeholder="Лимит" data-mi="${idx}" data-f="limit">
-        <button class="icon-btn danger" onclick="this.parentElement.remove()" style="height:30px">✕</button>
-    `;
-    list.appendChild(div);
 };
 
-window.saveSupplier = function(idx) {
-    const supplier = $('#m-supplier').value;
-    const schedule = $('#m-schedule').value;
-    if(!supplier) { toast('Введите название поставщика', 'error'); return; }
-    
-    const items = Array.from(document.querySelectorAll('[data-mi]')).reduce((acc, el) => {
-        const i = el.dataset.mi;
-        const f = el.dataset.f;
-        acc[i] = acc[i] || {};
-        let val = el.value;
-        if(f === 'limit') val = val ? Number(val) : null;
-        acc[i][f] = val;
-        return acc;
-    }, []).filter(x => x.name);
+window.addMatrixItem = function() {
+    const list = document.getElementById('matrix-items-list');
+    const idx = list.querySelectorAll('.ing-editor').length;
+    const html = `
+        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
+                <input class="form-input" placeholder="Продукт" data-midx="${idx}" data-f="name" value="">
+                <input class="form-input" placeholder="Ед." data-midx="${idx}" data-f="unit" value="">
+                <input class="form-input" placeholder="Лимит" type="number" data-midx="${idx}" data-f="limit" value="">
+                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
+            </div>
+        </div>`;
+    list.insertAdjacentHTML('beforeend', html);
+};
 
-    const newEntry = { supplier, schedule, items };
+window.saveSupplier = function(index) {
+    const supplierName = $('#m-supplier').value;
+    const schedule = $('#m-schedule').value;
     
-    if(idx !== null) {
-        MATRIX_DATA[idx] = newEntry;
+    if(!supplierName) { toast('Введите название поставщика', 'error'); return; }
+    
+    const items = Array.from(document.querySelectorAll('[data-midx]')).reduce((acc, el) => {
+        const idx = el.dataset.midx;
+        const f = el.dataset.f;
+        acc[idx] = acc[idx] || {};
+        let val = el.value;
+        if (f === 'limit') val = val === '' ? null : parseFloat(val);
+        acc[idx][f] = val;
+        return acc;
+    }, []).filter(x => x.name && x.name.trim() !== '');
+    
+    const newSupplier = { supplier: supplierName, schedule: schedule, items: items };
+    
+    if (index !== null) {
+        MATRIX_DATA[index] = newSupplier;
     } else {
-        MATRIX_DATA.push(newEntry);
+        MATRIX_DATA.push(newSupplier);
     }
+    
     saveData();
-    document.getElementById('edit-modal').remove();
+    document.getElementById('edit-supplier-modal').remove();
     toast('Сохранено', 'success');
     renderAdminContent();
 };
 
-window.deleteSupplier = function(idx) {
+window.deleteSupplier = function(index) {
     if(!confirm('Удалить поставщика и все его товары?')) return;
-    MATRIX_DATA.splice(idx, 1);
+    MATRIX_DATA.splice(index, 1);
     saveData();
     renderAdminContent();
     toast('Удалено', 'success');
 };
 
-// Остальные функции админки (рецепты, новости, команда)
+// --- Остальные функции админки (Рецепты, Новости, Команда) ---
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
