@@ -140,23 +140,58 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
 
-/* Стили для категорий ТТК */
-.cat-editor-item {
+/* Навигация по неделям */
+.week-nav {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 8px;
-    margin-bottom: 8px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 10px;
 }
-.cat-order-btns { display: flex; gap: 4px; }
-.cat-order-btn {
-    width: 24px; height: 24px; border-radius: 4px; border: none;
-    background: rgba(255,255,255,0.1); color: var(--text);
-    cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px;
+.week-nav-btn {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
 }
-.cat-order-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.week-nav-btn:active { background: var(--accent); color: #000; }
+.week-nav-title {
+    font-weight: 700;
+    font-size: 16px;
+    text-align: center;
+    flex: 1;
+}
+.day-cell {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    background: var(--card);
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+.day-cell.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
+.day-cell.today {
+    border-color: var(--green);
+}
+.day-cell .dow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.day-cell.active .dow { color: #000; }
+.day-cell .num { font-weight: 800; font-size: 17px; margin: 3px 0; }
+.day-cell .count { font-size: 11px; color: var(--muted); }
+.day-cell.active .count { color: #000; }
 </style>
 </head>
 <body>
@@ -174,8 +209,8 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 /* ============================================================
    📦 ДАННЫЕ
    ============================================================ */
-// Категории по умолчанию
-const DEFAULT_CATEGORIES = ['Горячее', 'Салаты', 'Десерты', 'Напитки', 'Заготовки'];
+// Категории ТТК (редактируемые)
+let RECIPE_CATEGORIES = JSON.parse(localStorage.getItem('chef_recipe_cats')) || ['Горячее', 'Салаты', 'Десерты', 'Напитки', 'Заготовки'];
 
 const DEFAULT_RECIPES = [
   {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'Срок хранения основы — 12 ч.', ingr:[['Говядина',121,80]], steps:['Варить.']},
@@ -201,7 +236,7 @@ const DEFAULT_TEAM = [
 ];
 
 // Матрица заявок
-const MATRIX_DATA = [
+const DEFAULT_MATRIX = [
   {
     supplier: "ИП Максимова",
     schedule: "Ежедневно (сегодня на завтра)",
@@ -212,310 +247,7 @@ const MATRIX_DATA = [
     schedule: "Ежедневно (сегодня на завтра)",
     items: [
       {name: "Панини", unit: "шт", limit: 10},
-      {name: "Чиабатта", unit: "шт", limit: 10},
-      {name: "Багет французский", unit: "шт", limit: 10},
-      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
-      {name: "Хлеб Датский", unit: "шт", limit: 10},
-      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
-    ]
-  },
-  {
-    supplier: "Пионер (Заготовки)",
-    schedule: "Заявка в воскресенье, отгрузка в чт-пт",
-    items: [
-      {name: "Ребра запеченые", unit: "кг", limit: 10},
-      {name: "Щечки томленые", unit: "кг", limit: 10},
-      {name: "Фарш штат", unit: "кг", limit: 10},
-      {name: "Фарш 70/30", unit: "кг", limit: 10},
-      {name: "Ростбиф", unit: "кг", limit: 10},
-      {name: "Смалец", unit: "кг", limit: 2}
-    ]
-  },
-  {
-    supplier: "Партнер",
-    schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
-    items: [
-      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
-      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
-      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
-      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
-      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
-      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
-      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
-      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
-      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
-      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
-      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
-      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
-      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
-      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
-      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
-      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
-      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
-      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
-      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
-      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
-      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
-      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
-      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
-      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
-      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
-      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
-      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
-      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
-      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
-      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
-      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
-      {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
-    ]
-  },
-  {
-    supplier: "Интегрита",
-    schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
-    items: [
-      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
-      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
-      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
-      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
-      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
-      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
-      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
-      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
-      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
-      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
-      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
-      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
-      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
-      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
-      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
-      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
-      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
-      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
-      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
-      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
-      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
-    ]
-  },
-  {
-    supplier: "Восток Запад",
-    schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
-    items: [
-      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
-      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
-      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
-      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
-      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
-      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
-      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
-      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
-      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
-      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
-      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
-      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
-      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
-      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
-      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
-      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
-      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
-      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
-      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
-      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
-      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
-      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
-      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
-      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
-    ]
-  },
-  {
-    supplier: "Снежный Городок",
-    schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
-    items: [
-      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
-      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
-    ]
-  },
-  {
-    supplier: "Мираторг",
-    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
-    items: [
-      {name: "Свиная шейка", unit: "кг", limit: 20},
-      {name: "Свиная вырезка", unit: "кг", limit: 15},
-      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
-      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
-    ]
-  },
-  {
-    supplier: "Вкусная Жизнь",
-    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
-    items: [
-      {name: "Мясник толстый край", unit: "кг", limit: 2},
-      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
-      {name: "Колбаски горчичные", unit: "уп", limit: 5},
-      {name: "Колбаски с сыром", unit: "уп", limit: 5}
-    ]
-  },
-  {
-    supplier: "ИП Орлов",
-    schedule: "Ежедневно",
-    items: [
-      {name: "Черная смородина с/м", unit: "кг", limit: 4},
-      {name: "Черника с/м", unit: "кг", limit: 2},
-      {name: "Облепиха", unit: "кг", limit: 1},
-      {name: "Клюква", unit: "кг", limit: 3},
-      {name: "Брусника", unit: "кг", limit: 0.5},
-      {name: "Малина", unit: "кг", limit: 3},
-      {name: "Огурец свежий", unit: "кг", limit: 5},
-      {name: "Томат свежий", unit: "кг", limit: 0},
-      {name: "Томат черри", unit: "кг", limit: 4},
-      {name: "Баклажан", unit: "кг", limit: 0.1},
-      {name: "Цукини", unit: "кг", limit: 5},
-      {name: "Капуста б/к", unit: "кг", limit: 10},
-      {name: "Айсберг", unit: "кг", limit: 5},
-      {name: "Романо", unit: "кг", limit: 2},
-      {name: "Перец Болгарский", unit: "кг", limit: 5},
-      {name: "Перец чили", unit: "кг", limit: 5},
-      {name: "Морковь", unit: "кг", limit: 0.4},
-      {name: "Картофель", unit: "кг", limit: 0.5},
-      {name: "Картофель беби", unit: "кг", limit: 0.5},
-      {name: "Чеснок", unit: "кг", limit: 0.4},
-      {name: "Лук репчатый", unit: "кг", limit: 0.3},
-      {name: "Лук красный", unit: "кг", limit: 0.1},
-      {name: "Лук зелёный", unit: "кг", limit: 0.1},
-      {name: "Петрушка", unit: "шт", limit: 2},
-      {name: "Укроп", unit: "шт", limit: 2},
-      {name: "Кинза", unit: "кг", limit: 1},
-      {name: "Базилик свежий", unit: "шт", limit: 5},
-      {name: "Тимьян", unit: "кг", limit: 1}
-    ]
-  },
-  {
-    supplier: "ИП Филатова",
-    schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
-    items: [
-      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
-      {name: "Крупа манная 1кг", unit: "уп", limit: null},
-      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
-      {name: "Макароны персонал", unit: "уп", limit: null},
-      {name: "Мука Алейка", unit: "уп", limit: null},
-      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
-      {name: "Соль 1кг", unit: "уп", limit: null},
-      {name: "Сахар песок 1кг", unit: "уп", limit: null},
-      {name: "Яйцо С1", unit: "уп", limit: null}
-    ]
-  },
-  {
-    supplier: "МЕТРО",
-    schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
-    items: [
-      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
-      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
-      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
-      {name: "Меланж пастеризованный", unit: "кг", limit: null},
-      {name: "Паприка", unit: "кг", limit: null},
-      {name: "Чеснок сушёный", unit: "кг", limit: null},
-      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
-      {name: "Приправа гриль", unit: "шт", limit: null},
-      {name: "Чёрный перец горошек", unit: "бут", limit: null},
-      {name: "Кориандр горошек", unit: "кг", limit: null},
-      {name: "Кориандр молотый", unit: "кг", limit: null},
-      {name: "Соль гималайская розовая", unit: "кг", limit: null},
-      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
-      {name: "Кефир", unit: "л", limit: null},
-      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
-      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
-      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
-      {name: "Сок лимона 1л", unit: "шт", limit: null},
-      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
-      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
-      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
-      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
-      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
-      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
-      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
-      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
-    ]
-  },
-  {
-    supplier: "СИБМК",
-    schedule: "По наличию",
-    items: [
-      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
-      {name: "Кальмар командорский", unit: "кг", limit: null},
-      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
-      {name: "Мидии в двух створках", unit: "кг", limit: null},
-      {name: "Мидии в одной створке", unit: "кг", limit: null},
-      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "О Бэйкери (ИП Фоминых)",
-    schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
-    items: [
-      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
-      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
-      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
-      {name: "Безе весовое", unit: "кг", limit: 0.5},
-      {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
-    ]
-  },
-  {
-    supplier: "Алтайская Птица",
-    schedule: "По договору",
-    items: [
-      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
-      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
-      {name: "Филе куриной грудки", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "Два Сыровара",
-    schedule: "По договору",
-    items: [
-      {name: "Качотта", unit: "кг", limit: null},
-      {name: "Рулет", unit: "кг", limit: null},
-      {name: "Адыгейский", unit: "кг", limit: null},
-      {name: "Сулугуни копченый", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "Вяленое мясо",
-    schedule: "По договору",
-    items: [
-      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
-      {name: "Чипсы из индейки", unit: "уп", limit: null},
-      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
-      {name: "Чипсы из оленины", unit: "уп", limit: null}
-    ]
-  },
-  {
-    supplier: "Першин (микрозелень)",
-    schedule: "Ежедневно (сегодня на завтра)",
-    items: [
-      {name: "Руккола мини", unit: "уп", limit: null},
-      {name: "Шпинат мини", unit: "уп", limit: null},
-      {name: "Щавель микро", unit: "уп", limit: null},
-      {name: "Мята микро", unit: "уп", limit: null},
-      {name: "Фиалки", unit: "уп", limit: null}
+      {name: "Чиабатта", unit: "шт", limit: 10}
     ]
   }
 ];
@@ -540,8 +272,7 @@ const CHECKLISTS = {
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-let CATEGORIES = JSON.parse(localStorage.getItem('chef_categories')) || DEFAULT_CATEGORIES;
-let MATRIX_CUSTOM = JSON.parse(localStorage.getItem('chef_matrix_custom')) || []; // Пользовательские изменения матрицы
+let MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
 let scheduleData = null;
 let useLocalSchedule = false;
 let isLoading = false;
@@ -550,8 +281,8 @@ function saveData() {
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_categories', JSON.stringify(CATEGORIES));
-    localStorage.setItem('chef_matrix_custom', JSON.stringify(MATRIX_CUSTOM));
+    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
+    localStorage.setItem('chef_recipe_cats', JSON.stringify(RECIPE_CATEGORIES));
 }
 
 /* ============================================================
@@ -567,7 +298,7 @@ let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
 
-// Переменные для навигации по неделям и выбора дня
+// Переменные для навигации по графику
 let currentWeekStart = null;
 let selectedDayIndex = null; // Индекс дня в месяце (0-30)
 
@@ -612,6 +343,7 @@ function renderHome(){
   const dayIndex = currentDay - 1;
   
   let todayShifts = [];
+  // Используем загруженные данные или локальные
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   
   if(source && source.locations) {
@@ -674,7 +406,7 @@ function renderHome(){
 }
 
 function renderTTK(){
-  const cats = ['Все', ...CATEGORIES];
+  const cats = ['Все', ...RECIPE_CATEGORIES];
   window._ttkCat = window._ttkCat || 'Все';
   window._ttkQ = window._ttkQ || '';
   const q = window._ttkQ.toLowerCase();
@@ -692,7 +424,7 @@ function renderTTK(){
     <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
       ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
     </div>
-    <div id="ttk-results">
+    <div id="ttk-list">
     ${items.length ? items.map(r => `
       <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
         <div class="recipe-name">${r.name}</div>
@@ -702,23 +434,16 @@ function renderTTK(){
     </div>
   `;
   
-  // Добавляем обработчик поиска отдельно, чтобы не пересоздавать input
-  const searchInput = document.getElementById('ttk-search');
-  searchInput.addEventListener('input', (e) => {
+  // Восстанавливаем фокус и обработчик отдельно, чтобы не терялся при рендере
+  const input = document.getElementById('ttk-search');
+  input.addEventListener('input', (e) => {
       window._ttkQ = e.target.value;
-      // Перерисовываем только список результатов
-      const q = window._ttkQ.toLowerCase();
-      const items = RECIPES.filter(r => 
-        (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
-        (!q || r.name.toLowerCase().includes(q))
-      );
-      const resultsDiv = document.getElementById('ttk-results');
-      resultsDiv.innerHTML = items.length ? items.map(r => `
-        <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-          <div class="recipe-name">${r.name}</div>
-          <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
-        </button>
-      `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+      renderTTK();
+      // Возвращаем фокус и курсор в конец
+      const val = e.target.value;
+      e.target.value = ''; 
+      e.target.value = val;
+      e.target.setSelectionRange(val.length, val.length);
   });
 }
 
@@ -858,7 +583,7 @@ async function renderSchedule(){
         currentWeekStart.setDate(today.getDate() + mondayOffset);
         selectedDayIndex = today.getDate() - 1;
     }
-
+    
     app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -876,16 +601,18 @@ async function renderSchedule(){
     renderScheduleContent();
 }
 
-function handleRefresh() { renderSchedule(); }
+function handleRefresh() { 
+    currentWeekStart = null; 
+    selectedDayIndex = null;
+    renderSchedule(); 
+}
 
 function renderScheduleContent() {
+    const source = scheduleData || DEFAULT_LOCAL_DATA;
     const today = new Date();
     const currentDay = today.getDate();
     
-    // Навигация по неделям
-    const weekEnd = new Date(currentWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    
+    // Генерация дней недели
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(currentWeekStart);
@@ -893,10 +620,9 @@ function renderScheduleContent() {
         const dayNum = d.getDate();
         const idx = dayNum - 1; 
         const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        const isSelected = idx === selectedDayIndex;
+        const isSelected = selectedDayIndex === idx;
         
         let count = 0;
-        const source = scheduleData || DEFAULT_LOCAL_DATA;
         if(source && source.locations) {
             source.locations.forEach(loc => {
                 loc.staff.forEach(p => {
@@ -907,15 +633,24 @@ function renderScheduleContent() {
         weekDays.push({ dayNum, idx, isToday, isSelected, count, dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] });
     }
 
-    // Определяем сотрудников для выбранного дня
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    let workingStaffByLoc = {};
+    // Формирование заголовка диапазона
+    const endOfWeek = new Date(currentWeekStart);
+    endOfWeek.setDate(currentWeekStart.getDate() + 6);
+    const rangeTitle = `${currentWeekStart.getDate()} — ${endOfWeek.getDate()} августа`;
+
+    // Получение списка сотрудников для выбранного дня
+    let staffForSelectedDay = [];
+    let locationsWithStaff = [];
     
     if (selectedDayIndex !== null && source && source.locations) {
         source.locations.forEach(loc => {
-            const staffOnDay = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
-            if(staffOnDay.length > 0) {
-                workingStaffByLoc[loc.name] = staffOnDay;
+            const workingToday = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
+            if (workingToday.length > 0 || loc.staff.length > 0) {
+                locationsWithStaff.push({
+                    name: loc.name,
+                    staff: loc.staff, // Все сотрудники локации
+                    workingToday: workingToday // Только те, кто работает в выбранный день
+                });
             }
         });
     }
@@ -924,73 +659,109 @@ function renderScheduleContent() {
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
-        <div style="display:flex;gap:8px">
-            <button class="icon-btn" onclick="changeWeek(-1);haptic()">←</button>
-            <button class="icon-btn" onclick="resetWeek();haptic()">📅</button>
-            <button class="icon-btn" onclick="changeWeek(1);haptic()">→</button>
-        </div>
+        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
     </div>
     
-    <div style="text-align:center;margin-bottom:12px;font-weight:600;color:var(--muted)">
-        ${currentWeekStart.getDate()} ${getMonthName(currentWeekStart.getMonth())} — ${weekEnd.getDate()} ${getMonthName(weekEnd.getMonth())}
+    <div class="week-nav">
+        <button class="week-nav-btn" onclick="changeWeek(-1);haptic()">←</button>
+        <div class="week-nav-title">${rangeTitle}</div>
+        <button class="week-nav-btn" onclick="changeWeek(1);haptic()">→</button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px">
+        <button class="btn-sm btn-sec" onclick="resetToToday();haptic()">Сегодня</button>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
-        <div style="flex:1;text-align:center;padding:8px 4px;background:${d.isSelected?'var(--accent)':(d.isToday?'rgba(255,138,61,0.2)':'var(--card)')};border-radius:10px;color:${d.isSelected?'#000':'var(--text)'};cursor:pointer" onclick="selectDay(${d.idx});haptic()">
-          <div style="font-size:10px;font-weight:700;color:${d.isSelected?'#000':'var(--muted)'};text-transform:uppercase">${d.dowName}</div>
-          <div style="font-weight:800;font-size:17px;margin:3px 0">${d.dayNum}</div>
-          <div style="font-size:11px;color:${d.isSelected?'#000':'var(--muted)'}">${d.count}</div>
+        <div class="day-cell ${d.isSelected ? 'active' : ''} ${d.isToday ? 'today' : ''}" 
+             onclick="selectDay(${d.idx});haptic()">
+          <div class="dow">${d.dowName}</div>
+          <div class="num">${d.dayNum}</div>
+          <div class="count">${d.count} чел</div>
         </div>
       `).join('')}
     </div>
     
     ${selectedDayIndex !== null ? `
-        <h2>Смена ${selectedDayIndex + 1} числа</h2>
-        ${Object.keys(workingStaffByLoc).length > 0 ? Object.keys(workingStaffByLoc).map(locName => {
-            const staff = workingStaffByLoc[locName];
-            const isOpen = expandedLocations.has(locName);
-            return `
+        <h2>Локации (${selectedDayIndex + 1} число)</h2>
+        ${locationsWithStaff.length > 0 ? locationsWithStaff.map(loc => {
+          const isOpen = expandedLocations.has(loc.name);
+          const workCount = loc.workingToday.length;
+          const totalCount = loc.staff.length;
+          
+          // Сортировка: сначала работающие, потом остальные
+          const sortedStaff = [...loc.staff].sort((a,b) => {
+              const aWork = a.shifts && a.shifts[selectedDayIndex] > 0;
+              const bWork = b.shifts && b.shifts[selectedDayIndex] > 0;
+              if (aWork && !bWork) return -1;
+              if (!aWork && bWork) return 1;
+              return 0;
+          });
+
+          return `
             <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-                <button onclick="toggleLoc('${locName}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-                    <div style="font-weight:700;font-size:16px">${locName}</div>
-                    <div style="width:24px;height:24px;border-radius:6px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
-                    </div>
-                </button>
-                <div style="max-height:${isOpen?'2000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-                    <div style="padding:0 16px 16px">
-                        ${staff.map(p => `
-                            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                                <div>
-                                    <div style="font-weight:600">${p.name}</div>
-                                    <div style="font-size:12px;color:var(--muted)">${p.role}</div>
-                                </div>
-                                <div style="font-weight:700;color:var(--accent)">${p.shifts[selectedDayIndex]} см</div>
-                            </div>
-                        `).join('')}
-                    </div>
+              <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+                  <div style="font-size:12px;color:var(--muted)">
+                    👥 На смене: <span style="color:var(--accent);font-weight:700">${workCount}</span> из ${totalCount}
+                  </div>
                 </div>
+                <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+              </button>
+              <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
+                <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+                  ${sortedStaff.map(s => {
+                      const isWorking = s.shifts && s.shifts[selectedDayIndex] && Number(s.shifts[selectedDayIndex]) > 0;
+                      const shiftVal = isWorking ? s.shifts[selectedDayIndex] : 0;
+                      return `
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);opacity:${isWorking?1:0.5}">
+                        <div style="flex:1;min-width:0">
+                          <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
+                          <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role}</div>
+                        </div>
+                        <div style="text-align:right;margin-left:10px">
+                          ${isWorking ? `<div style="font-weight:800;font-size:16px;color:var(--accent)">${shiftVal}</div>` : '<div style="font-size:12px;color:var(--muted)">Отдых</div>'}
+                        </div>
+                      </div>
+                      `;
+                  }).join('')}
+                </div>
+              </div>
             </div>
-            `;
-        }).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Нет сотрудников на эту дату</div>'}
-    ` : '<div class="card" style="text-align:center;color:var(--muted)">Выберите день</div>'}
+          `;
+        }).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Нет данных по локациям</div>'}
+    ` : '<div class="card" style="text-align:center;color:var(--muted)">Выберите день, чтобы увидеть список сотрудников</div>'}
     
-    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">📝 Открыть таблицу</a>
+    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
+      📝 Открыть таблицу
+    </a>
   `;
 }
 
-function getMonthName(monthIndex) {
-    return ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][monthIndex];
-}
-
-function changeWeek(offset) {
-    currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 7));
-    selectedDayIndex = null; // Сброс выбора дня при смене недели
+function changeWeek(delta) {
+    const newStart = new Date(currentWeekStart);
+    newStart.setDate(currentWeekStart.getDate() + (delta * 7));
+    // Ограничение: август 2026 (1-31)
+    if (newStart.getMonth() !== 7) return; // Только август (месяц 7 в JS)
+    
+    currentWeekStart = newStart;
+    // Если выбранный день выходит за пределы новой недели, сбрасываем выбор или выбираем первый день
+    const endOfWeek = new Date(currentWeekStart);
+    endOfWeek.setDate(currentWeekStart.getDate() + 6);
+    
+    if (selectedDayIndex < currentWeekStart.getDate() - 1 || selectedDayIndex > endOfWeek.getDate() - 1) {
+        selectedDayIndex = currentWeekStart.getDate() - 1;
+    }
+    
     renderScheduleContent();
 }
 
-function resetWeek() {
+function resetToToday() {
     const today = new Date();
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -1002,6 +773,19 @@ function resetWeek() {
 
 function selectDay(idx) {
     selectedDayIndex = idx;
+    // Корректировка начала недели, если день не входит в текущую
+    const d = new Date();
+    d.setDate(idx + 1);
+    const dayOfWeek = d.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    const newWeekStart = new Date(d);
+    newWeekStart.setDate(d.getDate() + mondayOffset);
+    
+    if (newWeekStart.getMonth() === 7) { // Только если август
+        currentWeekStart = newWeekStart;
+    }
+    
     renderScheduleContent();
 }
 
@@ -1041,22 +825,22 @@ function renderChecklist(){
 
   // Получаем ВСЕХ сотрудников локации из графика (не фильтруя по смене)
   const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let allStaff = [];
+  let allLocStaff = [];
   
   if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
     if(locData && locData.staff) {
-      allStaff = locData.staff;
+      allLocStaff = locData.staff;
     }
   }
   
-  // Если данных графика нет, используем TEAM как fallback
-  if(allStaff.length === 0) {
-      allStaff = TEAM.map(t => ({name: t.name, role: t.role}));
+  // Если в графике нет сотрудников для этой локации, используем TEAM как fallback
+  if (allLocStaff.length === 0) {
+      allLocStaff = TEAM;
   }
 
-  // Фильтруем только руководящий состав для выбора
-  const managers = allStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный') || p.role.includes('Шеф'));
+  // Фильтруем только Су-шефов и ИО для списка ответственных
+  const managers = allLocStaff.filter(p => p.role && (p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный')));
 
   app.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
@@ -1066,7 +850,7 @@ function renderChecklist(){
       <div class="form-label">Ответственный сегодня</div>
       <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
         <option value="">-- Не выбран --</option>
-        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
+        ${managers.length > 0 ? managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('') : '<option disabled>Нет подходящих сотрудников</option>'}
       </select>
       ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
     </div>
@@ -1136,16 +920,10 @@ function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
   
-  // Объединяем стандартные и пользовательские данные (если нужно)
-  const allData = [...MATRIX_DATA, ...MATRIX_CUSTOM];
-
-  const filteredSuppliers = allData.map(sup => {
+  const filteredSuppliers = MATRIX_DATA.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-    if(sup.supplier.toLowerCase().includes(q)) {
-      return sup; // Показать всего поставщика
-    }
-    if(items.length > 0) {
-      return {...sup, items: items}; // Показать только найденные товары
+    if(sup.supplier.toLowerCase().includes(q) || items.length > 0) {
+      return {...sup, items: items.length > 0 ? items : sup.items};
     }
     return null;
   }).filter(s => s !== null);
@@ -1157,7 +935,7 @@ function renderMatrix(){
            value="${window._matrixQ}" 
            style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
     
-    <div id="matrix-results">
+    <div id="matrix-list">
     ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
@@ -1180,38 +958,14 @@ function renderMatrix(){
     </div>
   `;
 
-  const searchInput = document.getElementById('matrix-search');
-  searchInput.addEventListener('input', (e) => {
+  const input = document.getElementById('matrix-search');
+  input.addEventListener('input', (e) => {
       window._matrixQ = e.target.value;
-      const q = window._matrixQ.toLowerCase();
-      const allData = [...MATRIX_DATA, ...MATRIX_CUSTOM];
-      const filteredSuppliers = allData.map(sup => {
-        const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-        if(sup.supplier.toLowerCase().includes(q)) return sup;
-        if(items.length > 0) return {...sup, items: items};
-        return null;
-      }).filter(s => s !== null);
-      
-      const resultsDiv = document.getElementById('matrix-results');
-      resultsDiv.innerHTML = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
-        <div class="supplier-block">
-          <div class="supplier-header">
-            <div class="supplier-name">${sup.supplier}</div>
-            <div class="supplier-schedule">🕒 ${sup.schedule}</div>
-          </div>
-          <div class="card" style="padding:10px 14px">
-            ${sup.items.map(it => `
-              <div class="matrix-item">
-                <div class="matrix-name">${it.name}</div>
-                <div class="matrix-meta">
-                  <span class="matrix-unit">${it.unit}</span>
-                  ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+      renderMatrix();
+      const val = e.target.value;
+      e.target.value = ''; 
+      e.target.value = val;
+      e.target.setSelectionRange(val.length, val.length);
   });
 }
 
@@ -1238,12 +992,12 @@ function showAdminModal(){
         <div class="modal-title">⚙️ Редактор</div>
         <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
       </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
+      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0;overflow-x:auto">
         <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
-        <button class="tab-btn ${adminTab==='categories'?'on':''}" onclick="adminTab='categories';showAdminModal()">Категории</button>
+        <button class="tab-btn ${adminTab==='cats'?'on':''}" onclick="adminTab='cats';showAdminModal()">Категории</button>
+        <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';showAdminModal()">Матрица</button>
         <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
         <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
-        <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';showAdminModal()">Матрица</button>
       </div>
       <div id="admin-content" class="modal-body"></div>
     </div>
@@ -1274,16 +1028,36 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if (adminTab === 'categories') {
+  } else if (adminTab === 'cats') {
       c.innerHTML = `
         <button class="btn" onclick="addCategory()">+ Добавить категорию</button>
-        ${CATEGORIES.map((cat, i) => `
-            <div class="cat-editor-item">
-                <span style="font-weight:600">${cat}</span>
-                <div class="cat-order-btns">
-                    <button class="cat-order-btn" ${i===0?'disabled':''} onclick="moveCategory(${i}, -1)">↑</button>
-                    <button class="cat-order-btn" ${i===CATEGORIES.length-1?'disabled':''} onclick="moveCategory(${i}, 1)">↓</button>
-                    <button class="icon-btn danger" style="width:24px;height:24px;margin-left:4px" onclick="deleteCategory(${i})">🗑</button>
+        ${RECIPE_CATEGORIES.map((cat, i) => `
+            <div class="item-card">
+                <div class="item-card-head">
+                    <div class="item-card-title">${cat}</div>
+                    <div>
+                        <button class="icon-btn" onclick="moveCat(${i}, -1)">↑</button>
+                        <button class="icon-btn" onclick="moveCat(${i}, 1)">↓</button>
+                        <button class="icon-btn danger" onclick="deleteCat(${i})">🗑</button>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+      `;
+  } else if(adminTab === 'matrix'){
+      c.innerHTML = `
+        <button class="btn" onclick="editSupplier()">+ Добавить поставщика</button>
+        ${MATRIX_DATA.map((sup, i) => `
+            <div class="item-card">
+                <div class="item-card-head">
+                    <div>
+                        <div class="item-card-title">${sup.supplier}</div>
+                        <div style="font-size:12px;color:var(--muted);margin-top:3px">${sup.items.length} товаров</div>
+                    </div>
+                    <div>
+                        <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
+                        <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
+                    </div>
                 </div>
             </div>
         `).join('')}
@@ -1324,107 +1098,153 @@ function renderAdminContent(){
         </div>
       `).join('')}
     `;
-  } else if (adminTab === 'matrix') {
-      c.innerHTML = `
-        <button class="btn" onclick="addSupplier()">+ Добавить поставщика</button>
-        ${[...MATRIX_DATA, ...MATRIX_CUSTOM].map((sup, i) => `
-            <div class="item-card">
-                <div class="item-card-head">
-                    <div>
-                        <div class="item-card-title">${sup.supplier}</div>
-                        <div style="font-size:12px;color:var(--muted)">${sup.items.length} товаров</div>
-                    </div>
-                    <div>
-                        <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
-                        ${i >= MATRIX_DATA.length ? `<button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('')}
-      `;
   }
 }
 
-// --- Логика категорий ---
+// --- Управление категориями ---
 window.addCategory = function() {
-    const name = prompt("Название новой категории:");
-    if(name && name.trim() !== "") {
-        if(CATEGORIES.includes(name)) {
+    const name = prompt('Название новой категории:');
+    if (name && name.trim() !== '') {
+        if (RECIPE_CATEGORIES.includes(name.trim())) {
             toast('Такая категория уже есть', 'error');
             return;
         }
-        CATEGORIES.push(name);
+        RECIPE_CATEGORIES.push(name.trim());
         saveData();
         renderAdminContent();
         toast('Категория добавлена', 'success');
     }
 };
 
-window.moveCategory = function(index, direction) {
+window.moveCat = function(index, direction) {
     const newIndex = index + direction;
-    if(newIndex < 0 || newIndex >= CATEGORIES.length) return;
-    const temp = CATEGORIES[index];
-    CATEGORIES[index] = CATEGORIES[newIndex];
-    CATEGORIES[newIndex] = temp;
+    if (newIndex < 0 || newIndex >= RECIPE_CATEGORIES.length) return;
+    [RECIPE_CATEGORIES[index], RECIPE_CATEGORIES[newIndex]] = [RECIPE_CATEGORIES[newIndex], RECIPE_CATEGORIES[index]];
     saveData();
     renderAdminContent();
 };
 
-window.deleteCategory = function(index) {
-    const cat = CATEGORIES[index];
+window.deleteCat = function(index) {
+    const cat = RECIPE_CATEGORIES[index];
     const hasRecipes = RECIPES.some(r => r.cat === cat);
-    if(hasRecipes) {
+    if (hasRecipes) {
         toast(`Нельзя удалить: в категории "${cat}" есть техкарты`, 'error');
         return;
     }
     if(confirm(`Удалить категорию "${cat}"?`)) {
-        CATEGORIES.splice(index, 1);
+        RECIPE_CATEGORIES.splice(index, 1);
         saveData();
         renderAdminContent();
         toast('Категория удалена', 'success');
     }
 };
 
-// --- Логика матрицы (упрощенная) ---
-window.addSupplier = function() {
-    const name = prompt("Название поставщика:");
-    if(name) {
-        const schedule = prompt("График доставки:");
-        MATRIX_CUSTOM.push({ supplier: name, schedule: schedule || '', items: [] });
-        saveData();
-        renderAdminContent();
-    }
+// --- Управление матрицей ---
+window.editSupplier = function(index) {
+    const isEdit = index !== undefined;
+    const sup = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-bg';
+    modal.id = 'edit-modal';
+    
+    let itemsHtml = sup.items.map((it, i) => `
+        <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px;">
+                <input class="form-input" placeholder="Товар" value="${it.name}" id="mat-name-${i}">
+                <input class="form-input" placeholder="Ед." value="${it.unit}" id="mat-unit-${i}">
+                <input class="form-input" type="number" placeholder="Лимит" value="${it.limit || ''}" id="mat-limit-${i}">
+                <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">×</button>
+            </div>
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">${isEdit ? 'Редактировать' : 'Новый'} поставщик</div>
+                <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0 20px">
+                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="mat-sup" value="${sup.supplier}"></div>
+                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="mat-sched" value="${sup.schedule}"></div>
+                
+                <label class="form-label">Товары <button class="btn btn-sm btn-sec" onclick="addMatrixItem()">+ Товар</button></label>
+                <div id="mat-items-list">${itemsHtml}</div>
+                
+                <button class="btn" style="margin-top:16px" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 };
 
-window.editSupplier = function(index) {
-    // Для краткости просто редактируем имя
-    const all = [...MATRIX_DATA, ...MATRIX_CUSTOM];
-    const sup = all[index];
-    if(index < MATRIX_DATA.length) {
-        toast('Стандартных поставщиков редактировать нельзя, только добавлять новые', 'error');
-        return;
+window.addMatrixItem = function() {
+    const list = document.getElementById('mat-items-list');
+    const idx = list.querySelectorAll('.form-input').length / 3; // Примерно
+    const div = document.createElement('div');
+    div.style.cssText = "background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;";
+    div.innerHTML = `
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px;">
+            <input class="form-input" placeholder="Товар" id="mat-name-new-${Date.now()}">
+            <input class="form-input" placeholder="Ед." id="mat-unit-new-${Date.now()}" value="шт">
+            <input class="form-input" type="number" placeholder="Лимит" id="mat-limit-new-${Date.now()}">
+            <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    list.appendChild(div);
+};
+
+window.saveSupplier = function(index) {
+    const supName = document.getElementById('mat-sup').value.trim();
+    const supSched = document.getElementById('mat-sched').value.trim();
+    
+    if (!supName) { toast('Введите название поставщика', 'error'); return; }
+    
+    const items = [];
+    const itemRows = document.querySelectorAll('#mat-items-list > div');
+    itemRows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length >= 3) {
+            const name = inputs[0].value.trim();
+            const unit = inputs[1].value.trim();
+            const limitVal = inputs[2].value.trim();
+            if (name) {
+                items.push({
+                    name: name,
+                    unit: unit || 'шт',
+                    limit: limitVal === '' ? null : parseFloat(limitVal)
+                });
+            }
+        }
+    });
+    
+    const newSup = { supplier: supName, schedule: supSched, items: items };
+    
+    if (index !== null) {
+        MATRIX_DATA[index] = newSup;
+    } else {
+        MATRIX_DATA.push(newSup);
     }
-    const newName = prompt("Название поставщика:", sup.supplier);
-    if(newName) {
-        const realIndex = index - MATRIX_DATA.length;
-        MATRIX_CUSTOM[realIndex].supplier = newName;
-        saveData();
-        renderAdminContent();
-    }
+    
+    saveData();
+    document.getElementById('edit-modal').remove();
+    toast('Сохранено', 'success');
+    renderAdminContent();
 };
 
 window.deleteSupplier = function(index) {
-    if(index < MATRIX_DATA.length) return;
-    if(confirm("Удалить поставщика?")) {
-        const realIndex = index - MATRIX_DATA.length;
-        MATRIX_CUSTOM.splice(realIndex, 1);
+    if (confirm('Удалить этого поставщика и все его товары?')) {
+        MATRIX_DATA.splice(index, 1);
         saveData();
         renderAdminContent();
+        toast('Удалено', 'success');
     }
 };
 
+// --- Рецепты, Новости, Команда (без изменений логики, только сохранение) ---
 function editRecipe(id){
-  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:CATEGORIES[0]||'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
+  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat: RECIPE_CATEGORIES[0] || 'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
   const modal = document.createElement('div');
   modal.className = 'modal-bg';
@@ -1439,7 +1259,7 @@ function editRecipe(id){
         <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
         <div class="form-field"><label class="form-label">Категория</label>
           <select class="form-select" id="r-cat">
-            ${CATEGORIES.map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+            ${RECIPE_CATEGORIES.map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
           </select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
