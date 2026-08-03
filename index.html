@@ -161,7 +161,6 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     justify-content: center;
     cursor: pointer;
     font-size: 18px;
-    flex-shrink: 0;
 }
 .week-nav-btn:active { background: var(--accent); color: #000; }
 .week-nav-title {
@@ -169,19 +168,17 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     font-size: 16px;
     text-align: center;
     flex: 1;
-    white-space: nowrap;
 }
 .day-cell {
     flex: 1;
     text-align: center;
-    padding: 8px 2px;
+    padding: 8px 4px;
     background: var(--card);
     border-radius: 10px;
     color: var(--text);
     cursor: pointer;
     transition: all 0.2s;
     border: 2px solid transparent;
-    min-width: 40px;
 }
 .day-cell.active {
     background: var(--accent);
@@ -191,11 +188,22 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .day-cell.today {
     border-color: var(--green);
 }
-.day-cell .dow { font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+.day-cell .dow { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
 .day-cell.active .dow { color: #000; }
-.day-cell .num { font-weight: 800; font-size: 16px; margin: 2px 0; }
-.day-cell .count { font-size: 10px; color: var(--muted); }
+.day-cell .num { font-weight: 800; font-size: 17px; margin: 3px 0; }
+.day-cell .count { font-size: 11px; color: var(--muted); }
 .day-cell.active .count { color: #000; }
+
+.loc-group { margin-bottom: 20px; }
+.loc-group-title {
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
@@ -643,6 +651,7 @@ function renderScheduleContent() {
     const rangeTitle = `${currentWeekStart.getDate()} — ${endOfWeek.getDate()} августа`;
 
     // Получение списка сотрудников для выбранного дня
+    let staffForSelectedDay = [];
     let locationsWithStaff = [];
     
     if (selectedDayIndex !== null && source && source.locations) {
@@ -676,13 +685,13 @@ function renderScheduleContent() {
         <button class="btn-sm btn-sec" onclick="resetToToday();haptic()">Сегодня</button>
     </div>
 
-    <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
+    <div style="display:flex;gap:6px;margin-bottom:16px">
       ${weekDays.map(d => `
         <div class="day-cell ${d.isSelected ? 'active' : ''} ${d.isToday ? 'today' : ''}" 
              onclick="selectDay(${d.idx});haptic()">
           <div class="dow">${d.dowName}</div>
           <div class="num">${d.dayNum}</div>
-          <div class="count">${d.count}</div>
+          <div class="count">${d.count} чел</div>
         </div>
       `).join('')}
     </div>
@@ -753,7 +762,7 @@ function changeWeek(delta) {
     if (newStart.getMonth() !== 7) return; 
     
     currentWeekStart = newStart;
-    // Если выбранный день выходит за пределы новой недели, выбираем первый день новой недели
+    // Если выбранный день выходит за пределы новой недели, сбрасываем выбор или выбираем первый день
     const endOfWeek = new Date(currentWeekStart);
     endOfWeek.setDate(currentWeekStart.getDate() + 6);
     
@@ -901,21 +910,44 @@ window.toggleCheckItem = function(loc, type, i){
 
 function renderTeam(){
   const user = tg?.initDataUnsafe?.user;
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
+  
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
-      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
+      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent);margin-bottom:16px">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
       </div>
     ` : ''}
-    ${TEAM.map(u => `
-      <div class="user">
-        <div class="avatar">${u.init}</div>
-        <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-      </div>
-    `).join('')}
+    
+    ${source.locations.map(loc => {
+        // Сортировка: сначала руководители, потом остальные
+        const sortedStaff = [...loc.staff].sort((a,b) => {
+            const aIsLead = a.role && (a.role.includes('Су-шеф') || a.role.includes('ИО') || a.role.includes('Верховный'));
+            const bIsLead = b.role && (b.role.includes('Су-шеф') || b.role.includes('ИО') || b.role.includes('Верховный'));
+            if (aIsLead && !bIsLead) return -1;
+            if (!aIsLead && bIsLead) return 1;
+            return 0;
+        });
+
+        return `
+        <div class="loc-group">
+            <div class="loc-group-title">${loc.name}</div>
+            ${sortedStaff.map(u => `
+            <div class="user">
+                <div class="avatar">${u.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+            </div>
+            `).join('')}
+        </div>
+        `;
+    }).join('')}
+    
+    ${source.locations.length === 0 ? `
+        <div class="card" style="text-align:center;color:var(--muted)">Загрузка данных...</div>
+    ` : ''}
   `;
 }
 
@@ -1188,9 +1220,9 @@ window.addMatrixItem = function() {
     div.style.cssText = "background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;";
     div.innerHTML = `
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px;">
-            <input class="form-input" placeholder="Товар" id="mat-name-new-${Date.now()}">
-            <input class="form-input" placeholder="Ед." id="mat-unit-new-${Date.now()}" value="шт">
-            <input class="form-input" type="number" placeholder="Лимит" id="mat-limit-new-${Date.now()}">
+            <input class="form-input" placeholder="Товар">
+            <input class="form-input" placeholder="Ед." value="шт">
+            <input class="form-input" type="number" placeholder="Лимит">
             <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
     `;
