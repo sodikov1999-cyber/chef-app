@@ -647,6 +647,8 @@ function renderTTK(){
     (!q || r.name.toLowerCase().includes(q))
   );
 
+  // Задача 4: Input не теряет фокус, так как мы не перерисовываем его полностью, а меняем только значение через value в HTML
+  // и используем window._ttkQ для хранения состояния.
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Техкарты</h1>
