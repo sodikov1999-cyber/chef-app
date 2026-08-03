@@ -106,7 +106,6 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     border-radius: 8px;
     margin-right: 4px;
     cursor: pointer;
-    white-space: nowrap;
 }
 .tab-btn.on {
     background: var(--accent);
@@ -193,17 +192,6 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .day-cell .num { font-weight: 800; font-size: 17px; margin: 3px 0; }
 .day-cell .count { font-size: 11px; color: var(--muted); }
 .day-cell.active .count { color: #000; }
-
-.loc-group { margin-bottom: 20px; }
-.loc-group-title {
-    font-size: 14px;
-    color: var(--accent);
-    font-weight: 700;
-    margin-bottom: 8px;
-    padding-left: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 </style>
 </head>
 <body>
@@ -912,42 +900,52 @@ function renderTeam(){
   const user = tg?.initDataUnsafe?.user;
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   
+  let content = '';
+  
+  // Если есть данные графика, группируем по локациям
+  if (source && source.locations && source.locations.length > 0) {
+      source.locations.forEach(loc => {
+          if (!loc.staff || loc.staff.length === 0) return;
+          
+          // Сортировка внутри локации: Су-шефы/ИО первыми, затем остальные
+          const sortedStaff = [...loc.staff].sort((a, b) => {
+              const aIsLead = a.role && (a.role.includes('Су-шеф') || a.role.includes('ИО') || a.role.includes('Верховный'));
+              const bIsLead = b.role && (b.role.includes('Су-шеф') || b.role.includes('ИО') || b.role.includes('Верховный'));
+              if (aIsLead && !bIsLead) return -1;
+              if (!aIsLead && bIsLead) return 1;
+              return a.name.localeCompare(b.name);
+          });
+
+          content += `
+            <h2>${loc.name}</h2>
+            ${sortedStaff.map(u => `
+              <div class="user">
+                <div class="avatar">${u.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+              </div>
+            `).join('')}
+          `;
+      });
+  } else {
+      // Fallback на старый список TEAM, если нет данных о локациях
+      content = TEAM.map(u => `
+        <div class="user">
+          <div class="avatar">${u.init}</div>
+          <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+        </div>
+      `).join('');
+  }
+
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
-      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent);margin-bottom:16px">
+      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
       </div>
     ` : ''}
-    
-    ${source.locations.map(loc => {
-        // Сортировка: сначала руководители, потом остальные
-        const sortedStaff = [...loc.staff].sort((a,b) => {
-            const aIsLead = a.role && (a.role.includes('Су-шеф') || a.role.includes('ИО') || a.role.includes('Верховный'));
-            const bIsLead = b.role && (b.role.includes('Су-шеф') || b.role.includes('ИО') || b.role.includes('Верховный'));
-            if (aIsLead && !bIsLead) return -1;
-            if (!aIsLead && bIsLead) return 1;
-            return 0;
-        });
-
-        return `
-        <div class="loc-group">
-            <div class="loc-group-title">${loc.name}</div>
-            ${sortedStaff.map(u => `
-            <div class="user">
-                <div class="avatar">${u.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-                <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-            </div>
-            `).join('')}
-        </div>
-        `;
-    }).join('')}
-    
-    ${source.locations.length === 0 ? `
-        <div class="card" style="text-align:center;color:var(--muted)">Загрузка данных...</div>
-    ` : ''}
+    ${content}
   `;
 }
 
@@ -1216,13 +1214,14 @@ window.editSupplier = function(index) {
 
 window.addMatrixItem = function() {
     const list = document.getElementById('mat-items-list');
+    const idx = list.querySelectorAll('.form-input').length / 3; // Примерно
     const div = document.createElement('div');
     div.style.cssText = "background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;";
     div.innerHTML = `
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:5px;">
-            <input class="form-input" placeholder="Товар">
-            <input class="form-input" placeholder="Ед." value="шт">
-            <input class="form-input" type="number" placeholder="Лимит">
+            <input class="form-input" placeholder="Товар" id="mat-name-new-${Date.now()}">
+            <input class="form-input" placeholder="Ед." id="mat-unit-new-${Date.now()}" value="шт">
+            <input class="form-input" type="number" placeholder="Лимит" id="mat-limit-new-${Date.now()}">
             <button class="icon-btn danger" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
     `;
