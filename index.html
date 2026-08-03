@@ -7,128 +7,80 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root {
-    /* Dark Liquid Glass Palette */
-    --bg-base: #05060A;
-    --bg-gradient: radial-gradient(circle at 10% 10%, rgba(79, 107, 255, 0.15) 0%, transparent 40%),
-                   radial-gradient(circle at 90% 90%, rgba(79, 107, 255, 0.1) 0%, transparent 40%),
-                   linear-gradient(180deg, #0A0E1A 0%, #05060A 100%);
-    
-    --glass-bg: rgba(17, 24, 39, 0.45);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-highlight: rgba(255, 255, 255, 0.15);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    
+    --bg-dark: #05060A;
+    --bg-card: rgba(17, 24, 39, 0.6);
+    --bg-glass: rgba(10, 14, 26, 0.5);
     --text-main: #F3F4F6;
     --text-muted: #9CA3AF;
-    
     --accent: #4F6BFF;
-    --accent-glow: 0 0 20px rgba(79, 107, 255, 0.4);
-    --accent-soft: rgba(79, 107, 255, 0.15);
-    
+    --accent-glow: rgba(79, 107, 255, 0.4);
     --green: #10B981;
     --red: #EF4444;
-    --blue: #3B82F6;
-
+    --border: rgba(255, 255, 255, 0.08);
     --safe-top: env(safe-area-inset-top, 20px);
     --safe-bottom: env(safe-area-inset-bottom, 20px);
-    --safe-left: env(safe-area-inset-left, 0px);
-    --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-    background: var(--bg-base);
-    background-image: var(--bg-gradient);
-    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 10% 10%, rgba(79, 107, 255, 0.15), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(79, 107, 255, 0.1), transparent 40%);
     color: var(--text-main);
     min-height: 100dvh;
-    padding: calc(var(--safe-top) + 10px) var(--safe-right) calc(var(--safe-bottom) + 20px) var(--safe-left);
+    padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 20px);
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
 }
 
-h1 {
-    font-weight: 800;
-    font-size: 28px;
-    margin-bottom: 20px;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
+h1 { font-weight: 800; font-size: 28px; margin-bottom: 20px; letter-spacing: -0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+h2 { font-weight: 700; font-size: 20px; margin: 24px 0 14px; letter-spacing: -0.3px; }
 
-h2 {
-    font-weight: 700;
-    font-size: 20px;
-    margin: 24px 0 14px;
-    letter-spacing: -0.3px;
-}
-
-/* Glass Card Component */
+/* Liquid Glass Card */
 .card {
-    background: var(--glass-bg);
+    background: var(--bg-card);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-radius: 24px;
     padding: 20px;
     margin-bottom: 16px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
 }
-
-/* Inset Shine Effect */
 .card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
-    opacity: 0.6;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    opacity: 0.5;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 24px;
-}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
 
 .tile {
-    padding: 24px 16px;
+    padding: 20px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 20px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     cursor: pointer;
     text-align: left;
     color: inherit;
     font: inherit;
     width: 100%;
-    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, background 0.2s;
     backdrop-filter: blur(10px);
 }
-
-.tile:active {
-    transform: scale(0.96);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
+.tile:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.06); }
 .tile-emoji { font-size: 32px; margin-bottom: 10px; display: block; }
-.tile-title { font-weight: 700; font-size: 16px; display: block; margin-bottom: 4px; }
-.tile-desc { font-size: 13px; color: var(--text-muted); display: block; }
+.tile-title { font-weight: 700; font-size: 16px; display: block; }
+.tile-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: block; }
 
-.pulse {
-    display: inline-block;
-    width: 8px; height: 8px;
-    background: var(--green);
-    border-radius: 50%;
-    margin-right: 8px;
-    box-shadow: 0 0 10px var(--green);
-    animation: blink 2s infinite;
-}
-
+.pulse { display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-right: 8px; animation: blink 2s infinite; box-shadow: 0 0 10px var(--green); }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 .btn {
@@ -144,28 +96,18 @@ h2 {
     cursor: pointer;
     margin-bottom: 12px;
     text-align: center;
-    box-shadow: var(--accent-glow);
+    box-shadow: 0 4px 20px var(--accent-glow);
     transition: transform 0.2s, box-shadow 0.2s;
 }
-
-.btn:active { transform: scale(0.97); box-shadow: 0 0 10px rgba(79, 107, 255, 0.2); }
+.btn:active { transform: scale(0.98); box-shadow: 0 2px 10px var(--accent-glow); }
 
 .btn-sec {
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-main);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     box-shadow: none;
 }
-
-.btn-sm {
-    padding: 10px 16px;
-    font-size: 14px;
-    width: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border-radius: 12px;
-}
+.btn-sm { padding: 10px 16px; font-size: 14px; width: auto; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; }
 
 .back {
     display: inline-flex;
@@ -177,7 +119,7 @@ h2 {
     color: var(--text-main);
     margin-bottom: 20px;
     cursor: pointer;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     font-size: 15px;
     font-weight: 600;
     backdrop-filter: blur(10px);
@@ -189,183 +131,64 @@ h2 {
     border-radius: 18px;
     margin-bottom: 10px;
     cursor: pointer;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     width: 100%;
     text-align: left;
     color: inherit;
     font: inherit;
     transition: background 0.2s;
 }
-
-.recipe:active { background: rgba(255, 255, 255, 0.08); }
-
+.recipe:active { background: rgba(255, 255, 255, 0.05); }
 .recipe-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
 .recipe-meta { font-size: 13px; color: var(--text-muted); }
 
-.ingredient {
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: space-between;
-    font-size: 15px;
-}
-
+.ingredient { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 15px; }
 .ingredient:last-child { border: none; }
 .ingredient b { color: var(--accent); font-weight: 700; }
 
-.step {
-    padding: 14px;
-    margin-bottom: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 14px;
-    border-left: 3px solid var(--accent);
-    font-size: 15px;
-    line-height: 1.5;
-}
+.step { padding: 14px; margin-bottom: 10px; background: rgba(255, 255, 255, 0.03); border-radius: 16px; border-left: 3px solid var(--accent); font-size: 15px; line-height: 1.5; }
+.step-num { display: inline-block; width: 24px; height: 24px; background: rgba(79, 107, 255, 0.2); color: var(--accent); border-radius: 8px; text-align: center; line-height: 24px; font-weight: 700; font-size: 12px; margin-right: 10px; }
 
-.step-num {
-    display: inline-block;
-    width: 22px; height: 22px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border-radius: 6px;
-    text-align: center;
-    line-height: 22px;
-    font-weight: 700;
-    font-size: 12px;
-    margin-right: 10px;
-}
-
-.news {
-    padding: 16px;
-    background: rgba(79, 107, 255, 0.08);
-    border-radius: 18px;
-    margin-bottom: 10px;
-    border-left: 3px solid var(--accent);
-    border: 1px solid rgba(79, 107, 255, 0.1);
-}
-
-.news-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: #a5b4fc; }
-.news-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+.news { padding: 16px; background: rgba(79, 107, 255, 0.1); border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(79, 107, 255, 0.2); }
+.news-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; color: #aebcff; }
+.news-text { font-size: 14px; color: var(--text-muted); line-height: 1.4; }
 .news-date { font-size: 12px; color: var(--text-muted); margin-top: 6px; opacity: 0.7; }
 
-.check-item {
-    display: flex;
-    align-items: center;
-    padding: 14px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
+.check-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
 .check-item:last-child { border: none; }
-.check-item:active { opacity: 0.7; }
-
-.check-box {
-    width: 24px; height: 24px;
-    border: 2px solid var(--text-muted);
-    border-radius: 8px;
-    margin-right: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-weight: bold;
-    color: transparent;
-    font-size: 14px;
-    transition: all 0.2s;
-    background: rgba(255,255,255,0.02);
-}
-
-.check-item.done .check-box {
-    background: var(--green);
-    border-color: var(--green);
-    color: #000;
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-}
-
+.check-box { width: 24px; height: 24px; border: 2px solid var(--text-muted); border-radius: 8px; margin-right: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: bold; color: transparent; font-size: 14px; transition: all 0.2s; background: rgba(255,255,255,0.02); }
+.check-item.done .check-box { background: var(--green); border-color: var(--green); color: #000; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
 .check-item.done span { text-decoration: line-through; color: var(--text-muted); opacity: 0.6; }
 
 .kpi { display: flex; gap: 10px; margin-bottom: 20px; }
-.kpi-box {
-    flex: 1;
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
-    text-align: center;
-    border: 1px solid var(--glass-border);
-}
-.kpi-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.kpi-value { font-weight: 800; font-size: 18px; color: var(--text-main); }
+.kpi-box { flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 16px; text-align: center; border: 1px solid var(--border); }
+.kpi-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-weight: 800; font-size: 16px; color: var(--text-main); }
 
 .mults { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.mult {
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    border-radius: 99px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--text-muted);
-    transition: all 0.2s;
-}
-.mult.on {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-    box-shadow: var(--accent-glow);
-}
+.mult { padding: 8px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 99px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); backdrop-filter: blur(5px); transition: all 0.2s; }
+.mult:active { transform: scale(0.95); }
+.mult.on { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-.user {
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 16px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    border: 1px solid var(--glass-border);
-}
-
-.avatar {
-    width: 44px; height: 44px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #60A5FA, var(--accent));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(79, 107, 255, 0.3);
-}
-
+.user { padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); }
+.avatar { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #60A5FA, var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 4px 15px rgba(79, 107, 255, 0.3); }
 .user-info b { display: block; font-size: 16px; color: var(--text-main); }
 .user-info span { font-size: 13px; color: var(--text-muted); }
 
-.note {
-    padding: 16px;
-    background: rgba(16, 185, 129, 0.1);
-    border-left: 3px solid var(--green);
-    border-radius: 14px;
-    margin-top: 16px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #d1fae5;
-}
+.note { padding: 16px; background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--green); border-radius: 16px; margin-top: 20px; font-size: 14px; line-height: 1.5; border: 1px solid rgba(16, 185, 129, 0.2); }
 
 .admin-btn {
     position: fixed;
     bottom: calc(var(--safe-bottom) + 20px);
-    right: calc(var(--safe-right) + 20px);
-    width: 56px; height: 56px;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), #3b5bdb);
     color: #fff;
     border: none;
     cursor: pointer;
-    box-shadow: var(--accent-glow);
+    box-shadow: 0 4px 20px var(--accent-glow);
     font-size: 24px;
     z-index: 100;
     display: flex;
@@ -378,133 +201,94 @@ h2 {
 .modal-bg {
     position: fixed;
     inset: 0;
-    background: rgba(5, 6, 10, 0.6);
-    backdrop-filter: blur(30px) saturate(200%);
-    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    background: rgba(5, 6, 10, 0.85);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     z-index: 200;
     display: flex;
     align-items: flex-end;
     justify-content: center;
 }
-
 .modal {
-    background: rgba(17, 24, 39, 0.85);
+    background: rgba(17, 24, 39, 0.95);
     border-radius: 28px 28px 0 0;
     width: 100%;
     max-width: 600px;
     height: 90vh;
     display: flex;
     flex-direction: column;
-    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    border-top: 1px solid var(--glass-highlight);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
-
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
 
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    border-bottom: 1px solid var(--glass-border);
-    flex-shrink: 0;
-}
-
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
 .modal-title { font-weight: 800; font-size: 20px; color: var(--text-main); }
-.modal-close {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: var(--text-main);
-    width: 36px; height: 36px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-}
+.modal-close { background: rgba(255, 255, 255, 0.1); border: none; color: var(--text-main); width: 36px; height: 36px; border-radius: 12px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
 
 .form-field { margin-bottom: 16px; }
-.form-label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
 .form-input, .form-textarea, .form-select {
     width: 100%;
     padding: 14px;
     background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     border-radius: 14px;
     color: var(--text-main);
-    font-size: 16px;
+    font-size: 15px;
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s;
 }
-.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); background: rgba(0, 0, 0, 0.3); }
 .form-textarea { min-height: 90px; resize: vertical; }
 
-.item-card {
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 16px;
-    margin-bottom: 12px;
-    border: 1px solid var(--glass-border);
-}
-
+.item-card { padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 18px; margin-bottom: 12px; border: 1px solid var(--border); }
 .item-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .item-card-title { font-weight: 700; font-size: 16px; color: var(--text-main); }
 
-.icon-btn {
-    width: 38px; height: 38px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.2s;
-}
+.icon-btn { width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.08); border: none; color: var(--text-main); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .icon-btn:active { background: rgba(255, 255, 255, 0.15); }
-.icon-btn.danger { background: rgba(239, 68, 68, 0.15); color: var(--red); border-color: rgba(239, 68, 68, 0.3); }
+.icon-btn.danger { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+.icon-btn.danger:active { background: rgba(239, 68, 68, 0.25); }
 
 .toast {
     position: fixed;
     bottom: calc(var(--safe-bottom) + 40px);
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: rgba(31, 41, 55, 0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(20px);
     color: #fff;
     padding: 14px 24px;
     border-radius: 99px;
     font-weight: 600;
     font-size: 15px;
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 300;
     max-width: 85vw;
     text-align: center;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: rgba(239, 68, 68, 0.9); border-color: rgba(239, 68, 68, 0.3); }
+.toast.success { background: rgba(16, 185, 129, 0.9); border-color: rgba(16, 185, 129, 0.3); }
 
 .fade { animation: fade 0.3s ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-.loader-inline {
-    border: 4px solid rgba(255, 255, 255, 0.05);
-    border-left-color: var(--accent);
-    border-radius: 50%;
-    width: 32px; height: 32px;
-    animation: spin 1s linear infinite;
-}
+.loader-inline { border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--accent); border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .refresh-btn {
     background: rgba(255, 255, 255, 0.05);
     color: var(--text-main);
-    border: 1px solid var(--glass-border);
-    padding: 8px 14px;
+    border: 1px solid var(--border);
+    padding: 10px 16px;
     border-radius: 14px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -512,6 +296,7 @@ h2 {
     gap: 6px;
     transition: all 0.2s;
     margin-left: auto;
+    backdrop-filter: blur(5px);
 }
 .refresh-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
 
@@ -519,53 +304,48 @@ h2 {
     flex: 1;
     padding: 12px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     color: var(--text-muted);
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: 14px;
     margin-right: 6px;
     cursor: pointer;
-    font-size: 13px;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 .tab-btn.on {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
-    box-shadow: var(--accent-glow);
+    box-shadow: 0 0 15px var(--accent-glow);
 }
 
-.modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    padding-bottom: 40px;
-}
+.modal-body { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 40px; }
 
 /* Matrix Styles */
 .supplier-block { margin-bottom: 24px; }
-.supplier-header {
-    background: rgba(79, 107, 255, 0.05);
-    border-left: 3px solid var(--accent);
-    padding: 14px;
-    border-radius: 16px;
+.supplier-header { 
+    background: rgba(79, 107, 255, 0.05); 
+    border-left: 3px solid var(--accent); 
+    padding: 16px; 
+    border-radius: 16px; 
     margin-bottom: 12px;
     border: 1px solid rgba(79, 107, 255, 0.1);
 }
-.supplier-name { font-weight: 700; font-size: 16px; color: #a5b4fc; margin-bottom: 4px; }
+.supplier-name { font-weight: 800; font-size: 16px; color: #aebcff; margin-bottom: 6px; }
 .supplier-schedule { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-.matrix-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.matrix-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 0; 
+    border-bottom: 1px solid var(--border); 
 }
 .matrix-item:last-child { border-bottom: none; }
 .matrix-name { font-size: 15px; font-weight: 500; flex: 1; padding-right: 12px; color: var(--text-main); }
 .matrix-meta { text-align: right; flex-shrink: 0; }
-.matrix-unit { font-size: 12px; color: var(--text-muted); display: block; }
-.matrix-limit { font-size: 14px; font-weight: 700; color: var(--green); }
+.matrix-unit { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 2px; }
+.matrix-limit { font-size: 14px; font-weight: 700; color: var(--green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
 
 /* Schedule Navigation */
 .week-nav {
@@ -574,31 +354,35 @@ h2 {
     justify-content: space-between;
     margin-bottom: 20px;
     gap: 12px;
-    padding: 0 4px;
+    background: rgba(255,255,255,0.03);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
 }
 .week-nav-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.05);
+    border: none;
     color: var(--text-main);
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
     transition: all 0.2s;
 }
-.week-nav-btn:active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.week-nav-title { font-weight: 700; font-size: 17px; text-align: center; flex: 1; color: var(--text-main); }
+.week-nav-btn:active { background: var(--accent); color: #fff; }
+.week-nav-title { font-weight: 700; font-size: 15px; text-align: center; flex: 1; color: var(--text-main); }
 
 .day-cell {
     flex: 1;
     text-align: center;
     padding: 10px 4px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255,255,255,0.02);
     border-radius: 14px;
-    color: var(--text-muted);
+    color: var(--text-main);
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid transparent;
@@ -607,18 +391,18 @@ h2 {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
-    box-shadow: var(--accent-glow);
+    box-shadow: 0 4px 15px var(--accent-glow);
 }
 .day-cell.today { border-color: var(--green); }
-.day-cell .dow { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; opacity: 0.7; }
-.day-cell.active .dow { opacity: 1; }
+.day-cell .dow { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.day-cell.active .dow { color: rgba(255,255,255,0.8); }
 .day-cell .num { font-weight: 800; font-size: 18px; margin-bottom: 4px; }
-.day-cell .count { font-size: 11px; opacity: 0.8; }
-.day-cell.active .count { opacity: 1; }
+.day-cell .count { font-size: 11px; color: var(--text-muted); }
+.day-cell.active .count { color: rgba(255,255,255,0.9); }
 
 /* Location Group in Team */
 .loc-group-title {
-    font-size: 14px;
+    font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: var(--text-muted);
@@ -646,20 +430,20 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 let RECIPE_CATEGORIES = JSON.parse(localStorage.getItem('chef_recipe_cats')) || ['Горячее', 'Салаты', 'Десерты', 'Напитки', 'Заготовки'];
 
 const DEFAULT_RECIPES = [
-  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'Срок хранения основы — 12 ч.', ingr:[['Говядина',121,80],['Свёкла',80,64],['Картофель',96,81]], steps:['Сварить бульон.','Добавить овощи.','Тушить свёклу.']},
-  {id:2, name:'Цезарь с курицей', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185, note:'', ingr:[['Курица',90,70],['Айсберг',80,72],['Соус',40,40]], steps:['Обжарить курицу.','Порвать салат.','Собрать салат.']},
-  {id:3, name:'Паста Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265, note:'', ingr:[['Спагетти',120,120],['Гуанчале',50,45],['Желток',40,40]], steps:['Варить пасту.','Вытопить гуанчале.','Смешать с желтками.']},
-  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210, note:'', ingr:[['Творог',140,135],['Мука',25,25],['Яйцо',20,20]], steps:['Смешать тесто.','Сформировать шайбы.','Жарить.']},
-  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин', yield:'140 г', kcal:298, note:'', ingr:[['Маскарпоне',70,70],['Сливки',40,40],['Савоярди',30,30]], steps:['Взбить крем.','Пропитать печенья.','Собрать десерт.']},
-  {id:6, name:'Греческий салат', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122, note:'', ingr:[['Фета',50,50],['Томаты',90,82],['Огурцы',80,74]], steps:['Нарезать овощи.','Добавить фету.','Заправить маслом.']},
-  {id:7, name:'Глинтвейн б/а', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64, note:'', ingr:[['Сок вишневый',200,200],['Специи',5,5]], steps:['Нагреть сок.','Добавить специи.','Настоять.']},
-  {id:8, name:'Пюре картофельное', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118, note:'', ingr:[['Картофель',1350,1000],['Молоко',150,150],['Масло',100,100]], steps:['Сварить картофель.','Протереть.','Добавить молоко и масло.']}
+  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'Срок хранения основы — 12 ч.', ingr:[['Говядина',121,80]], steps:['Варить.']},
+  {id:2, name:'Цезарь', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185, note:'', ingr:[['Курица',90,70]], steps:['Обжарить.']},
+  {id:3, name:'Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265, note:'', ingr:[['Паста',120,120]], steps:['Варить.']},
+  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210, note:'', ingr:[['Творог',140,135]], steps:['Жарить.']},
+  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин', yield:'140 г', kcal:298, note:'', ingr:[['Маскарпоне',70,70]], steps:['Собрать.']},
+  {id:6, name:'Греческий', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122, note:'', ingr:[['Фета',50,50]], steps:['Нарезать.']},
+  {id:7, name:'Глинтвейн', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64, note:'', ingr:[['Сок',200,200]], steps:['Нагреть.']},
+  {id:8, name:'Пюре', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118, note:'', ingr:[['Картофель',1350,1000]], steps:['Сварить.']}
 ];
 
 const DEFAULT_NEWS = [
-  {tag:'Поставка', title:'Лосось в среду', text:'Перенос от поставщика.', date:'Сегодня'},
-  {tag:'Событие', title:'Дегустация', text:'Пятница 16:00. Всем явиться.', date:'Вчера'},
-  {tag:'Важно', title:'Обновление ТТК', text:'Изменены нормы закладки в десертах.', date:'2 дня назад'}
+  {tag:'Поставка', title:'Лосось в среду', text:'Перенос.', date:'Сегодня'},
+  {tag:'Событие', title:'Дегустация', text:'Пятница 16:00', date:'Вчера'},
+  {tag:'Важно', title:'ТТК обновлены', text:'Сливки 33%', date:'2 дня назад'}
 ];
 
 const DEFAULT_TEAM = [
@@ -668,38 +452,334 @@ const DEFAULT_TEAM = [
   {name:'Даша П.', role:'Кондитер', init:'ДП'}
 ];
 
+// ПОЛНЫЙ СПИСОК МАТРИЦЫ ЗАЯВОК
 const DEFAULT_MATRIX = [
-  { supplier: "ИП Максимова", schedule: "Ежедневно (сегодня на завтра)", items: [{name: "Лаваш традиционный", unit: "шт", limit: 40}] },
-  { supplier: "Булочная Пирогов", schedule: "Ежедневно (сегодня на завтра)", items: [{name: "Панини", unit: "шт", limit: 10}, {name: "Чиабатта", unit: "шт", limit: 10}, {name: "Багет французский", unit: "шт", limit: 10}] },
-  { supplier: "Партнер", schedule: "Ежедневно, кроме сб.", items: [{name: "Аджика", unit: "шт", limit: 2}, {name: "Масло оливковое", unit: "л", limit: 4}, {name: "Соус сырный", unit: "шт", limit: 2}] },
-  { supplier: "Интегрита", schedule: "Заявка в ВС, отгрузка ВТ", items: [{name: "Бекон сырокопченый", unit: "уп", limit: 5}, {name: "Сливки 22%", unit: "шт", limit: 24}, {name: "Сливки 33%", unit: "шт", limit: 3}] },
-  { supplier: "Восток Запад", schedule: "Заявка в ВС/ПН", items: [{name: "Сыр Моцарелла", unit: "шт", limit: 10}, {name: "Сыр Фета", unit: "шт", limit: 10}, {name: "Тортилья", unit: "уп", limit: 4}] },
-  { supplier: "ИП Орлов (Овощи)", schedule: "Ежедневно", items: [{name: "Томат свежий", unit: "кг", limit: 5}, {name: "Огурец свежий", unit: "кг", limit: 5}, {name: "Зелень", unit: "уп", limit: 3}] }
+  {
+    supplier: "ИП Максимова",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [{name: "Лаваш традиционный", unit: "шт", limit: 40}]
+  },
+  {
+    supplier: "Булочная Пирогов",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [
+      {name: "Панини", unit: "шт", limit: 10},
+      {name: "Чиабатта", unit: "шт", limit: 10},
+      {name: "Багет французский", unit: "шт", limit: 10},
+      {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
+      {name: "Хлеб Датский", unit: "шт", limit: 10},
+      {name: "Пампушки Бородинские", unit: "шт", limit: 40}
+    ]
+  },
+  {
+    supplier: "Пионер (Заготовки)",
+    schedule: "Заявка в воскресенье, отгрузка в чт-пт",
+    items: [
+      {name: "Ребра запеченые", unit: "кг", limit: 10},
+      {name: "Щечки томленые", unit: "кг", limit: 10},
+      {name: "Фарш штат", unit: "кг", limit: 10},
+      {name: "Фарш 70/30", unit: "кг", limit: 10},
+      {name: "Ростбиф", unit: "кг", limit: 10},
+      {name: "Смалец", unit: "кг", limit: 2}
+    ]
+  },
+  {
+    supplier: "Партнер",
+    schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
+    items: [
+      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2},
+      {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
+      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1},
+      {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6},
+      {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
+      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10},
+      {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
+      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2},
+      {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2},
+      {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
+      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10},
+      {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
+      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6},
+      {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
+      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4},
+      {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
+      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36},
+      {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
+      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3},
+      {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
+      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2},
+      {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
+      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1},
+      {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
+      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2},
+      {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
+      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2},
+      {name: "СОУС Ворчестер", unit: "шт", limit: 1},
+      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2},
+      {name: "СОУС соевый 1л", unit: "шт", limit: 2},
+      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1},
+      {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
+      {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
+    ]
+  },
+  {
+    supplier: "Интегрита",
+    schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
+    items: [
+      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5},
+      {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2},
+      {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
+      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5},
+      {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
+      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3},
+      {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
+      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2},
+      {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
+      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4},
+      {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
+      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
+      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5},
+      {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
+      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24},
+      {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
+      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3},
+      {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
+      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6},
+      {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
+      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
+      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6},
+      {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
+      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4},
+      {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
+    ]
+  },
+  {
+    supplier: "Восток Запад",
+    schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
+    items: [
+      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1},
+      {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
+      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
+      {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
+      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36},
+      {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
+      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24},
+      {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
+      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1},
+      {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
+      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5},
+      {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
+      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10},
+      {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
+      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10},
+      {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
+      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2},
+      {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
+      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3},
+      {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2},
+      {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
+      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4},
+      {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
+      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3},
+      {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
+      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3},
+      {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
+    ]
+  },
+  {
+    supplier: "Снежный Городок",
+    schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
+    items: [
+      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
+      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
+      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
+    ]
+  },
+  {
+    supplier: "Мираторг",
+    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
+    items: [
+      {name: "Свиная шейка", unit: "кг", limit: 20},
+      {name: "Свиная вырезка", unit: "кг", limit: 15},
+      {name: "Диафрагма толстый край", unit: "кг", limit: 10},
+      {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
+    ]
+  },
+  {
+    supplier: "Вкусная Жизнь",
+    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
+    items: [
+      {name: "Мясник толстый край", unit: "кг", limit: 2},
+      {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
+      {name: "Колбаски горчичные", unit: "уп", limit: 5},
+      {name: "Колбаски с сыром", unit: "уп", limit: 5}
+    ]
+  },
+  {
+    supplier: "ИП Орлов",
+    schedule: "Ежедневно",
+    items: [
+      {name: "Черная смородина с/м", unit: "кг", limit: 4},
+      {name: "Черника с/м", unit: "кг", limit: 2},
+      {name: "Облепиха", unit: "кг", limit: 1},
+      {name: "Клюква", unit: "кг", limit: 3},
+      {name: "Брусника", unit: "кг", limit: 0.5},
+      {name: "Малина", unit: "кг", limit: 3},
+      {name: "Огурец свежий", unit: "кг", limit: 5},
+      {name: "Томат свежий", unit: "кг", limit: 0},
+      {name: "Томат черри", unit: "кг", limit: 4},
+      {name: "Баклажан", unit: "кг", limit: 0.1},
+      {name: "Цукини", unit: "кг", limit: 5},
+      {name: "Капуста б/к", unit: "кг", limit: 10},
+      {name: "Айсберг", unit: "кг", limit: 5},
+      {name: "Романо", unit: "кг", limit: 2},
+      {name: "Перец Болгарский", unit: "кг", limit: 5},
+      {name: "Перец чили", unit: "кг", limit: 5},
+      {name: "Морковь", unit: "кг", limit: 0.4},
+      {name: "Картофель", unit: "кг", limit: 0.5},
+      {name: "Картофель беби", unit: "кг", limit: 0.5},
+      {name: "Чеснок", unit: "кг", limit: 0.4},
+      {name: "Лук репчатый", unit: "кг", limit: 0.3},
+      {name: "Лук красный", unit: "кг", limit: 0.1},
+      {name: "Лук зелёный", unit: "кг", limit: 0.1},
+      {name: "Петрушка", unit: "шт", limit: 2},
+      {name: "Укроп", unit: "шт", limit: 2},
+      {name: "Кинза", unit: "кг", limit: 1},
+      {name: "Базилик свежий", unit: "шт", limit: 5},
+      {name: "Тимьян", unit: "кг", limit: 1}
+    ]
+  },
+  {
+    supplier: "ИП Филатова",
+    schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
+    items: [
+      {name: "Крупа гречневая 750г", unit: "уп", limit: null},
+      {name: "Крупа манная 1кг", unit: "уп", limit: null},
+      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null},
+      {name: "Макароны персонал", unit: "уп", limit: null},
+      {name: "Мука Алейка", unit: "уп", limit: null},
+      {name: "Рис пропаренный 750г", unit: "уп", limit: null},
+      {name: "Соль 1кг", unit: "уп", limit: null},
+      {name: "Сахар песок 1кг", unit: "уп", limit: null},
+      {name: "Яйцо С1", unit: "уп", limit: null}
+    ]
+  },
+  {
+    supplier: "МЕТРО",
+    schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
+    items: [
+      {name: "Сметана 20% Коровкино", unit: "кг", limit: null},
+      {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
+      {name: "Яичный желток пастеризованный", unit: "кг", limit: null},
+      {name: "Меланж пастеризованный", unit: "кг", limit: null},
+      {name: "Паприка", unit: "кг", limit: null},
+      {name: "Чеснок сушёный", unit: "кг", limit: null},
+      {name: "Чеснок черный ферментированный", unit: "шт", limit: null},
+      {name: "Приправа гриль", unit: "шт", limit: null},
+      {name: "Чёрный перец горошек", unit: "бут", limit: null},
+      {name: "Кориандр горошек", unit: "кг", limit: null},
+      {name: "Кориандр молотый", unit: "кг", limit: null},
+      {name: "Соль гималайская розовая", unit: "кг", limit: null},
+      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null},
+      {name: "Кефир", unit: "л", limit: null},
+      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null},
+      {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
+      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null},
+      {name: "Сок лимона 1л", unit: "шт", limit: null},
+      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null},
+      {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
+      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null},
+      {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
+      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null},
+      {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
+      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null},
+      {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
+    ]
+  },
+  {
+    supplier: "СИБМК",
+    schedule: "По наличию",
+    items: [
+      {name: "Форель с/с Trim-D", unit: "кг", limit: null},
+      {name: "Кальмар командорский", unit: "кг", limit: null},
+      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null},
+      {name: "Мидии в двух створках", unit: "кг", limit: null},
+      {name: "Мидии в одной створке", unit: "кг", limit: null},
+      {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "О Бэйкери (ИП Фоминых)",
+    schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
+    items: [
+      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15},
+      {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
+      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10},
+      {name: "Безе весовое", unit: "кг", limit: 0.5},
+      {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
+    ]
+  },
+  {
+    supplier: "Алтайская Птица",
+    schedule: "По договору",
+    items: [
+      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null},
+      {name: "Крылья куриные рубленые", unit: "кг", limit: null},
+      {name: "Филе куриной грудки", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "Два Сыровара",
+    schedule: "По договору",
+    items: [
+      {name: "Качотта", unit: "кг", limit: null},
+      {name: "Рулет", unit: "кг", limit: null},
+      {name: "Адыгейский", unit: "кг", limit: null},
+      {name: "Сулугуни копченый", unit: "кг", limit: null}
+    ]
+  },
+  {
+    supplier: "Вяленое мясо",
+    schedule: "По договору",
+    items: [
+      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null},
+      {name: "Чипсы из индейки", unit: "уп", limit: null},
+      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null},
+      {name: "Чипсы из оленины", unit: "уп", limit: null}
+    ]
+  },
+  {
+    supplier: "Першин (микрозелень)",
+    schedule: "Ежедневно (сегодня на завтра)",
+    items: [
+      {name: "Руккола мини", unit: "уп", limit: null},
+      {name: "Шпинат мини", unit: "уп", limit: null},
+      {name: "Щавель микро", unit: "уп", limit: null},
+      {name: "Мята микро", unit: "уп", limit: null},
+      {name: "Фиалки", unit: "уп", limit: null}
+    ]
+  }
 ];
 
 const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
   locations: [
-    { name: 'Галактика', staff: [
-        {name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Матвей Андреев', role:'ИО', shifts:[0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,0], total:20}
-    ]},
-    { name: 'Сибирь', staff: [
-        {name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23},
-        {name:'Рустан Женгозинов', role:'Универсал', shifts:[1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1], total:16}
-    ]},
-    { name: 'Пионер', staff: [
-        {name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19},
-        {name:'Боженко Вадим', role:'Универсал', shifts:[0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,1,1,1,0,0], total:15}
-    ]},
-    { name: 'Европа', staff: [
-        {name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21},
-        {name:'Диана Назарук', role:'Холодный цех', shifts:[0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,0,0,1,1,0,1,1,0,0,1,1,1,1,1,0], total:19}
-    ]},
-    { name: 'Лазурная', staff: [
-        {name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15},
-        {name:'Иванюк Никита', role:'ИО', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}
-    ]}
+    { name: 'Галактика', staff: [{name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Сибирь', staff: [{name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Пионер', staff: [{name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19}] },
+    { name: 'Европа', staff: [{name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21}] },
+    { name: 'Лазурная', staff: [{name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}] }
   ]
 };
 
@@ -708,7 +788,7 @@ const CHECKLISTS = {
   close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
 };
 
-// === ЗАГРУЗКА ДАННЫХ ===
+// === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
 let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
 let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
 let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
@@ -746,10 +826,8 @@ function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccu
 
 function toast(msg, type='info'){
   const t = document.createElement('div');
-  t.className = 'toast';
+  t.className = 'toast ' + (type === 'error' ? 'error' : type === 'success' ? 'success' : '');
   t.textContent = msg;
-  if(type === 'error') { t.style.background = 'rgba(239, 68, 68, 0.9)'; t.style.color = '#fff'; t.style.borderColor = 'var(--red)'; }
-  if(type === 'success') { t.style.background = 'rgba(16, 185, 129, 0.9)'; t.style.color = '#fff'; t.style.borderColor = 'var(--green)'; }
   document.body.appendChild(t);
   setTimeout(()=>t.classList.add('show'), 10);
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
@@ -801,7 +879,7 @@ function renderHome(){
     <div class="card">
       <div style="display:flex;align-items:center;margin-bottom:8px">
         <span class="pulse"></span>
-        <span style="font-weight:600;font-size:15px">Сегодня ${currentDay} августа</span>
+        <span style="font-weight:600">Сегодня ${currentDay} августа</span>
       </div>
       <div style="font-size:14px;color:var(--text-muted)">
          На смене: <span style="color:var(--accent);font-weight:700;font-size:16px">${todayShifts.length}</span> человек
@@ -837,13 +915,13 @@ function renderHome(){
     </div>
 
     <h2>Объявления</h2>
-    ${NEWS.length ? NEWS.map(n => `
+    ${NEWS.map(n => `
       <div class="news">
         <div class="news-title">${n.tag}: ${n.title}</div>
         <div class="news-text">${n.text}</div>
         <div class="news-date">${n.date}</div>
       </div>
-    `).join('') : '<div style="color:var(--text-muted);text-align:center;padding:20px">Нет новых объявлений</div>'}
+    `).join('')}
   `;
 }
 
@@ -862,8 +940,8 @@ function renderTTK(){
     <h1>Техкарты</h1>
     <input type="search" id="ttk-search" placeholder="🔍 Поиск блюда..." 
            value="${window._ttkQ}" 
-           style="width:100%;padding:14px 18px;background:rgba(0,0,0,0.2);border:1px solid var(--glass-border);border-radius:16px;color:var(--text-main);font-size:16px;margin-bottom:16px;outline:none">
-    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px;scrollbar-width:none">
+           style="width:100%;padding:14px 18px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:16px;color:var(--text-main);font-size:16px;margin-bottom:16px;outline:none">
+    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:20px;padding-bottom:4px">
       ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
     </div>
     <div id="ttk-list">
@@ -948,7 +1026,7 @@ async function fetchScheduleData(force = false) {
             scheduleData = DEFAULT_LOCAL_DATA;
             useLocalSchedule = true;
         }
-        toast('Нет связи. Показаны локальные данные.', 'error');
+        toast('Нет связи с сервером. Показаны локальные данные.', 'error');
     } finally {
         isLoading = false;
     }
@@ -961,9 +1039,14 @@ function parseComplexCSV(csvText) {
         let inQuotes = false;
         for (let i = 0; i < row.length; i++) {
             const char = row[i];
-            if (char === '"') { inQuotes = !inQuotes; }
-            else if (char === ',' && !inQuotes) { result.push(cell.trim()); cell = ''; }
-            else { cell += char; }
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(cell.trim());
+                cell = '';
+            } else {
+                cell += char;
+            }
         }
         result.push(cell.trim());
         return result;
@@ -976,7 +1059,12 @@ function parseComplexCSV(csvText) {
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const firstCell = (row[0] || '').trim().toLowerCase();
-        if (firstCell.includes('итого') || firstCell.includes('дата') || firstCell.includes('локация') || firstCell === '' || !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) continue;
+        
+        if (firstCell.includes('итого') || firstCell.includes('дата') || 
+            firstCell.includes('локация') || firstCell === '' || 
+            !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
+            continue;
+        }
 
         const secondCell = (row[1] || '').trim();
         if (secondCell === 'Должность' || secondCell === '') {
@@ -1066,11 +1154,16 @@ function renderScheduleContent() {
     const rangeTitle = `${currentWeekStart.getDate()} — ${endOfWeek.getDate()} августа`;
 
     let locationsWithStaff = [];
+    
     if (selectedDayIndex !== null && source && source.locations) {
         source.locations.forEach(loc => {
             const workingToday = loc.staff.filter(p => p.shifts && p.shifts[selectedDayIndex] && Number(p.shifts[selectedDayIndex]) > 0);
-            if (loc.staff.length > 0) {
-                locationsWithStaff.push({ name: loc.name, staff: loc.staff, workingToday: workingToday });
+            if (workingToday.length > 0 || loc.staff.length > 0) {
+                locationsWithStaff.push({
+                    name: loc.name,
+                    staff: loc.staff,
+                    workingToday: workingToday
+                });
             }
         });
     }
@@ -1110,6 +1203,7 @@ function renderScheduleContent() {
           const isOpen = expandedLocations.has(loc.name);
           const workCount = loc.workingToday.length;
           const totalCount = loc.staff.length;
+          
           const sortedStaff = [...loc.staff].sort((a,b) => {
               const aWork = a.shifts && a.shifts[selectedDayIndex] > 0;
               const bWork = b.shifts && b.shifts[selectedDayIndex] > 0;
@@ -1120,29 +1214,29 @@ function renderScheduleContent() {
 
           return `
             <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
-              <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:18px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:18px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px">
                 <div style="flex:1;min-width:0">
-                  <div style="font-weight:700;font-size:17px;margin-bottom:4px">${loc.name}</div>
+                  <div style="font-weight:700;font-size:17px;margin-bottom:6px">${loc.name}</div>
                   <div style="font-size:13px;color:var(--text-muted)">
                     👥 На смене: <span style="color:var(--accent);font-weight:700">${workCount}</span> из ${totalCount}
                   </div>
                 </div>
-                <div style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
+                <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
                 </div>
               </button>
               <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-                <div style="padding:0 18px 18px;border-top:1px solid var(--glass-border)">
+                <div style="padding:0 18px 18px;border-top:1px solid var(--border)">
                   ${sortedStaff.map(s => {
                       const isWorking = s.shifts && s.shifts[selectedDayIndex] && Number(s.shifts[selectedDayIndex]) > 0;
                       const shiftVal = isWorking ? s.shifts[selectedDayIndex] : 0;
                       return `
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);opacity:${isWorking?1:0.5}">
+                      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);opacity:${isWorking?1:0.5}">
                         <div style="flex:1;min-width:0">
                           <div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
                           <div style="font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role}</div>
                         </div>
-                        <div style="text-align:right;margin-left:10px">
+                        <div style="text-align:right;margin-left:12px">
                           ${isWorking ? `<div style="font-weight:800;font-size:17px;color:var(--accent)">${shiftVal}</div>` : '<div style="font-size:13px;color:var(--text-muted)">Отдых</div>'}
                         </div>
                       </div>
@@ -1164,7 +1258,7 @@ function renderScheduleContent() {
 function changeWeek(delta) {
     const newStart = new Date(currentWeekStart);
     newStart.setDate(currentWeekStart.getDate() + (delta * 7));
-    if (newStart.getMonth() !== 7) return; 
+    if (newStart.getMonth() !== 7) return;
     
     currentWeekStart = newStart;
     const endOfWeek = new Date(currentWeekStart);
@@ -1173,6 +1267,7 @@ function changeWeek(delta) {
     if (selectedDayIndex < currentWeekStart.getDate() - 1 || selectedDayIndex > endOfWeek.getDate() - 1) {
         selectedDayIndex = currentWeekStart.getDate() - 1;
     }
+    
     renderScheduleContent();
 }
 
@@ -1192,9 +1287,14 @@ function selectDay(idx) {
     d.setDate(idx + 1);
     const dayOfWeek = d.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
     const newWeekStart = new Date(d);
     newWeekStart.setDate(d.getDate() + mondayOffset);
-    if (newWeekStart.getMonth() === 7) currentWeekStart = newWeekStart;
+    
+    if (newWeekStart.getMonth() === 7) {
+        currentWeekStart = newWeekStart;
+    }
+    
     renderScheduleContent();
 }
 
@@ -1213,8 +1313,8 @@ function renderChecklist(){
       <div style="display:grid;gap:12px">
         ${source.locations.map(loc => `
           <button class="tile" onclick="window._clLoc='${loc.name}';renderChecklist();haptic()">
-            <span class="tile-title">${loc.name}</span>
-            <span class="tile-desc">Открыть чек-лист локации</span>
+            <div class="tile-title">${loc.name}</div>
+            <div class="tile-desc">Открыть чек-лист локации</div>
           </button>
         `).join('')}
       </div>
@@ -1233,12 +1333,18 @@ function renderChecklist(){
 
   const source = scheduleData || DEFAULT_LOCAL_DATA;
   let allLocStaff = [];
+  
   if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
-    if(locData && locData.staff) allLocStaff = locData.staff;
+    if(locData && locData.staff) {
+      allLocStaff = locData.staff;
+    }
   }
-  if (allLocStaff.length === 0) allLocStaff = TEAM;
   
+  if (allLocStaff.length === 0) {
+      allLocStaff = TEAM;
+  }
+
   const managers = allLocStaff.filter(p => p.role && (p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный')));
 
   app.innerHTML = `
@@ -1251,7 +1357,7 @@ function renderChecklist(){
         <option value="">-- Не выбран --</option>
         ${managers.length > 0 ? managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('') : '<option disabled>Нет подходящих сотрудников</option>'}
       </select>
-      ${manager ? `<div style="margin-top:10px;font-size:14px;color:var(--green);background:rgba(16,185,129,0.1);padding:10px;border-radius:10px">✅ Ответственный: <b>${manager}</b></div>` : ''}
+      ${manager ? `<div style="margin-top:10px;font-size:14px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
     </div>
 
     <div class="mults">
@@ -1287,8 +1393,10 @@ window.toggleCheckItem = function(loc, type, i){
   const key = 'cl_'+today+'_'+loc;
   const saved = JSON.parse(localStorage.getItem(key) || '{}');
   if(!saved[type]) saved[type] = [];
+  
   const idx = saved[type].indexOf(i);
   if(idx>=0) saved[type].splice(idx,1); else saved[type].push(i);
+  
   localStorage.setItem(key, JSON.stringify(saved));
   renderChecklist();
 };
@@ -1306,36 +1414,37 @@ function renderTeam(){
           }
       });
   }
-  
-  // Если данных графика нет, показываем общий список TEAM
-  const hasScheduleData = Object.keys(staffByLocation).length > 0;
 
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
-      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
+      <div class="user" style="background:rgba(79, 107, 255, 0.1);border:1px solid rgba(79, 107, 255, 0.3)">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
         <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
       </div>
     ` : ''}
     
-    ${hasScheduleData ? Object.keys(staffByLocation).sort().map(locName => `
-        <div>
-            <div class="loc-group-title">${locName}</div>
-            ${staffByLocation[locName].map(u => `
-              <div class="user">
-                <div class="avatar">${u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
-                <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-              </div>
-            `).join('')}
-        </div>
-    `).join('') : TEAM.map(u => `
-      <div class="user">
-        <div class="avatar">${u.init}</div>
-        <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-      </div>
-    `).join('')}
+    ${Object.keys(staffByLocation).length > 0 ? 
+        Object.keys(staffByLocation).map(locName => `
+            <div>
+                <div class="loc-group-title">${locName}</div>
+                ${staffByLocation[locName].map(u => `
+                  <div class="user">
+                    <div class="avatar">${u.name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}</div>
+                    <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+                  </div>
+                `).join('')}
+            </div>
+        `).join('')
+        : 
+        TEAM.map(u => `
+          <div class="user">
+            <div class="avatar">${u.init}</div>
+            <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+          </div>
+        `).join('')
+    }
   `;
 }
 
@@ -1356,7 +1465,7 @@ function renderMatrix(){
     <h1>Матрица заявок</h1>
     <input type="search" id="matrix-search" placeholder="🔍 Поиск продукта или поставщика..." 
            value="${window._matrixQ}" 
-           style="width:100%;padding:14px 18px;background:rgba(0,0,0,0.2);border:1px solid var(--glass-border);border-radius:16px;color:var(--text-main);font-size:16px;margin-bottom:20px;outline:none">
+           style="width:100%;padding:14px 18px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:16px;color:var(--text-main);font-size:16px;margin-bottom:20px;outline:none">
     
     <div id="matrix-list">
     ${filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
@@ -1528,13 +1637,17 @@ function renderAdminContent(){
 window.addCategory = function() {
     const name = prompt('Название новой категории:');
     if (name && name.trim() !== '') {
-        if (RECIPE_CATEGORIES.includes(name.trim())) { toast('Такая категория уже есть', 'error'); return; }
+        if (RECIPE_CATEGORIES.includes(name.trim())) {
+            toast('Такая категория уже есть', 'error');
+            return;
+        }
         RECIPE_CATEGORIES.push(name.trim());
         saveData();
         renderAdminContent();
         toast('Категория добавлена', 'success');
     }
 };
+
 window.moveCat = function(index, direction) {
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= RECIPE_CATEGORIES.length) return;
@@ -1542,10 +1655,14 @@ window.moveCat = function(index, direction) {
     saveData();
     renderAdminContent();
 };
+
 window.deleteCat = function(index) {
     const cat = RECIPE_CATEGORIES[index];
     const hasRecipes = RECIPES.some(r => r.cat === cat);
-    if (hasRecipes) { toast(`Нельзя удалить: в категории "${cat}" есть техкарты`, 'error'); return; }
+    if (hasRecipes) {
+        toast(`Нельзя удалить: в категории "${cat}" есть техкарты`, 'error');
+        return;
+    }
     if(confirm(`Удалить категорию "${cat}"?`)) {
         RECIPE_CATEGORIES.splice(index, 1);
         saveData();
@@ -1558,13 +1675,14 @@ window.deleteCat = function(index) {
 window.editSupplier = function(index) {
     const isEdit = index !== undefined;
     const sup = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
+    
     const modal = document.createElement('div');
     modal.className = 'modal-bg';
     modal.id = 'edit-modal';
     
     let itemsHtml = sup.items.map((it, i) => `
         <div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:12px;margin-bottom:10px;">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:8px;">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 34px;gap:6px;">
                 <input class="form-input" placeholder="Товар" value="${it.name}" id="mat-name-${i}">
                 <input class="form-input" placeholder="Ед." value="${it.unit}" id="mat-unit-${i}">
                 <input class="form-input" type="number" placeholder="Лимит" value="${it.limit || ''}" id="mat-limit-${i}">
@@ -1582,20 +1700,23 @@ window.editSupplier = function(index) {
             <div class="modal-body" style="padding:0 20px">
                 <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="mat-sup" value="${sup.supplier}"></div>
                 <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="mat-sched" value="${sup.schedule}"></div>
+                
                 <label class="form-label">Товары <button class="btn btn-sm btn-sec" onclick="addMatrixItem()">+ Товар</button></label>
-                <div id="mat-items-list" style="margin-top:10px">${itemsHtml}</div>
+                <div id="mat-items-list">${itemsHtml}</div>
+                
                 <button class="btn" style="margin-top:20px" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 };
+
 window.addMatrixItem = function() {
     const list = document.getElementById('mat-items-list');
     const div = document.createElement('div');
     div.style.cssText = "background:rgba(255,255,255,0.03);padding:12px;border-radius:12px;margin-bottom:10px;";
     div.innerHTML = `
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:8px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 34px;gap:6px;">
             <input class="form-input" placeholder="Товар" id="mat-name-new-${Date.now()}">
             <input class="form-input" placeholder="Ед." id="mat-unit-new-${Date.now()}" value="шт">
             <input class="form-input" type="number" placeholder="Лимит" id="mat-limit-new-${Date.now()}">
@@ -1604,9 +1725,11 @@ window.addMatrixItem = function() {
     `;
     list.appendChild(div);
 };
+
 window.saveSupplier = function(index) {
     const supName = document.getElementById('mat-sup').value.trim();
     const supSched = document.getElementById('mat-sched').value.trim();
+    
     if (!supName) { toast('Введите название поставщика', 'error'); return; }
     
     const items = [];
@@ -1617,18 +1740,30 @@ window.saveSupplier = function(index) {
             const name = inputs[0].value.trim();
             const unit = inputs[1].value.trim();
             const limitVal = inputs[2].value.trim();
-            if (name) items.push({ name: name, unit: unit || 'шт', limit: limitVal === '' ? null : parseFloat(limitVal) });
+            if (name) {
+                items.push({
+                    name: name,
+                    unit: unit || 'шт',
+                    limit: limitVal === '' ? null : parseFloat(limitVal)
+                });
+            }
         }
     });
     
     const newSup = { supplier: supName, schedule: supSched, items: items };
-    if (index !== null) MATRIX_DATA[index] = newSup; else MATRIX_DATA.push(newSup);
+    
+    if (index !== null) {
+        MATRIX_DATA[index] = newSup;
+    } else {
+        MATRIX_DATA.push(newSup);
+    }
     
     saveData();
     document.getElementById('edit-modal').remove();
     toast('Сохранено', 'success');
     renderAdminContent();
 };
+
 window.deleteSupplier = function(index) {
     if (confirm('Удалить этого поставщика и все его товары?')) {
         MATRIX_DATA.splice(index, 1);
@@ -1678,20 +1813,23 @@ function editRecipe(id){
   `;
   document.body.appendChild(modal);
 }
+
 function ingrRow(i, idx){
-  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:12px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:12px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 34px;gap:6px">
     <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
     <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
     <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
     <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
   </div></div>`;
 }
+
 function stepRow(s, idx){
   return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:44px">${s||''}</textarea>
     <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
 }
+
 window.addIngr = function(){
   const list = document.getElementById('ingr-list');
   const idx = list.querySelectorAll('.ing-editor').length;
@@ -1702,38 +1840,61 @@ window.addStep = function(){
   const idx = list.querySelectorAll('[data-step]').length;
   list.insertAdjacentHTML('beforeend', stepRow('', idx));
 };
+
 window.saveRecipe = function(editId){
   const r = {
-    id: editId || Date.now(), name: $('#r-name').value, cat: $('#r-cat').value, time: $('#r-time').value,
-    yield: $('#r-yield').value, kcal: parseInt($('#r-kcal').value) || 0, note: $('#r-note').value,
+    id: editId || Date.now(),
+    name: $('#r-name').value,
+    cat: $('#r-cat').value,
+    time: $('#r-time').value,
+    yield: $('#r-yield').value,
+    kcal: parseInt($('#r-kcal').value) || 0,
+    note: $('#r-note').value,
     ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
-      const idx = el.dataset.ing, f = el.dataset.f;
+      const idx = el.dataset.ing;
+      const f = el.dataset.f;
       acc[idx] = acc[idx] || [];
       const val = f==='name' ? el.value : parseFloat(el.value)||0;
       const pos = f==='name'?0:f==='brutto'?1:2;
-      acc[idx][pos] = val; return acc;
+      acc[idx][pos] = val;
+      return acc;
     }, []).filter(x=>x && x[0]),
     steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
   };
   if(!r.name){ toast('Введите название', 'error'); return; }
-  if(editId){ const idx = RECIPES.findIndex(x=>x.id===editId); RECIPES[idx] = r; } else { RECIPES.push(r); }
-  saveData(); document.getElementById('edit-modal').remove(); toast('Сохранено ✓', 'success'); renderAdminContent();
+  if(editId){
+    const idx = RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx] = r;
+  } else {
+    RECIPES.push(r);
+  }
+  saveData();
+  document.getElementById('edit-modal').remove();
+  toast('Сохранено ✓', 'success');
+  renderAdminContent();
 };
+
 window.deleteRecipe = function(id){
   if(!confirm('Удалить техкарту?')) return;
   const idx = RECIPES.findIndex(r=>r.id===id);
   if(idx>=0) RECIPES.splice(idx,1);
-  saveData(); renderAdminContent(); toast('Удалено', 'success');
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
 };
 
 function editNews(i){
   const isEdit = i !== undefined;
   const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
   const modal = document.createElement('div');
-  modal.className = 'modal-bg'; modal.id = 'edit-modal';
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
   modal.innerHTML = `
     <div class="modal">
-      <div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div>
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
       <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
         <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
@@ -1741,41 +1902,69 @@ function editNews(i){
         <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
         <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
       </div>
-    </div>`;
+    </div>
+  `;
   document.body.appendChild(modal);
 }
+
 window.saveNews = function(i){
   const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
   if(!n.title){ toast('Введите заголовок', 'error'); return; }
   if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
-  saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success');
+  saveData();
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
 };
-window.deleteNews = function(i){ if(!confirm('Удалить новость?')) return; NEWS.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
+
+window.deleteNews = function(i){
+  if(!confirm('Удалить новость?')) return;
+  NEWS.splice(i,1);
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
 
 function editTeamMember(i){
   const isEdit = i !== undefined;
   const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
   const modal = document.createElement('div');
-  modal.className = 'modal-bg'; modal.id = 'edit-modal';
+  modal.className = 'modal-bg';
+  modal.id = 'edit-modal';
   modal.innerHTML = `
     <div class="modal">
-      <div class="modal-header"><div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div><button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button></div>
+      <div class="modal-header">
+        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove()">✕</button>
+      </div>
       <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
         <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
         <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
         <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
       </div>
-    </div>`;
+    </div>
+  `;
   document.body.appendChild(modal);
 }
+
 window.saveTeamMember = function(i){
   const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
   if(!u.name){ toast('Введите имя', 'error'); return; }
   if(i !== null) TEAM[i] = u; else TEAM.push(u);
-  saveData(); document.getElementById('edit-modal').remove(); renderAdminContent(); toast('Сохранено', 'success');
+  saveData();
+  document.getElementById('edit-modal').remove();
+  renderAdminContent();
+  toast('Сохранено', 'success');
 };
-window.deleteTeamMember = function(i){ if(!confirm('Удалить сотрудника?')) return; TEAM.splice(i,1); saveData(); renderAdminContent(); toast('Удалено', 'success'); };
+
+window.deleteTeamMember = function(i){
+  if(!confirm('Удалить сотрудника?')) return;
+  TEAM.splice(i,1);
+  saveData();
+  renderAdminContent();
+  toast('Удалено', 'success');
+};
 
 /* ============================================================
    🚀 СТАРТ
