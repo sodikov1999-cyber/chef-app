@@ -686,7 +686,6 @@ let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
 let FAVORITES = [];
-let _modalLock = false; // защита от двойного открытия модалок
 
 function toggleFavorite(id){
   const idx = FAVORITES.indexOf(id);
@@ -699,12 +698,7 @@ function toggleFavorite(id){
 }
 
 function resetModalLock(){
-  // Если модалок нет в DOM — сбрасываем флаг
-  const hasModal = document.getElementById('admin-modal') || 
-                   document.getElementById('edit-modal') || 
-                   document.getElementById('edit-supplier-modal');
-  if(!hasModal) _modalLock = false;
-  return !_modalLock;
+  // Устаревшая функция, оставлена для совместимости
 }
 
 // Переменные для навигации по графику
@@ -1058,7 +1052,7 @@ async function showDayStaff(locName, dayIndex){
     <div class="modal" style="max-height:70vh">
       <div class="modal-header">
         <div class="modal-title">${locName} · ${dayNum} августа</div>
-        <button class="modal-close" onclick="event.stopPropagation();this.closest('.modal-bg').remove();_modalLock=false;">✕</button>
+        <button class="modal-close" onclick="event.stopPropagation();this.closest('.modal-bg').remove();">✕</button>
       </div>
       <div class="modal-body">
         <p style="color:var(--muted);margin-bottom:12px">На смене: ${staffOnShift.length} чел.</p>
@@ -1075,7 +1069,6 @@ async function showDayStaff(locName, dayIndex){
     </div>
   `;
   document.body.appendChild(modal);
-  _modalLock = true;
 }
 
 function renderSchedule(){
@@ -1499,9 +1492,6 @@ let adminTab = 'recipes';
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
-  resetModalLock();
-  if(_modalLock) return;
-  _modalLock = true;
   // Удаляем старую sheet, если есть
   const old = document.getElementById('admin-modal');
   if(old) old.remove();
@@ -1739,7 +1729,7 @@ window.editSupplier = function(index) {
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-title">${isEdit ? '✏️ Редактировать' : '✨ Новый'} поставщик</div>
-                <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove();_modalLock=false;"></button>
+                <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove();"></button>
             </div>
             <div class="modal-body" style="padding:0 20px">
                 <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${s.supplier}"></div>
@@ -1799,7 +1789,6 @@ window.saveSupplier = function(index) {
     saveData();
     syncToFirebase();
     document.getElementById('edit-supplier-modal').remove();
-    _modalLock = false;
     toast('Сохранено', 'success');
     renderAdminContent();
 };
@@ -1813,9 +1802,6 @@ window.deleteSupplier = function(index) {
 };
 
 function editRecipe(id){
-  resetModalLock();
-  if(_modalLock) return;
-  _modalLock = true;
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
@@ -1831,7 +1817,7 @@ function editRecipe(id){
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove();_modalLock=false;"></button>
+        <button class="modal-close" onclick="document.getElementById('edit-modal').remove();"></button>
       </div>
       <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
@@ -1918,7 +1904,6 @@ window.saveRecipe = function(editId){
   saveData();
   syncToFirebase();
   document.getElementById('edit-modal').remove();
-  _modalLock = false;
   haptic('hard');
   toast('Сохранено ✓', 'success');
   renderAdminContent();
@@ -1930,15 +1915,11 @@ window.deleteRecipe = function(id){
   if(idx>=0) RECIPES.splice(idx,1);
   saveData();
   syncToFirebase();
-  _modalLock = false;
   renderAdminContent();
   toast('Удалено', 'success');
 };
 
 function editNews(i){
-  resetModalLock();
-  if(_modalLock) return;
-  _modalLock = true;
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
@@ -1954,7 +1935,7 @@ function editNews(i){
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
-        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();_modalLock=false;">✕</button>
+        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
       </div>
       <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
@@ -1975,7 +1956,6 @@ window.saveNews = function(i){
   saveData();
   syncToFirebase();
   document.getElementById('edit-modal').remove();
-  _modalLock = false;
   renderAdminContent();
   toast('Сохранено', 'success');
 };
@@ -1985,15 +1965,11 @@ window.deleteNews = function(i){
   NEWS.splice(i,1);
   saveData();
   syncToFirebase();
-  _modalLock = false;
   renderAdminContent();
   toast('Удалено', 'success');
 };
 
 function editTeamMember(i){
-  resetModalLock();
-  if(_modalLock) return;
-  _modalLock = true;
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
@@ -2009,7 +1985,7 @@ function editTeamMember(i){
     <div class="modal">
       <div class="modal-header">
         <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
-        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();_modalLock=false;">✕</button>
+        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
       </div>
       <div class="modal-body" style="padding:0 20px">
         <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
@@ -2029,7 +2005,6 @@ window.saveTeamMember = function(i){
   saveData();
   syncToFirebase();
   document.getElementById('edit-modal').remove();
-  _modalLock = false;
   renderAdminContent();
   toast('Сохранено', 'success');
 };
@@ -2039,7 +2014,6 @@ window.deleteTeamMember = function(i){
   TEAM.splice(i,1);
   saveData();
   syncToFirebase();
-  _modalLock = false;
   renderAdminContent();
   toast('Удалено', 'success');
 };
