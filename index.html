@@ -537,7 +537,13 @@ const DEFAULT_MATRIX = [
 
 const DEFAULT_LOCAL_DATA = {
   month: 'Август 2026',
-  locations: []
+  locations: [
+    { name: 'Галактика', staff: [{name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Сибирь', staff: [{name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
+    { name: 'Пионер', staff: [{name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19}] },
+    { name: 'Европа', staff: [{name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21}] },
+    { name: 'Лазурная', staff: [{name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}] }
+  ]
 };
 
 const CHECKLISTS = {
@@ -675,32 +681,6 @@ let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
 let _modalLock = false; // защита от двойного открытия модалок
-
-// Синхронизирует TEAM с реальными данными из графика (Google Sheets)
-function syncTeamFromSchedule(){
-  if(!scheduleData || !scheduleData.locations) return;
-  const realPeople = new Map(); // Map чтобы избежать дубликатов
-  scheduleData.locations.forEach(loc => {
-    if(loc.staff){
-      loc.staff.forEach(person => {
-        const key = person.name + '|' + person.role;
-        if(!realPeople.has(key)){
-          realPeople.set(key, {
-            name: person.name,
-            role: person.role,
-            init: person.name.split(' ').map(n => n[0]).join('').toUpperCase()
-          });
-        }
-      });
-    }
-  });
-  if(realPeople.size > 0){
-    TEAM = Array.from(realPeople.values());
-    saveData();
-    syncToFirebase();
-    console.log('👥 Команда синхронизирована с графиком:', TEAM.length, 'человек');
-  }
-}
 
 function resetModalLock(){
   // Если модалок нет в DOM — сбрасываем флаг
