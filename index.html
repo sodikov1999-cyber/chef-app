@@ -227,6 +227,11 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
     overflow-wrap: break-word;
     white-space: normal;
 }
+    @media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .modal{animation:none!important;transform:none!important;opacity:0;transition:opacity .15s ease!important}
+  .modal.show{opacity:1}
+}
 </style>
 </head>
 <body>
