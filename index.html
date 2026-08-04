@@ -885,7 +885,7 @@ function renderRecipe(){
           ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
         </div>
         <div class="card">
-          ${r.ingr.map(i => `
+          ${(r.ingr || []).map(i => `
             <div class="ingredient">
               <span>${i[0]}</span>
               <b>${Math.round(i[2]*currentMult)} г</b>
@@ -894,7 +894,7 @@ function renderRecipe(){
         </div>
 
         <h2>Приготовление</h2>
-        ${r.steps.map((s,i) => `
+        ${(r.steps || []).map((s,i) => `
           <div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>
         `).join('')}
 
