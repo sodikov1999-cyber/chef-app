@@ -2,15 +2,16 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF;--red:#FF6B5E}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent}
 h1{font-weight:800;font-size:26px;margin-bottom:16px}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
+h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
 .tile{padding:18px 14px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
@@ -32,8 +33,8 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .ingredient{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:14px}
 .ingredient:last-child{border:none}
 .ingredient b{color:var(--accent)}
-.step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5}
-.step-num{display:inline-block;width:20px;height:20px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:20px;font-weight:700;font-size:11px;margin-right:8px}
+.step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word}
+.step-num{display:inline-block;width:20px;height:20px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:20px;font-weight:700;font-size:11px;margin-right:8px;flex-shrink:0}
 .news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
 .news-title{font-weight:700;font-size:14px;margin-bottom:3px}
 .news-text{font-size:13px;color:var(--muted);line-height:1.4}
@@ -135,8 +136,8 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     border-bottom: 1px solid rgba(255,255,255,0.05); 
 }
 .matrix-item:last-child { border-bottom: none; }
-.matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; }
-.matrix-meta { text-align: right; flex-shrink: 0; }
+.matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; word-break: break-word; }
+.matrix-meta { text-align: right; flex-shrink: 0; margin-left: 10px; }
 .matrix-unit { font-size: 11px; color: var(--muted); display: block; }
 .matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
 
@@ -191,6 +192,7 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
     cursor: pointer;
     transition: all 0.2s;
     border: 2px solid transparent;
+    min-width: 45px;
 }
 .day-card:active { transform: scale(0.95); }
 .day-card.selected {
@@ -206,6 +208,24 @@ h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 .day-card .day-num { font-weight: 800; font-size: 17px; margin: 3px 0; }
 .day-card .count { font-size: 11px; color: var(--muted); }
 .day-card.selected .count { color: #000; }
+
+/* Исправление для ТТК (Задача 3) */
+.recipe-detail-container {
+    width: 100%;
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 20px;
+}
+.recipe-detail-container .card {
+    height: auto;
+    overflow: visible;
+}
+.recipe-detail-container .ingredient, 
+.recipe-detail-container .step {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
 </style>
 </head>
 <body>
@@ -496,7 +516,32 @@ function saveData() {
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
     localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
+    // Принудительное событие для синхронизации между вкладками
+    window.dispatchEvent(new Event('local-storage-update'));
 }
+
+// Слушатель изменений в других вкладках
+window.addEventListener('storage', () => {
+    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
+    if (currentView === 'home') renderHome();
+    if (currentView === 'ttk') renderTTK();
+    if (currentView === 'team') renderTeam();
+    if (currentView === 'matrix') renderMatrix();
+});
+// Слушатель для той же вкладки (так как storage не срабатывает внутри одной вкладки)
+window.addEventListener('local-storage-update', () => {
+    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
+    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
+    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
+    if (currentView === 'home') renderHome();
+    if (currentView === 'ttk') renderTTK();
+    if (currentView === 'team') renderTeam();
+    if (currentView === 'matrix') renderMatrix();
+});
 
 /* ============================================================
    ⚙️ ЛОГИКА
@@ -512,8 +557,8 @@ let currentMult = 1;
 let expandedLocations = new Set();
 
 // Переменные для навигации по графику
-let currentWeekStart = null; // Дата начала текущей отображаемой недели
-let selectedDayIndex = null; // Индекс дня (0-30) внутри месяца, который выбран пользователем
+let currentWeekStart = null;
+let selectedDayIndex = null;
 
 function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
 
@@ -617,6 +662,7 @@ function renderHome(){
   `;
 }
 
+// Обновленная функция renderTTK с кнопкой "Обновить" и исправленным фокусом input
 function renderTTK(){
   const cats = ['Все', ...new Set(RECIPES.map(r=>r.cat))];
   window._ttkCat = window._ttkCat || 'Все';
@@ -627,24 +673,70 @@ function renderTTK(){
     (!q || r.name.toLowerCase().includes(q))
   );
 
+  // Рендерим структуру один раз, но input оставляем статичным при вводе
+  // Если контейнер уже существует, обновляем только список, чтобы не терять фокус
+  const existingContainer = document.getElementById('ttk-list-container');
+  const existingInput = document.getElementById('ttk-search-input');
+
+  if (existingContainer && existingInput) {
+      // Обновляем только список и кнопки категорий, не трогая input
+      const catsHtml = cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('');
+      document.getElementById('ttk-cats-container').innerHTML = catsHtml;
+      
+      const listHtml = items.length ? items.map(r => `
+        <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
+          <div class="recipe-name">${r.name}</div>
+          <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
+        </button>
+      `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+      
+      existingContainer.innerHTML = listHtml;
+      return;
+  }
+
+  // Первый рендер
   app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <button class="back" onclick="navigate('home');haptic()" style="margin-bottom:0">← Назад</button>
+        <button class="refresh-btn" onclick="refreshTTKData();haptic('hard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+    </div>
     <h1>Техкарты</h1>
-    <input type="search" placeholder="🔍 Поиск блюда..." 
+    <input type="search" id="ttk-search-input" placeholder="🔍 Поиск блюда..." 
            value="${window._ttkQ}" 
-           oninput="window._ttkQ=this.value;renderTTK()"
            style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none">
-    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
+    <div id="ttk-cats-container" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
       ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
     </div>
+    <div id="ttk-list-container">
     ${items.length ? items.map(r => `
       <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
         <div class="recipe-name">${r.name}</div>
         <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
       </button>
     `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+    </div>
   `;
+
+  const input = document.getElementById('ttk-search-input');
+  input.addEventListener('input', (e) => {
+      window._ttkQ = e.target.value;
+      renderTTK(); // Теперь это вызовет ветку "обновления списка", а не полный ререндер
+  });
 }
+
+// Функция для кнопки "Обновить" в ТТК
+window.refreshTTKData = function() {
+    // Перечитываем данные из localStorage на случай изменений в другой вкладке
+    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
+    window._ttkQ = '';
+    window._ttkCat = 'Все';
+    const input = document.getElementById('ttk-search-input');
+    if(input) input.value = '';
+    renderTTK();
+    toast('Данные обновлены', 'success');
+};
 
 function renderRecipe(){
   const r = RECIPES.find(x => x.id === currentRecipeId);
@@ -654,31 +746,33 @@ function renderRecipe(){
     <button class="back" onclick="navigate('ttk');haptic()">← Назад</button>
     <h1>${r.name}</h1>
     
-    <div class="kpi">
-      <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${r.time}</div></div>
-      <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${r.yield}</div></div>
-      <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
-    </div>
-
-    <h2>Ингредиенты</h2>
-    <div class="mults">
-      ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
-    </div>
-    <div class="card">
-      ${r.ingr.map(i => `
-        <div class="ingredient">
-          <span>${i[0]}</span>
-          <b>${Math.round(i[2]*currentMult)} г</b>
+    <div class="recipe-detail-container">
+        <div class="kpi">
+          <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${r.time}</div></div>
+          <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${r.yield}</div></div>
+          <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
         </div>
-      `).join('')}
+
+        <h2>Ингредиенты</h2>
+        <div class="mults">
+          ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
+        </div>
+        <div class="card">
+          ${r.ingr.map(i => `
+            <div class="ingredient">
+              <span>${i[0]}</span>
+              <b>${Math.round(i[2]*currentMult)} г</b>
+            </div>
+          `).join('')}
+        </div>
+
+        <h2>Приготовление</h2>
+        ${r.steps.map((s,i) => `
+          <div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>
+        `).join('')}
+
+        ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
     </div>
-
-    <h2>Приготовление</h2>
-    ${r.steps.map((s,i) => `
-      <div class="step"><span class="step-num">${i+1}</span>${s}</div>
-    `).join('')}
-
-    ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
   `;
 }
 
@@ -773,7 +867,6 @@ function parseComplexCSV(csvText) {
 }
 
 async function renderSchedule(){
-    // Инициализация недели сегодня при первом входе
     if (!currentWeekStart) {
         const today = new Date();
         const dayOfWeek = today.getDay();
@@ -810,7 +903,6 @@ function renderScheduleContent() {
     const today = new Date();
     const currentDay = today.getDate();
     
-    // Если неделя не установлена (первый вход), устанавливаем текущую
     if (!currentWeekStart) {
         const dayOfWeek = today.getDay();
         const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -819,15 +911,12 @@ function renderScheduleContent() {
         if (selectedDayIndex === null) selectedDayIndex = currentDay - 1;
     }
 
-    // Генерация дней недели
     const weekDays = [];
     for(let i=0; i<7; i++){
         const d = new Date(currentWeekStart);
         d.setDate(currentWeekStart.getDate() + i);
         const dayNum = d.getDate();
         const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        
-        // Индекс дня в месяце (0-30)
         const dayIdx = dayNum - 1;
         
         let count = 0;
@@ -849,12 +938,10 @@ function renderScheduleContent() {
         });
     }
 
-    // Определяем диапазон дат для заголовка
     const lastDay = new Date(currentWeekStart);
     lastDay.setDate(currentWeekStart.getDate() + 6);
     const rangeStr = `${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru', {month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru', {month:'long'})}`;
 
-    // Получаем данные для выбранного дня
     const activeDayIndex = selectedDayIndex !== null ? selectedDayIndex : currentDay - 1;
     const source = scheduleData || DEFAULT_LOCAL_DATA;
     
@@ -892,7 +979,6 @@ function renderScheduleContent() {
       if(!loc.staff || loc.staff.length === 0) return '';
       const isOpen = expandedLocations.has(loc.name);
       
-      // Фильтруем сотрудников, работающих в ВЫБРАННЫЙ день (activeDayIndex)
       const workingToday = loc.staff.filter(p => p.shifts && p.shifts[activeDayIndex] && Number(p.shifts[activeDayIndex]) > 0);
       const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
       
@@ -952,21 +1038,13 @@ function renderScheduleContent() {
   app.innerHTML = html;
 }
 
-// Функции навигации
 window.changeWeek = function(offset) {
     if (!currentWeekStart) return;
     const newDate = new Date(currentWeekStart);
     newDate.setDate(currentWeekStart.getDate() + (offset * 7));
-    
-    // Простая проверка на выход за пределы августа 2026 (можно расширить)
-    if (newDate.getMonth() !== 7 && newDate.getMonth() !== 6 && newDate.getMonth() !== 8) {
-        // Если уходим сильно далеко, можно добавить тост
-        // toast('Нет данных за этот период', 'error');
-        // return;
-    }
-    
+    if (newDate.getMonth() !== 7 && newDate.getMonth() !== 6 && newDate.getMonth() !== 8) {}
     currentWeekStart = newDate;
-    selectedDayIndex = null; // Сбрасываем выбор дня при смене недели
+    selectedDayIndex = null;
     renderScheduleContent();
 };
 
@@ -992,7 +1070,6 @@ function toggleLoc(name) {
 }
 
 function renderChecklist(){
-  // Если локация не выбрана, показываем список локаций
   if (!window._clLoc) {
     app.innerHTML = `
       <button class="back" onclick="navigate('home');haptic()">← Назад</button>
@@ -1018,19 +1095,19 @@ function renderChecklist(){
   const totalOpen = CHECKLISTS.open.length;
   const totalClose = CHECKLISTS.close.length;
 
-  // Получаем сотрудников на сегодня для этой локации
+  // Задача 1: Берем ВСЕХ сотрудников локации (не только сегодняшних) и фильтруем по ролям
   const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let todayStaff = [];
-  const dayIndex = new Date().getDate() - 1;
+  let allLocStaff = [];
   
   if(source && source.locations) {
     const locData = source.locations.find(l => l.name === locName);
     if(locData && locData.staff) {
-      todayStaff = locData.staff.filter(p => p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0);
+      allLocStaff = locData.staff;
     }
   }
-  // Фильтруем только Су-шефов и ИО
-  const managers = todayStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
+  
+  // Фильтруем только Су-шефов, ИО и Верховных из всего списка сотрудников локации
+  const managers = allLocStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   app.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
@@ -1088,22 +1165,51 @@ window.toggleCheckItem = function(loc, type, i){
 
 function renderTeam(){
   const user = tg?.initDataUnsafe?.user;
-  app.innerHTML = `
+  
+  const source = scheduleData || DEFAULT_LOCAL_DATA;
+  let locationsWithStaff = [];
+  
+  if (source && source.locations) {
+      source.locations.forEach(loc => {
+          if (loc.staff && loc.staff.length > 0) {
+              locationsWithStaff.push({
+                  name: loc.name,
+                  staff: loc.staff
+              });
+          }
+      });
+  }
+  
+  if (locationsWithStaff.length === 0) {
+      locationsWithStaff.push({
+          name: 'Команда',
+          staff: TEAM.map(t => ({...t, shifts: [], total: 0}))
+      });
+  }
+
+  let html = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
       <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы · Повар</span></div>
+        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
       </div>
     ` : ''}
-    ${TEAM.map(u => `
-      <div class="user">
-        <div class="avatar">${u.init}</div>
-        <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-      </div>
-    `).join('')}
   `;
+
+  locationsWithStaff.forEach(locGroup => {
+      html += `<h3>${locGroup.name}</h3>`;
+      locGroup.staff.forEach(u => {
+          html += `
+          <div class="user">
+            <div class="avatar">${u.init || u.name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
+            <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+          </div>`;
+      });
+  });
+
+  app.innerHTML = html;
 }
 
 function renderMatrix(){
@@ -1112,7 +1218,6 @@ function renderMatrix(){
   
   const searchInputId = 'matrix-search-input';
   
-  // Фильтрация
   const filteredSuppliers = MATRIX_DATA.map(sup => {
     const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
     if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
@@ -1124,7 +1229,6 @@ function renderMatrix(){
     return null;
   }).filter(s => s !== null);
 
-  // Рендерим HTML, но поле ввода будем обновлять отдельно, чтобы не терять фокус
   const listHtml = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
@@ -1145,17 +1249,14 @@ function renderMatrix(){
       </div>
     `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
 
-  // Проверяем, существует ли уже поле ввода в DOM
   const existingInput = document.getElementById(searchInputId);
   
   if (existingInput) {
-      // Если поле есть, обновляем только список ниже, не трогая input
       const listContainer = document.getElementById('matrix-list-container');
       if (listContainer) listContainer.innerHTML = listHtml;
       return;
   }
 
-  // Если поля нет (первый рендер), создаем всё полностью
   app.innerHTML = `
     <button class="back" onclick="navigate('home');haptic()">← Назад</button>
     <h1>Матрица заявок</h1>
@@ -1168,7 +1269,6 @@ function renderMatrix(){
     </div>
   `;
   
-  // Добавляем обработчик события после создания элемента
   const input = document.getElementById(searchInputId);
   if (input) {
       input.addEventListener('input', (e) => {
@@ -1292,7 +1392,6 @@ function renderAdminContent(){
   }
 }
 
-// --- Функции редактирования Матрицы ---
 window.editSupplier = function(index) {
     const isEdit = index !== undefined;
     const s = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
@@ -1387,7 +1486,6 @@ window.deleteSupplier = function(index) {
     toast('Удалено', 'success');
 };
 
-// --- Остальные функции админки (Рецепты, Новости, Команда) ---
 function editRecipe(id){
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
