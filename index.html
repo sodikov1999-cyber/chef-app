@@ -1308,33 +1308,133 @@ let adminTab = 'recipes';
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
+  // Удаляем старую модалку, если есть
   const old = document.getElementById('admin-modal');
   if(old) old.remove();
 
   adminTab = adminTab || 'recipes';
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'admin-modal';
-  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-  
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">⚙️ Редактор</div>
-        <button class="modal-close" onclick="document.getElementById('admin-modal').remove()">✕</button>
-      </div>
-      <div style="display:flex;gap:4px;margin-bottom:12px;flex-shrink:0">
-        <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';showAdminModal()">ТТК</button>
-        <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';showAdminModal()">Новости</button>
-        <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';showAdminModal()">Команда</button>
-        <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';showAdminModal()">Матрица</button>
-      </div>
-      <div id="admin-content" class="modal-body"></div>
+
+  // Создаём фон
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg';
+  bg.id = 'admin-modal';
+
+  // Создаём саму панель
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet';
+  sheet.id = 'admin-sheet';
+
+  // Drag-область (невидимая, но ловит тап)
+  const dragArea = document.createElement('div');
+  dragArea.className = 'sheet-drag-area';
+
+  // Содержимое
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">⚙️ Редактор</div>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
     </div>
+    <div style="display:flex;gap:4px;padding:0 20px 12px;flex-shrink:0">
+      <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';renderAdminContent()">ТТК</button>
+      <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';renderAdminContent()">Новости</button>
+      <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';renderAdminContent()">Команда</button>
+      <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';renderAdminContent()">Матрица</button>
+    </div>
+    <div id="admin-content" class="sheet-body"></div>
   `;
-  document.body.appendChild(modal);
+
+  sheet.insertBefore(dragArea, sheet.firstChild);
+  bg.appendChild(sheet);
+  document.body.appendChild(bg);
+
+  // Показываем с анимацией (следующий кадр)
+  requestAnimationFrame(() => {
+    bg.classList.add('open');
+    sheet.classList.add('open');
+  });
+
+  // === DRAG ЛОГИКА ===
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  let startTransform = 0;
+  let velocity = 0;
+  let lastY = 0;
+  let lastTime = 0;
+
+  function onPointerDown(e){
+    // Только если тапнули по drag-области или по самой панели (не по кнопкам внутри)
+    if(e.target.closest('button, input, textarea, select')) return;
+    isDragging = true;
+    startY = e.clientY || e.touches[0].clientY;
+    lastY = startY;
+    lastTime = Date.now();
+    sheet.setPointerCapture(e.pointerId);
+    sheet.style.transition = 'none';
+    startTransform = 0;
+    e.preventDefault();
+  }
+
+  function onPointerMove(e){
+    if(!isDragging) return;
+    const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+    const delta = y - startY;
+    
+    // Rubber-banding: нельзя тянуть вверх (delta < 0)
+    currentY = delta > 0 ? delta : delta * 0.3;
+    sheet.style.transform = `translateY(${currentY}px)`;
+
+    // Считаем velocity для handoff
+    const now = Date.now();
+    const dt = now - lastTime;
+    if(dt > 0){
+      velocity = (y - lastY) / dt * 1000; // px/s
+    }
+    lastY = y;
+    lastTime = now;
+  }
+
+  function onPointerUp(e){
+    if(!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,0,1)';
+
+    // Если потянули достаточно далеко ИЛИ быстро — закрываем
+    if(currentY > 120 || velocity > 600){
+      closeSheet();
+    } else {
+      // Возвращаем на место
+      sheet.style.transform = 'translateY(0)';
+    }
+    currentY = 0;
+  }
+
+  // Используем Pointer Events (работают и на мышь, и на тач)
+  dragArea.addEventListener('pointerdown', onPointerDown);
+  sheet.addEventListener('pointerdown', onPointerDown);
+  sheet.addEventListener('pointermove', onPointerMove);
+  sheet.addEventListener('pointerup', onPointerUp);
+  sheet.addEventListener('pointercancel', onPointerUp);
+
+  // Клик по фону = закрыть
+  bg.addEventListener('click', (e) => {
+    if(e.target === bg) closeSheet();
+  });
+
   renderAdminContent();
 }
+
+// Функция закрытия
+function closeSheet(){
+  const bg = document.getElementById('admin-modal');
+  const sheet = document.getElementById('admin-sheet');
+  if(!bg) return;
+  
+  bg.classList.remove('open');
+  if(sheet) sheet.classList.remove('open');
+  
+  // Ждём конца аним
 
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
