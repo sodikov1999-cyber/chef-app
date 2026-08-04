@@ -1711,6 +1711,7 @@ window.saveSupplier = function(index) {
     }
     
     saveData();
+    syncToFirebase();
     document.getElementById('edit-supplier-modal').remove();
     toast('Сохранено', 'success');
     renderAdminContent();
@@ -1825,6 +1826,7 @@ window.saveRecipe = function(editId){
     RECIPES.push(r);
   }
   saveData();
+  syncToFirebase();
   document.getElementById('edit-modal').remove();
   haptic('hard');
   toast('Сохранено ✓', 'success');
@@ -1876,6 +1878,7 @@ window.saveNews = function(i){
   if(!n.title){ toast('Введите заголовок', 'error'); return; }
   if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
   saveData();
+  syncToFirebase();
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
@@ -1924,6 +1927,7 @@ window.saveTeamMember = function(i){
   if(!u.name){ toast('Введите имя', 'error'); return; }
   if(i !== null) TEAM[i] = u; else TEAM.push(u);
   saveData();
+  syncToFirebase();
   document.getElementById('edit-modal').remove();
   renderAdminContent();
   toast('Сохранено', 'success');
