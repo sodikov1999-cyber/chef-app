@@ -580,14 +580,21 @@ async function syncToFirebase(){
       matrix: MATRIX_DATA,
       updatedAt: Date.now()
     };
-    await fetch(`${FIREBASE_URL}${FB_PATH}.json`, {
+    const url = `${FIREBASE_URL}${FB_PATH}.json`;
+    console.log('☁️ Отправка в Firebase:', url);
+    const res = await fetch(url, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data)
     });
-    console.log('☁️ Синхронизировано с Firebase');
+    console.log('☁️ Ответ Firebase:', res.status, res.statusText);
+    if(res.ok){
+      console.log('☁️ Успешно синхронизировано');
+    }else{
+      console.warn('☁️ Firebase вернул ошибку:', res.status, await res.text());
+    }
   }catch(e){
-    console.warn('Ошибка синхронизации:', e);
+    console.warn('☁️ Ошибка синхронизации:', e.message);
   }
 }
 
@@ -598,23 +605,32 @@ async function loadFromFirebase(){
     return false;
   }
   try{
-    const res = await fetch(`${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`);
+    const url = `${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`;
+    console.log('☁️ Загрузка из Firebase:', url);
+    const res = await fetch(url);
+    console.log('☁️ Ответ Firebase:', res.status, res.statusText);
+    if(!res.ok){
+      console.warn('☁️ Firebase вернул ошибку:', res.status);
+      return false;
+    }
     const data = await res.json();
+    console.log('☁️ Данные из Firebase:', data === null ? 'null (база пустая)' : 'получены');
     if(data && data.recipes){
       RECIPES = data.recipes;
       NEWS = data.news || DEFAULT_NEWS;
       TEAM = data.team || DEFAULT_TEAM;
       MATRIX_DATA = data.matrix || DEFAULT_MATRIX;
-      // Сохраняем локально как backup
       localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
       localStorage.setItem('chef_news', JSON.stringify(NEWS));
       localStorage.setItem('chef_team', JSON.stringify(TEAM));
       localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
-      console.log('☁️ Данные загружены из Firebase');
+      console.log('☁️ Данные загружены из Firebase, рецептов:', RECIPES.length);
       return true;
+    }else{
+      console.log('☁️ База пустая или нет рецептов');
     }
   }catch(e){
-    console.warn('Не удалось загрузить из Firebase:', e);
+    console.warn('☁️ Не удалось загрузить из Firebase:', e.message);
   }
   return false;
 }
