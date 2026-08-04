@@ -1370,7 +1370,7 @@ function showAdminModal(){
     startY = e.clientY || e.touches[0].clientY;
     lastY = startY;
     lastTime = Date.now();
-    sheet.setPointerCapture(e.pointerId);
+    if(e.pointerId) sheet.setPointerCapture(e.pointerId);
     sheet.style.transition = 'none';
     startTransform = 0;
     e.preventDefault();
@@ -1434,7 +1434,13 @@ function closeSheet(){
   bg.classList.remove('open');
   if(sheet) sheet.classList.remove('open');
   
-  // Ждём конца аним
+  // Ждём конца анимации и убираем из DOM
+  setTimeout(() => {
+    if(bg && bg.parentNode) bg.remove();
+  }, 350);
+}
+
+function renderAdminContent(){
 
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
