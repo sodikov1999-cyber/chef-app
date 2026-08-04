@@ -688,6 +688,15 @@ let currentMult = 1;
 let expandedLocations = new Set();
 let _modalLock = false; // защита от двойного открытия модалок
 
+function resetModalLock(){
+  // Если модалок нет в DOM — сбрасываем флаг
+  const hasModal = document.getElementById('admin-modal') || 
+                   document.getElementById('edit-modal') || 
+                   document.getElementById('edit-supplier-modal');
+  if(!hasModal) _modalLock = false;
+  return !_modalLock;
+}
+
 // Переменные для навигации по графику
 let currentWeekStart = null;
 let selectedDayIndex = null;
@@ -1420,8 +1429,10 @@ let adminTab = 'recipes';
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
+  resetModalLock();
   if(_modalLock) return;
   _modalLock = true;
+  setTimeout(() => _modalLock = false, 1000); // fallback на случай проблем
   // Удаляем старую sheet, если есть
   const old = document.getElementById('admin-modal');
   if(old) old.remove();
@@ -1734,8 +1745,10 @@ window.deleteSupplier = function(index) {
 };
 
 function editRecipe(id){
+  resetModalLock();
   if(_modalLock) return;
   _modalLock = true;
+  setTimeout(() => _modalLock = false, 1000);
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
@@ -1856,8 +1869,10 @@ window.deleteRecipe = function(id){
 };
 
 function editNews(i){
+  resetModalLock();
   if(_modalLock) return;
   _modalLock = true;
+  setTimeout(() => _modalLock = false, 1000);
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
@@ -1910,8 +1925,10 @@ window.deleteNews = function(i){
 };
 
 function editTeamMember(i){
+  resetModalLock();
   if(_modalLock) return;
   _modalLock = true;
+  setTimeout(() => _modalLock = false, 1000);
   // Удаляем старую модалку, если есть
   const oldModal = document.getElementById('edit-modal');
   if(oldModal) oldModal.remove();
