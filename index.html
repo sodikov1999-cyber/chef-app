@@ -92,7 +92,7 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
 .icon-btn:active{background:rgba(255,255,255,.1)}
 .icon-btn.danger{background:rgba(255,107,94,.15);color:var(--red)}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;transition:all .3s;z-index:300;max-width:85vw;text-align:center}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;z-index:300;max-width:85vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .fade{animation:fade .3s ease-out}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -207,11 +207,12 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
     border-radius: 10px;
     color: var(--text);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: transform 0.12s ease-out, background 0.2s ease, border-color 0.2s ease;
     border: 2px solid transparent;
     min-width: 45px;
+    -webkit-tap-highlight-color: transparent;
 }
-.day-card:active { transform: scale(0.95); }
+.day-card:active { transform: scale(0.92); transition: transform 0.05s ease-out; }
 .day-card.selected {
     background: var(--accent);
     color: #000;
@@ -1017,8 +1018,8 @@ function renderScheduleContent() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </button>
-          <div style="max-height:${isOpen?'5000px':'0'};overflow:hidden;transition:max-height .4s ease-out">
-            <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="display:grid;grid-template-rows:${isOpen?'1fr':'0fr'};transition:grid-template-rows .35s cubic-bezier(.32,.72,0,1);overflow:hidden">
+            <div style="min-height:0;overflow:hidden;padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
               <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">На смене (${workingToday.length})</div>
               ${workingToday.length > 0 ? workingToday.map(p => `
                 <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
@@ -1169,6 +1170,7 @@ window.saveManager = function(loc, name){
   const saved = JSON.parse(localStorage.getItem(key) || '{}');
   saved.manager = name;
   localStorage.setItem(key, JSON.stringify(saved));
+  haptic();
   renderChecklist();
 };
 
@@ -1182,6 +1184,7 @@ window.toggleCheckItem = function(loc, type, i){
   if(idx>=0) saved[type].splice(idx,1); else saved[type].push(i);
   
   localStorage.setItem(key, JSON.stringify(saved));
+  haptic();
   renderChecklist();
 };
 
@@ -1708,6 +1711,7 @@ window.saveRecipe = function(editId){
   }
   saveData();
   document.getElementById('edit-modal').remove();
+  haptic('hard');
   toast('Сохранено ✓', 'success');
   renderAdminContent();
 };
