@@ -1099,8 +1099,7 @@ function renderSchedule(){
       <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
     </div>
   `;
-    await fetchScheduleData(true);
-    renderScheduleContent();
+    fetchScheduleData(true).then(() => renderScheduleContent());
 }
 
 function handleRefresh() { 
