@@ -1311,9 +1311,14 @@ let adminTab = 'recipes';
 function openAdmin(){ showAdminModal(); }
 
 function showAdminModal(){
-  // Удаляем старую модалку, если есть
+  // Удаляем старую sheet, если есть
   const old = document.getElementById('admin-modal');
   if(old) old.remove();
+  // Удаляем все старые модалки редактирования
+  const oldEditModal = document.getElementById('edit-modal');
+  if(oldEditModal) oldEditModal.remove();
+  const oldSupplierModal = document.getElementById('edit-supplier-modal');
+  if(oldSupplierModal) oldSupplierModal.remove();
 
   adminTab = adminTab || 'recipes';
 
@@ -1616,6 +1621,12 @@ window.deleteSupplier = function(index) {
 };
 
 function editRecipe(id){
+  // Удаляем старую модалку, если есть
+  const oldModal = document.getElementById('edit-modal');
+  if(oldModal) oldModal.remove();
+  const oldSupplierModal = document.getElementById('edit-supplier-modal');
+  if(oldSupplierModal) oldSupplierModal.remove();
+
   const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
   const isEdit = !!id;
   const modal = document.createElement('div');
@@ -1726,6 +1737,12 @@ window.deleteRecipe = function(id){
 };
 
 function editNews(i){
+  // Удаляем старую модалку, если есть
+  const oldModal = document.getElementById('edit-modal');
+  if(oldModal) oldModal.remove();
+  const oldSupplierModal = document.getElementById('edit-supplier-modal');
+  if(oldSupplierModal) oldSupplierModal.remove();
+
   const isEdit = i !== undefined;
   const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
   const modal = document.createElement('div');
@@ -1768,6 +1785,12 @@ window.deleteNews = function(i){
 };
 
 function editTeamMember(i){
+  // Удаляем старую модалку, если есть
+  const oldModal = document.getElementById('edit-modal');
+  if(oldModal) oldModal.remove();
+  const oldSupplierModal = document.getElementById('edit-supplier-modal');
+  if(oldSupplierModal) oldSupplierModal.remove();
+
   const isEdit = i !== undefined;
   const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
   const modal = document.createElement('div');
