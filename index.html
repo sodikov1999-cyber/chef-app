@@ -264,6 +264,28 @@ const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
 /* ============================================================
+   🔥 FIREBASE — СИНХРОНИЗАЦИЯ МЕЖДУ УСТРОЙСТВАМИ
+
+   Инструкция:
+   1. Перейди на https://console.firebase.google.com
+   2. Создай проект (назови "ChefBook")
+   3. Слева меню → Build → Realtime Database → Создать базу
+   4. Выбери регион (eur3 — Европа)
+   5. На вкладке "Правила" замени всё на:
+      {
+        "rules": {
+          ".read": true,
+          ".write": true
+        }
+      }
+      Нажми "Опубликовать"
+   6. Скопируй URL базы (пример: https://chefbook-xxx-default-rtdb.europe-west1.firebasedatabase.app)
+   7. Вставь его ниже в FIREBASE_URL
+   ============================================================ */
+const FIREBASE_URL = 'https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app/'; // ← ЗАМЕНИ ЭТО
+const FB_PATH = '/chefbook';
+
+/* ============================================================
    📦 ДАННЫЕ
    ============================================================ */
 const DEFAULT_RECIPES = [
@@ -535,12 +557,78 @@ let useLocalSchedule = false;
 let isLoading = false;
 
 function saveData() {
+    // Локальный backup (на случай отключения интернета)
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
     localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
-    // Принудительное событие для синхронизации между вкладками
+    // Синхронизация между вкладками
     window.dispatchEvent(new Event('local-storage-update'));
+}
+
+// === FIREBASE: Сохранение в облако ===
+async function syncToFirebase(){
+  if(FIREBASE_URL.includes('ВАШ-ПРОЕКТ')){
+    console.warn('Firebase URL не настроен. Данные сохранены только локально.');
+    return;
+  }
+  try{
+    const data = {
+      recipes: RECIPES,
+      news: NEWS,
+      team: TEAM,
+      matrix: MATRIX_DATA,
+      updatedAt: Date.now()
+    };
+    await fetch(`${FIREBASE_URL}${FB_PATH}.json`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    console.log('☁️ Синхронизировано с Firebase');
+  }catch(e){
+    console.warn('Ошибка синхронизации:', e);
+  }
+}
+
+// === FIREBASE: Загрузка из облака ===
+async function loadFromFirebase(){
+  if(FIREBASE_URL.includes('ВАШ-ПРОЕКТ')){
+    console.log('Firebase не настроен — используем локальные данные');
+    return false;
+  }
+  try{
+    const res = await fetch(`${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`);
+    const data = await res.json();
+    if(data && data.recipes){
+      RECIPES = data.recipes;
+      NEWS = data.news || DEFAULT_NEWS;
+      TEAM = data.team || DEFAULT_TEAM;
+      MATRIX_DATA = data.matrix || DEFAULT_MATRIX;
+      // Сохраняем локально как backup
+      localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
+      localStorage.setItem('chef_news', JSON.stringify(NEWS));
+      localStorage.setItem('chef_team', JSON.stringify(TEAM));
+      localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
+      console.log('☁️ Данные загружены из Firebase');
+      return true;
+    }
+  }catch(e){
+    console.warn('Не удалось загрузить из Firebase:', e);
+  }
+  return false;
+}
+
+// === FIREBASE: Автообновление каждые 10 секунд ===
+let fbInterval = null;
+function startFirebaseSync(){
+  if(fbInterval) clearInterval(fbInterval);
+  fbInterval = setInterval(async () => {
+    if(currentView === 'home' || currentView === 'ttk' || currentView === 'team' || currentView === 'matrix'){
+      const loaded = await loadFromFirebase();
+      if(loaded) render();
+    }
+  }, 10000);
 }
 
 // Слушатель изменений в других вкладках
@@ -1732,6 +1820,7 @@ window.deleteRecipe = function(id){
   const idx = RECIPES.findIndex(r=>r.id===id);
   if(idx>=0) RECIPES.splice(idx,1);
   saveData();
+  syncToFirebase();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1780,6 +1869,7 @@ window.deleteNews = function(i){
   if(!confirm('Удалить новость?')) return;
   NEWS.splice(i,1);
   saveData();
+  syncToFirebase();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1827,6 +1917,7 @@ window.deleteTeamMember = function(i){
   if(!confirm('Удалить сотрудника?')) return;
   TEAM.splice(i,1);
   saveData();
+  syncToFirebase();
   renderAdminContent();
   toast('Удалено', 'success');
 };
@@ -1834,7 +1925,16 @@ window.deleteTeamMember = function(i){
 /* ============================================================
    🚀 СТАРТ
    ============================================================ */
-render();
+// Сначала пробуем загрузить из Firebase, потом рендерим
+(async function init(){
+  const loaded = await loadFromFirebase();
+  if(!loaded){
+    // Если Firebase не настроен — используем локальные данные (уже загружены выше)
+    console.log('📱 Работаем в offline-режиме');
+  }
+  render();
+  startFirebaseSync();
+})();
 </script>
 </body>
 </html>
