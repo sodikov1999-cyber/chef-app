@@ -1641,6 +1641,15 @@ function closeSheet(){
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
   if(!c) return;
+  // Добавляем визуальный feedback на табы
+  setTimeout(() => {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+      btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+      btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
+      btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
+    });
+  }, 0);
   if(adminTab === 'recipes'){
     c.innerHTML = `
       <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
