@@ -1535,10 +1535,10 @@ function showAdminModal(){
       <button class="sheet-close" onclick="event.stopPropagation();closeSheet()">✕</button>
     </div>
     <div style="display:flex;gap:4px;padding:0 20px 12px;flex-shrink:0">
-      <button class="tab-btn ${adminTab==='recipes'?'on':''}" ontouchstart="" onclick="adminTab='recipes';localStorage.setItem('chef_admin_tab','recipes');renderAdminContent()">ТТК</button>
-      <button class="tab-btn ${adminTab==='news'?'on':''}" ontouchstart="" onclick="adminTab='news';localStorage.setItem('chef_admin_tab','news');renderAdminContent()">Новости</button>
-      <button class="tab-btn ${adminTab==='team'?'on':''}" ontouchstart="" onclick="adminTab='team';localStorage.setItem('chef_admin_tab','team');renderAdminContent()">Команда</button>
-      <button class="tab-btn ${adminTab==='matrix'?'on':''}" ontouchstart="" onclick="adminTab='matrix';localStorage.setItem('chef_admin_tab','matrix');renderAdminContent()">Матрица</button>
+      <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';localStorage.setItem('chef_admin_tab','recipes');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">ТТК</button>
+      <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';localStorage.setItem('chef_admin_tab','news');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Новости</button>
+      <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';localStorage.setItem('chef_admin_tab','team');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Команда</button>
+      <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';localStorage.setItem('chef_admin_tab','matrix');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Матрица</button>
     </div>
     <div id="admin-content" class="sheet-body"></div>
   `;
