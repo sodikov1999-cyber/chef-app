@@ -1834,6 +1834,8 @@ function fallbackCopy(text){
 
 function renderCartSheet(){
   const old = document.getElementById('cart-sheet-bg');
+  const scroller = app.querySelector('.screen.current');
+  const savedScroll = scroller ? scroller.scrollTop : 0;
   if(old) old.remove();
 
   const bg = document.createElement('div');
@@ -1879,13 +1881,14 @@ function renderCartSheet(){
       <div class="sheet-body" style="padding-bottom:30px">
         ${itemsHtml}
         <button class="btn" onclick="copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
-        <button class="btn btn-sec" onclick="orderCart=[];saveData();closeCartSheet();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
+        <button class="btn btn-sec" onclick="orderCart=[];saveData();updateCartFab();closeCartSheet();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
       </div>
     </div>
   `;
 
   bg.addEventListener('click', e => { if(e.target === bg) closeCartSheet(); });
   document.body.appendChild(bg);
+  if(scroller) requestAnimationFrame(() => { scroller.scrollTop = savedScroll; });
 }
 
 function renderMatrix(){
@@ -2523,6 +2526,19 @@ window.deleteTeamMember = function(i){
    🚀 СТАРТ
    ============================================================ */
 // Сначала пробуем загрузить из Firebase, потом рендерим
+// Fix iOS keyboard scroll jump when editing cart qty
+document.addEventListener('focusout', e => {
+  if(e.target.classList.contains('cart-qty-input')){
+    const scroller = app.querySelector('.screen.current');
+    if(!scroller) return;
+    const st = scroller.scrollTop;
+    requestAnimationFrame(() => {
+      scroller.scrollTop = st;
+      requestAnimationFrame(() => scroller.scrollTop = st);
+    });
+  }
+});
+
 // Tap in top zone to scroll to top (like iOS status bar tap)
 document.addEventListener('touchend', e => {
   const t = e.changedTouches[0];
