@@ -13,9 +13,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 body{scrollbar-width:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent;overflow:hidden}
 #app{position:relative;width:100%;height:100vh;overflow:hidden}
-.screen{position:absolute;top:0;left:0;right:0;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px;will-change:transform,opacity}
-.scroll-top{position:fixed;right:16px;bottom:70px;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#000;border:none;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;opacity:0;transform:translateY(20px);transition:opacity .25s ease,transform .25s cubic-bezier(.32,.72,0,1);z-index:50;box-shadow:0 4px 14px rgba(255,138,61,.4)}
-.scroll-top.show{opacity:1;transform:translateY(0)}
+.screen{position:absolute;top:0;left:0;right:0;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px}
+
 @media (prefers-reduced-motion:reduce){
   .screen{transition:none!important;animation:none!important}
   .sheet{transition:none!important;transform:none!important}
@@ -38,7 +37,8 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .btn:active{transform:scale(.98)}
 .btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1)}
 .btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px}
-.back{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;background:rgba(255,255,255,.06);border-radius:12px;color:var(--text);margin-bottom:16px;cursor:pointer;border:none;font-size:15px;font-weight:600}
+.back{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;background:rgba(255,255,255,.08);border-radius:50%;color:var(--text);margin-bottom:16px;cursor:pointer;border:1px solid rgba(255,255,255,.1);font-size:18px;font-weight:600;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:manipulation}
+.back svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
 .recipe:active{background:rgba(255,255,255,.07)}
 .recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
@@ -750,29 +750,107 @@ let currentScreen = app;
 let viewStack = [{view: 'home', data: null}];
 let screenAnim = null;
 
-/* Scroll-to-top button */
-const scrollTopBtn = document.createElement('button');
-scrollTopBtn.className = 'scroll-top';
-scrollTopBtn.innerHTML = '↑';
-scrollTopBtn.style.display = 'none';
-scrollTopBtn.onclick = () => {
-  const scroller = app.querySelector('.screen.current') || app;
-  scroller.scrollTo({ top: 0, behavior: 'smooth' });
-  haptic();
-};
-document.body.appendChild(scrollTopBtn);
+/* ============================================================
+   ⬅️ GLOBAL SWIPE-BACK (iOS-style interactive pop)
+   ============================================================ */
+(function initSwipeBack(){
+  let sbStartX = 0, sbStartY = 0, sbDragging = false, sbAnim = null;
+  let sbCurrentScreen = null, sbPrevScreen = null;
 
-function updateScrollTop(){
-  const scroller = app.querySelector('.screen.current');
-  if(!scroller) return;
-  if(scroller.scrollTop > 180){
-    scrollTopBtn.style.display = 'flex';
-    requestAnimationFrame(() => scrollTopBtn.classList.add('show'));
-  } else {
-    scrollTopBtn.classList.remove('show');
-    setTimeout(() => { if(!scrollTopBtn.classList.contains('show')) scrollTopBtn.style.display = 'none'; }, 260);
-  }
-}
+  app.addEventListener('pointerdown', e => {
+    if(viewStack.length <= 1) return;
+    if(e.clientX > 24) return; // left edge zone only
+    const cur = app.querySelector('.screen.current');
+    if(!cur) return;
+    sbDragging = true;
+    sbStartX = e.clientX;
+    sbStartTime = e.timeStamp;
+    sbStartY = e.clientY;
+    sbCurrentScreen = cur;
+    sbPrevScreen = app.querySelector('.screen:not(.current)');
+    if(sbAnim) sbAnim.cancel();
+    if(e.pointerId) app.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  app.addEventListener('pointermove', e => {
+    if(!sbDragging || !sbCurrentScreen) return;
+    const dx = e.clientX - sbStartX;
+    const dy = e.clientY - sbStartY;
+    // Cancel if vertical scroll dominates
+    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12){ sbDragging = false; return; }
+    if(dx < 0){ sbDragging = false; return; }
+    const pct = dx / window.innerWidth;
+    sbCurrentScreen.style.transition = 'none';
+    sbCurrentScreen.style.transform = `translateX(${dx}px)`;
+    if(sbPrevScreen){
+      sbPrevScreen.style.display = '';
+      sbPrevScreen.style.visibility = '';
+      sbPrevScreen.style.transition = 'none';
+      sbPrevScreen.style.transform = `translateX(${(pct * 30 - 30)}%)`;
+      sbPrevScreen.style.opacity = Math.max(0.4, 1 - pct * 0.6);
+    }
+  });
+
+  app.addEventListener('pointerup', e => {
+    if(!sbDragging || !sbCurrentScreen) return;
+    sbDragging = false;
+    const dx = e.clientX - sbStartX;
+    const threshold = window.innerWidth * 0.28;
+    const velocity = dx / (e.timeStamp - (sbStartTime || e.timeStamp - 100)) * 1000 || 0;
+    const commit = dx > threshold || (dx > 60 && velocity > 400);
+
+    if(commit){
+      if(sbAnim) sbAnim.cancel();
+      sbAnim = springAnimate({
+        from: dx, to: window.innerWidth, velocity: velocity * 0.3,
+        stiffness: 520, damping: 28,
+        onUpdate: x => {
+          sbCurrentScreen.style.transform = `translateX(${x}px)`;
+          if(sbPrevScreen){
+            const p = x / window.innerWidth;
+            sbPrevScreen.style.transform = `translateX(${(p * 30 - 30)}%)`;
+            sbPrevScreen.style.opacity = Math.max(0.4, 1 - p * 0.6);
+          }
+        },
+        onComplete: () => {
+          viewStack.pop();
+          const prevState = viewStack[viewStack.length - 1];
+          currentView = prevState.view;
+          if(prevState.data !== undefined) currentRecipeId = prevState.data;
+          sbCurrentScreen.remove();
+          if(sbPrevScreen){
+            sbPrevScreen.classList.add('current');
+            sbPrevScreen.style.transform = ''; sbPrevScreen.style.opacity = '';
+            currentScreen = sbPrevScreen;
+          }
+          sbCurrentScreen = null; sbPrevScreen = null;
+        }
+      });
+    } else {
+      if(sbAnim) sbAnim.cancel();
+      sbAnim = springAnimate({
+        from: dx, to: 0, velocity: 0,
+        stiffness: 520, damping: 28,
+        onUpdate: x => {
+          sbCurrentScreen.style.transform = `translateX(${x}px)`;
+          if(sbPrevScreen){
+            const p = x / window.innerWidth;
+            sbPrevScreen.style.transform = `translateX(${(p * 30 - 30)}%)`;
+            sbPrevScreen.style.opacity = Math.max(0.4, 1 - p * 0.6);
+          }
+        },
+        onComplete: () => {
+          if(sbPrevScreen){ sbPrevScreen.style.display = 'none'; sbPrevScreen.style.visibility = 'hidden'; }
+          sbCurrentScreen.style.transform = '';
+          sbCurrentScreen = null; sbPrevScreen = null;
+        }
+      });
+    }
+  });
+})();
+
+
 let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
@@ -856,87 +934,6 @@ function navigate(view, data){
   newScreen.classList.add('current');
   viewStack.push({view, data});
 
-  // Scroll-to-top listener
-  newScreen.addEventListener('scroll', updateScrollTop, {passive: true});
-
-  // Swipe-back gesture (left edge only)
-  let sbStartX = 0, sbStartY = 0, sbDragging = false, sbAnim = null;
-  newScreen.addEventListener('pointerdown', e => {
-    if(viewStack.length <= 1) return;
-    if(e.clientX > 28) return; // only left edge
-    sbStartX = e.clientX;
-    sbStartY = e.clientY;
-    sbDragging = true;
-    if(sbAnim) sbAnim.cancel();
-    newScreen.style.transition = 'none';
-    if(e.pointerId) newScreen.setPointerCapture(e.pointerId);
-  });
-  newScreen.addEventListener('pointermove', e => {
-    if(!sbDragging) return;
-    const dx = e.clientX - sbStartX;
-    const dy = e.clientY - sbStartY;
-    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10){ sbDragging = false; return; }
-    if(dx < 0){ sbDragging = false; return; }
-    const prev = app.querySelector('.screen:not(.current)');
-    if(prev){
-      prev.style.display = '';
-      prev.style.visibility = '';
-      prev.style.transform = `translateX(${dx * 0.3 - 30}%)`;
-      prev.style.opacity = Math.max(0.4, 1 - (100-dx)/150);
-    }
-    newScreen.style.transform = `translateX(${dx}px)`;
-  });
-  newScreen.addEventListener('pointerup', e => {
-    if(!sbDragging) return;
-    sbDragging = false;
-    const dx = e.clientX - sbStartX;
-    const threshold = window.innerWidth * 0.22;
-    const prev = app.querySelector('.screen:not(.current)');
-    if(dx > threshold){
-      // commit pop
-      if(sbAnim) sbAnim.cancel();
-      sbAnim = springAnimate({
-        from: dx, to: window.innerWidth, velocity: 0,
-        stiffness: 520, damping: 28,
-        onUpdate: x => {
-          newScreen.style.transform = `translateX(${x}px)`;
-          if(prev){
-            prev.style.transform = `translateX(${x * 0.3 - 30}%)`;
-            prev.style.opacity = Math.max(0.4, 1 - (window.innerWidth-x)/150);
-          }
-        },
-        onComplete: () => {
-          viewStack.pop();
-          const prevState = viewStack[viewStack.length-1];
-          currentView = prevState.view;
-          if(prevState.data !== undefined) currentRecipeId = prevState.data;
-          newScreen.remove();
-          if(prev){
-            prev.classList.add('current');
-            prev.style.transform = ''; prev.style.opacity = '';
-            currentScreen = prev;
-          }
-        }
-      });
-    } else {
-      // cancel
-      if(sbAnim) sbAnim.cancel();
-      sbAnim = springAnimate({
-        from: dx, to: 0, velocity: 0,
-        stiffness: 520, damping: 28,
-        onUpdate: x => {
-          newScreen.style.transform = `translateX(${x}px)`;
-          if(prev){
-            prev.style.transform = `translateX(${x * 0.3 - 30}%)`;
-            prev.style.opacity = Math.max(0.4, 1 - (100-x)/150);
-          }
-        },
-        onComplete: () => {
-          if(prev){ prev.style.display = 'none'; prev.style.visibility = 'hidden'; }
-        }
-      });
-    }
-  });
 }
 
 function goBack(){
@@ -1114,7 +1111,7 @@ function renderTTK(){
   // Первый рендер
   currentScreen.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <button class="back" onclick="goBack();haptic()" style="margin-bottom:0">← Назад</button>
+        <button class="back" onclick="goBack();haptic()" style="margin-bottom:0" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button class="refresh-btn" onclick="refreshTTKData();haptic('hard')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
@@ -1162,7 +1159,7 @@ function renderRecipe(){
   if(!r){ navigate('ttk'); return; }
 
   currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="display:flex;align-items:center;gap:12px">
         <h1 style="flex:1">${r.name}</h1>
         <button onclick="event.stopPropagation();toggleFavorite(${r.id})" style="background:none;border:none;font-size:28px;cursor:pointer;padding:4px;color:${FAVORITES.includes(r.id)?'var(--accent)':'var(--muted)'};transition:transform .15s">
@@ -1337,7 +1334,7 @@ function renderSchedule(){
     }
     
     currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">График</h1>
         <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
@@ -1405,7 +1402,7 @@ function renderScheduleContent() {
     const source = scheduleData || DEFAULT_LOCAL_DATA;
     
     let html = `
-    <button class="back" onclick="goBack();haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
         <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
@@ -1454,7 +1451,7 @@ function renderScheduleContent() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </button>
-          <div style="display:grid;grid-template-rows:${isOpen?'1fr':'0fr'};transition:grid-template-rows .35s cubic-bezier(.32,.72,0,1);overflow:hidden">
+          <div style="max-height:${isOpen?'2000px':'0px'};transition:max-height .35s cubic-bezier(.32,.72,0,1),opacity .25s ease;overflow:hidden;opacity:${isOpen?'1':'0'}">
             <div style="min-height:0;overflow:hidden;padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
               <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">На смене (${workingToday.length})</div>
               ${workingToday.length > 0 ? workingToday.map(p => `
@@ -1531,7 +1528,7 @@ function toggleLoc(name) {
 function renderChecklist(){
   if (!window._clLoc) {
     currentScreen.innerHTML = `
-      <button class="back" onclick="goBack();haptic()">← Назад</button>
+      <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <h1>Чек-листы</h1>
       <div style="display:grid;gap:10px">
         ${DEFAULT_LOCAL_DATA.locations.map(loc => `
@@ -1569,7 +1566,7 @@ function renderChecklist(){
   const managers = allLocStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
   currentScreen.innerHTML = `
-    <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
+    <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h1>${locName}</h1>
     
     <div class="card" style="margin-bottom:16px">
@@ -1649,7 +1646,7 @@ function renderTeam(){
   }
 
   let html = `
-    <button class="back" onclick="goBack();haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h1>Команда</h1>
     ${user ? `
       <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
@@ -1719,7 +1716,7 @@ function renderMatrix(){
   }
 
   currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <h1>Матрица заявок</h1>
     <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
            value="${window._matrixQ}" 
@@ -2304,6 +2301,15 @@ window.deleteTeamMember = function(i){
    🚀 СТАРТ
    ============================================================ */
 // Сначала пробуем загрузить из Firebase, потом рендерим
+// Tap on <h1> to scroll to top
+document.addEventListener('click', e => {
+  if(e.target.tagName === 'H1' || e.target.closest('h1')){
+    const scroller = app.querySelector('.screen.current') || app;
+    scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    haptic();
+  }
+});
+
 (async function init(){
   const loaded = await loadFromFirebase();
   if(!loaded){
