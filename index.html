@@ -11,9 +11,8 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 ::-webkit-scrollbar{width:0;height:0}
 body{scrollbar-width:none}
-html,body{overflow:hidden;height:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent}
-#app{position:fixed;inset:0;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+#app{position:relative;width:100%;height:100vh;overflow:hidden}
 .screen{position:absolute;top:0;left:0;right:0;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px}
 
 @media (prefers-reduced-motion:reduce){
@@ -761,7 +760,7 @@ let screenAnim = null;
   document.body.addEventListener('touchstart', e => {
     if(viewStack.length <= 1) return;
     const t = e.touches[0];
-    if(t.clientX > 30) return;
+    if(t.clientX > 50) return;
     const cur = app.querySelector('.screen.current');
     if(!cur) return;
     sbDragging = true;
@@ -778,9 +777,11 @@ let screenAnim = null;
     const t = e.touches[0];
     const dx = t.clientX - sbStartX;
     const dy = t.clientY - sbStartY;
-    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12){ sbDragging = false; return; }
+    // Cancel swipe-back if vertical scroll dominates
+    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8){ sbDragging = false; return; }
     if(dx < 0){ sbDragging = false; return; }
-    if(dx > 5) e.preventDefault();
+    // Only prevent scroll if we're clearly going horizontal
+    if(dx > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) e.preventDefault();
     const pct = dx / window.innerWidth;
     sbCurrentScreen.style.transition = 'none';
     sbCurrentScreen.style.transform = `translateX(${dx}px)`;
