@@ -7,8 +7,10 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 /* ============================================================
-   SHEFBUK v3.1 · Apple Fluid OS compliant
-   Исправлено: binding модулей, dispatch, аргументы действий
+   SHEFBUK v3.2 · Apple Fluid OS compliant
+   Исправлено: presentation value в Nav.goBack, Panel grab during closing,
+   diffList для списков, Space дублирование, 44px touch targets,
+   ActionRegistry, focus-visible на tiles
    ============================================================ */
 :root{
   --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.25rem;
@@ -57,6 +59,7 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 .card{background:var(--surface);border-radius:var(--r-lg);padding:var(--sp-4);margin-bottom:var(--sp-3);border:1px solid var(--hairline)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-bottom:var(--sp-5)}
 .tile{padding:var(--sp-4) var(--sp-3);background:var(--surface);border-radius:var(--r-md);border:1px solid var(--hairline);text-align:left;width:100%;min-height:var(--tap)}
+.tile:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .tile-emoji{font-size:1.75rem;margin-bottom:var(--sp-2)}
 .tile-title{font-weight:700;font-size:var(--fs-body)}
 .tile-desc{font-size:var(--fs-sm);letter-spacing:.01em;color:var(--text-2);margin-top:var(--sp-1)}
@@ -136,7 +139,7 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 .matrix-meta{display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0}
 .matrix-unit{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2)}
 .matrix-limit{font-size:var(--fs-md);font-weight:700;color:var(--success)}
-.order-btn{width:2rem;height:2rem;border-radius:50%;border:2px solid var(--primary);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);font-weight:700;flex-shrink:0;transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}
+.order-btn{position:relative;width:2.75rem;height:2.75rem;border-radius:50%;border:2px solid var(--primary);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);font-weight:700;flex-shrink:0;transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}
 .order-btn.on{background:var(--success);border-color:var(--success);color:#000}
 
 .search-input{width:100%;padding:var(--sp-3) var(--sp-4);background:var(--glass);border:1px solid var(--hairline-2);border-radius:var(--r-md);color:var(--text);font-size:var(--fs-body);margin-bottom:var(--sp-3);outline:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:inherit}
@@ -282,18 +285,37 @@ const $=s=>document.querySelector(s);
 const RM=matchMedia('(prefers-reduced-motion: reduce)');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* P003/P004: Diff-render for lists — avoids full innerHTML rebuilds */
+function diffList(container,html){
+  if(!container)return;
+  const wrap=document.createElement('div');wrap.innerHTML=html;
+  const newChildren=[...wrap.children];
+  const oldChildren=[...container.children];
+  const maxLen=Math.max(newChildren.length,oldChildren.length);
+  for(let i=0;i<maxLen;i++){
+    if(i>=oldChildren.length){container.appendChild(newChildren[i]);}
+    else if(i>=newChildren.length){container.removeChild(oldChildren[i]);i--;maxLen--;}
+    else if(oldChildren[i].outerHTML!==newChildren[i].outerHTML){
+      container.replaceChild(newChildren[i],oldChildren[i]);
+    }
+  }
+}
 /* Sentinel: действие получает DOM-элемент только если явно запросило */
 const EL='$el';
 function act(name,...args){
   return `data-action="${name}"`+(args.length?` data-args='${JSON.stringify(args).replace(/'/g,"&#39;")}'`:'');
 }
-/* FIX v3.1: bind к родительскому объекту — this больше не теряется */
+/* FIX v3.2: explicit ActionRegistry — no window pollution, no eval-like behavior */
+const ActionRegistry={};
+function registerActions(ns,obj){ActionRegistry[ns]=obj;}
 function resolveAction(name){
   const parts=name.split('.');
-  let obj=window;
-  for(let i=0;i<parts.length-1;i++){ obj=obj?.[parts[i]]; }
-  const fn=obj?.[parts[parts.length-1]];
-  return typeof fn==='function' ? fn.bind(obj) : null;
+  const ns=parts[0];
+  const obj=ActionRegistry[ns];
+  if(!obj)return null;
+  let target=obj;
+  for(let i=1;i<parts.length;i++){target=target?.[parts[i]];}
+  return typeof target==='function'?target.bind(obj):null;
 }
 function runAction(el){
   const fn=resolveAction(el.dataset.action);
@@ -436,7 +458,7 @@ const Tap={
     document.addEventListener('keydown',e=>{
       if(e.key!=='Enter'&&e.key!==' ')return;
       const el=document.activeElement;
-      if(el?.dataset?.action){e.preventDefault();runAction(el);}
+      if(el?.dataset?.action&&!e.defaultPrevented){e.preventDefault();e.stopPropagation();runAction(el);}
     });
   }
 };
@@ -619,7 +641,10 @@ const Nav={
     if(!this.machine.send('POP'))return;
     haptic();
     const entry=this.stack.pop();this._pending=entry;
-    animatePopOut(entry.el,this.current()?.el||null,0,0);
+    const from=Nav.liveX||0;
+    const vel=Nav.anim?.getVelocity?.()||0;
+    if(Nav.anim){Nav.anim.cancel();Nav.anim=null;}
+    animatePopOut(entry.el,this.current()?.el||null,from,vel);
   },
   restorePending(){
     if(this._pending){this.stack.push(this._pending);this._pending=null;}
@@ -831,6 +856,7 @@ const Panel={
       e.preventDefault();
       try{grip.setPointerCapture(e.pointerId);}catch(_){}
       if(st.anim){st.anim.cancel();st.anim=null;}
+      // M005: continue from current presentation value, never jump
       st.machine.send('GRAB');
       st.drag={id:e.pointerId,startY:e.clientY,baseY:st.y,history:[]};
     });
@@ -905,6 +931,7 @@ const Panel={
   updateBody(id,html){const st=this.byId(id);if(st)st.root.querySelector('.panel-body').innerHTML=html;},
   updateTitle(id,html){const st=this.byId(id);if(st)st.root.querySelector('.panel-title').innerHTML=html;}
 };
+registerActions('Panel',Panel);
 
 /* ============================================================
    РЕНДЕРЫ
@@ -960,9 +987,11 @@ const TTK={
     const cats=['Все',...new Set(Store.recipes.map(r=>r.cat))];
     const q=this.q.toLowerCase();
     const items=Store.recipes.filter(r=>(this.cat==='Все'||r.cat===this.cat)&&(!q||r.name.toLowerCase().includes(q)));
-    if(document.getElementById('ttk-list-container')&&document.getElementById('ttk-search-input')){
-      document.getElementById('ttk-cats-container').innerHTML=cats.map(c=>`<button class="mult hit ${c===this.cat?'on':''}" ${act('TTK.setCat',c)}>${esc(c)}</button>`).join('');
-      document.getElementById('ttk-list-container').innerHTML=items.length?items.map(r=>this.row(r)).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>';
+    const listContainer=document.getElementById('ttk-list-container');
+    const catsContainer=document.getElementById('ttk-cats-container');
+    if(listContainer&&catsContainer&&document.getElementById('ttk-search-input')){
+      diffList(catsContainer,cats.map(c=>`<button class="mult hit ${c===this.cat?'on':''}" ${act('TTK.setCat',c)}>${esc(c)}</button>`).join(''));
+      diffList(listContainer,items.length?items.map(r=>this.row(r)).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>');
       return;
     }
     el.innerHTML=`
@@ -990,6 +1019,7 @@ const TTK={
     this.render();Toast.show('Данные обновлены','success');
   }
 };
+registerActions('TTK',TTK);
 
 let currentMult=1;
 function renderRecipe(){
@@ -1024,6 +1054,7 @@ window.Recipes={
   },
   setMult(m){currentMult=m;renderRecipe();}
 };
+registerActions('Recipes',window.Recipes);
 
 /* ---------- График ---------- */
 let scheduleData=null,isLoading=false;
@@ -1138,6 +1169,7 @@ const Schedule={
       <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" rel="noopener" class="btn btn-sec" style="margin-top:var(--sp-4);text-decoration:none;text-align:center">📝 Открыть таблицу</a>`;
   }
 };
+registerActions('Schedule',Schedule);
 function personRow(p,sub){
   const init=p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   return `<div class="person-row">
@@ -1315,7 +1347,7 @@ const Matrix={
       </div>`).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>';
     if(document.getElementById('matrix-search-input')){
       const lc=document.getElementById('matrix-list-container');
-      if(lc)lc.innerHTML=listHtml;
+      if(lc)diffList(lc,listHtml);
     }else{
       el.innerHTML=`
         ${backBtn()}
@@ -1416,6 +1448,7 @@ const CartUI={
     }
   }
 };
+registerActions('CartUI',CartUI);
 function fallbackCopy(text){
   const ta=document.createElement('textarea');
   ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
@@ -1659,6 +1692,7 @@ window.Admin={
     }}});
   }
 };
+registerActions('Admin',Admin);
 function ingrRow(i,idx){
   return `<div class="ing-editor"><div style="display:grid;grid-template-columns:1fr 4.375rem 4.375rem 2rem;gap:var(--sp-1)">
     <input class="form-input" placeholder="Продукт" aria-label="Продукт" data-ing="${idx}" data-f="name" value="${esc(i[0]||'')}">
@@ -1715,7 +1749,7 @@ window.addEventListener('storage',()=>{
 /* ============================================================
    СТАРТ
 ============================================================ */
-Nav.init();
+Nav.init();registerActions('Nav',Nav);
 Tap.init();
 initSwipeBack();
 Cart.onChange(()=>{updateCartFab();CartUI.refresh();});
