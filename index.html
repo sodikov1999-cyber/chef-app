@@ -7,22 +7,16 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 /* ============================================================
-   SHEFBUK v3 · Apple Fluid OS compliant
-   State machines · 44px targets · Focus management · Tokens
+   SHEFBUK v3.1 · Apple Fluid OS compliant
+   Исправлено: binding модулей, dispatch, аргументы действий
    ============================================================ */
 :root{
-  /* DT002: spacing, 8pt grid */
   --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.25rem;
   --sp-6:1.5rem; --sp-8:2rem; --sp-10:2.5rem; --sp-12:3rem;
-  /* DT004: radius */
   --r-sm:.5rem; --r-md:.75rem; --r-lg:1rem; --r-xl:1.25rem; --r-full:9999px;
-  /* DT020: z-index layers */
   --z-fab:100; --z-panel:200; --z-snack:300;
-  /* DT003: min interactive target */
   --tap:2.75rem;
-  /* DT006: type scale */
   --fs-xs:.6875rem; --fs-sm:.75rem; --fs-md:.875rem; --fs-body:.9375rem; --fs-lg:1.125rem; --fs-xl:1.625rem;
-  /* DT010: semantic colors */
   --bg:#0F0D0B; --surface:#1B1613; --surface-solid:#1B1613;
   --text:#F5ECE2; --text-2:#9C8D7E;
   --primary:#FF8A3D; --primary-soft:rgba(255,138,61,.14);
@@ -44,22 +38,19 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:var(--r-sm)}
 :focus:not(:focus-visible){outline:none}
 
-/* DT005/DT009: typography — size-specific tracking */
 h1{font-weight:800;font-size:var(--fs-xl);line-height:1.15;letter-spacing:-.02em;margin-bottom:var(--sp-4)}
 h2{font-weight:700;font-size:var(--fs-lg);line-height:1.2;letter-spacing:-.01em;margin:var(--sp-5) 0 var(--sp-3)}
 h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);color:var(--primary)}
 .small{font-size:var(--fs-sm);letter-spacing:.01em}
 
-/* G016: hit-area expansion — визуальный размер меньше 44, зона нажатия ≥44 */
+/* 44px hit-area (G016/AC013) */
 .hit{position:relative}
 .hit::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,var(--tap));height:max(100%,var(--tap));transform:translate(-50%,-50%)}
 
-/* Экраны навигационного стека */
 #app{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden}
 .screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);padding:var(--sp-5);padding-bottom:5.5rem;touch-action:pan-y;will-change:transform}
 .hscroll{touch-action:pan-x;overscroll-behavior-x:contain}
 
-/* Мгновенный press-фидбек (M001) */
 [data-action]{transition:transform 90ms ease-out;touch-action:manipulation}
 [data-action].pressed{transform:scale(.96)}
 
@@ -155,7 +146,6 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 .cart-fab{position:fixed;bottom:var(--sp-3);right:4.375rem;width:2.875rem;height:2.875rem;border-radius:50%;background:var(--primary);color:#000;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:1.125rem;z-index:var(--z-fab);display:flex;align-items:center;justify-content:center}
 .cart-badge{position:absolute;top:-.25rem;right:-.25rem;min-width:1.125rem;height:1.125rem;border-radius:.5625rem;background:var(--success);color:#000;font-size:var(--fs-xs);font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 var(--sp-1)}
 
-/* Панели */
 .panel-root{position:fixed;inset:0;z-index:var(--z-panel);display:flex;align-items:flex-end;justify-content:center}
 .panel-root .scrim{position:absolute;inset:0;background:#000;opacity:0}
 .panel{position:relative;width:100%;max-width:31.25rem;display:flex;flex-direction:column;will-change:transform;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
@@ -189,7 +179,6 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 .cart-qty-input{width:3.5rem;height:2rem;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--hairline-2);color:var(--text);font-size:var(--fs-body);font-weight:700;text-align:center;outline:none;padding:0 var(--sp-1);font-family:inherit}
 .cart-qty-input:focus{border-color:var(--primary)}
 
-/* Toast (информация) и Snackbar (информация + действие/undo) */
 .toast{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(5rem);background:var(--text);color:var(--bg);padding:var(--sp-3) var(--sp-5);border-radius:var(--r-full);font-weight:600;font-size:var(--fs-md);opacity:0;z-index:var(--z-snack);max-width:85vw;text-align:center;will-change:transform,opacity;pointer-events:none}
 .snackbar{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(5rem);display:flex;align-items:center;gap:var(--sp-2);background:var(--surface);color:var(--text);border:1px solid var(--hairline-2);padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);border-radius:var(--r-lg);z-index:var(--z-snack);max-width:92vw;font-size:var(--fs-md);font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.5);will-change:transform,opacity}
 .snackbar-msg{flex:1;min-width:0}
@@ -198,7 +187,6 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 .loader-inline{border:4px solid rgba(255,255,255,.1);border-left-color:var(--primary);border-radius:50%;width:1.875rem;height:1.875rem;animation:spin 1s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* AC014/AC015/AC012 */
 @media (prefers-reduced-motion:reduce){
   [data-action]{transition:none!important}
   .panel-root .panel,.panel-root .scrim{transition:opacity .16s ease!important}
@@ -227,7 +215,7 @@ h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);col
 ============================================================ */
 const SHEET_ID='1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-/* ⚠️ SECURITY: в продакшене закрыть правила Firebase (auth/ограничение записи) */
+/* ⚠️ SECURITY: в продакшене закрыть правила Firebase */
 const FIREBASE_URL='https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app';
 const FB_PATH='/chefbook';
 
@@ -294,21 +282,31 @@ const $=s=>document.querySelector(s);
 const RM=matchMedia('(prefers-reduced-motion: reduce)');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* Sentinel: действие получает DOM-элемент только если явно запросило */
+const EL='$el';
 function act(name,...args){
   return `data-action="${name}"`+(args.length?` data-args='${JSON.stringify(args).replace(/'/g,"&#39;")}'`:'');
 }
-function resolveAction(name){return name.split('.').reduce((o,k)=>o?.[k],window);}
+/* FIX v3.1: bind к родительскому объекту — this больше не теряется */
+function resolveAction(name){
+  const parts=name.split('.');
+  let obj=window;
+  for(let i=0;i<parts.length-1;i++){ obj=obj?.[parts[i]]; }
+  const fn=obj?.[parts[parts.length-1]];
+  return typeof fn==='function' ? fn.bind(obj) : null;
+}
 function runAction(el){
   const fn=resolveAction(el.dataset.action);
-  if(typeof fn!=='function')return;
+  if(!fn)return;
   let args=[];
   if(el.dataset.args){try{args=JSON.parse(el.dataset.args);}catch(e){args=[];}}
-  fn(...args,el);
+  args=args.map(a=>a===EL?el:a);
+  fn(...args);
 }
 function haptic(kind){try{if(tg?.HapticFeedback)tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light');}catch(e){}}
 
 /* ============================================================
-   S001–S025: STATE MACHINE FACTORY
+   STATE MACHINE FACTORY
 ============================================================ */
 const SM={
   create(cfg){
@@ -333,7 +331,7 @@ const SM={
 };
 
 /* ============================================================
-   MOTION: springs + DT016 motion tokens
+   MOTION
 ============================================================ */
 function makeSpring(response=0.4,bounce=0,mass=1){
   const zeta=Math.max(0.05,1-bounce), omega=(2*Math.PI)/response;
@@ -341,10 +339,10 @@ function makeSpring(response=0.4,bounce=0,mass=1){
   return {stiffness,damping:2*zeta*Math.sqrt(stiffness*mass),mass};
 }
 const Motion={
-  nav:makeSpring(0.42,0),          // навигация: критическое затухание
-  navCancel:makeSpring(0.4,0.12),  // возврат жеста: лёгкий отскок
+  nav:makeSpring(0.42,0),
+  navCancel:makeSpring(0.4,0.12),
   navFlick:v=>makeSpring(0.4,v>600?0.1:0),
-  sheetOpen:makeSpring(0.36,0.05), // DT016: sheet (response .3–0.4, damping ~0.8)
+  sheetOpen:makeSpring(0.36,0.05),
   sheetSettle:v=>makeSpring(0.36,Math.abs(v)>400?0.15:0),
   sheetDismiss:makeSpring(0.34,0),
   toastIn:makeSpring(0.45,0.3),
@@ -404,7 +402,7 @@ function popEl(el,from=0.6){
 }
 
 /* ============================================================
-   TAP: мгновенный отклик (M001) + TapMachine
+   TAP: мгновенный отклик на pointerdown
 ============================================================ */
 const Tap={
   state:'Idle', el:null, id:null, x:0, y:0,
@@ -421,7 +419,7 @@ const Tap={
     document.addEventListener('pointermove',e=>{
       if(this.state!=='Pressed'||e.pointerId!==this.id)return;
       if(Math.hypot(e.clientX-this.x,e.clientY-this.y)>12){
-        this.state='Cancelled';this.el.classList.remove('pressed'); // cancel-by-dragging-away
+        this.state='Cancelled';this.el.classList.remove('pressed');
       }
     },{passive:true});
     document.addEventListener('pointerup',e=>{
@@ -444,7 +442,7 @@ const Tap={
 };
 
 /* ============================================================
-   TOAST (информация, AC010) + SNACKBAR (действие/undo, S018)
+   TOAST + SNACKBAR
 ============================================================ */
 const Toast={
   el:null,anim:null,timer:null,
@@ -498,7 +496,7 @@ const Snackbar={
 };
 
 /* ============================================================
-   STORE (A006: единый владелец данных)
+   STORE
 ============================================================ */
 const Store={
   recipes:[],news:[],team:[],matrix:[],favorites:[],cart:[],
@@ -551,7 +549,7 @@ const FB={
 };
 
 /* ============================================================
-   CART — бизнес-логика вне UI (A004)
+   CART — бизнес-логика
 ============================================================ */
 const Cart={
   listeners:[],
@@ -586,7 +584,7 @@ const Cart={
 };
 
 /* ============================================================
-   NAV: единый стек + NavMachine (S021)
+   NAV: единый стек + NavMachine
 ============================================================ */
 const Nav={
   stack:[],machine:null,anim:null,liveX:0,_pending:null,
@@ -602,6 +600,7 @@ const Nav={
   prev(){return this.stack[this.stack.length-2];},
   markStale(){for(let i=0;i<this.stack.length-1;i++)this.stack[i].stale=true;},
   push(view,data){
+    if(data instanceof Element)data=null; // страховка
     if(!this.machine.send('PUSH'))return;
     haptic();
     const prevEl=this.current()?.el||null;
@@ -656,7 +655,7 @@ function focusHeading(el){
   const h=el?.querySelector('h1');
   if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}
 }
-/* Interactive pop gesture: pointer events, reversal, velocity handoff */
+/* Interactive pop gesture */
 const sb={id:null,startX:0,startY:0,baseX:0,x:0,engaged:false,cur:null,prev:null,fromPop:false,history:[]};
 function initSwipeBack(){
   document.addEventListener('pointerdown',e=>{
@@ -727,7 +726,7 @@ function finishSwipe(){
 }
 
 /* ============================================================
-   PANEL: Bottom Sheet Playbook — machine, focus, no data loss
+   PANEL: machine, focus, защита данных
 ============================================================ */
 const Panel={
   stack:[],
@@ -772,7 +771,7 @@ const Panel={
     this._wire(st);
     st.scrim.addEventListener('pointerdown',e=>{e.preventDefault();this.tryClose(st);});
     root.addEventListener('keydown',e=>{if(e.key==='Tab')this._trap(st.panel,e);});
-    root.addEventListener('input',()=>{st.dirty=true;},true); // защита работы пользователя
+    root.addEventListener('input',()=>{st.dirty=true;},true);
     st.machine.send('OPEN');
     if(RM.matches){
       st.panel.style.transform='';
@@ -864,7 +863,6 @@ const Panel={
   },
   requestClose(){const st=this.top();if(st)this.tryClose(st);},
   tryClose(st,force=false){
-    // Playbook: никогда не закрывать с потерей работы пользователя
     if(st.protected&&st.dirty&&!force){
       Snackbar.show('Есть несохранённые изменения',{
         action:{label:'Закрыть без сохранения',fn:()=>this.dismiss(st,0,true)},
@@ -897,7 +895,6 @@ const Panel={
     st.root.remove();
     const i=this.stack.indexOf(st);if(i>=0)this.stack.splice(i,1);
     this._refreshPush();
-    // AC006: возврат фокуса на триггер
     if(st.trigger&&document.contains(st.trigger))st.trigger.focus({preventScroll:true});
     if(st.onClose)st.onClose();
   },
@@ -912,10 +909,19 @@ const Panel={
 /* ============================================================
    РЕНДЕРЫ
 ============================================================ */
+/* FIX v3.1: стрелочные обёртки сохраняют this модулей */
 function render(){
   const v=Nav.current().view;
-  ({home:renderHome,ttk:TTK.render,recipe:renderRecipe,schedule:Schedule.render,
-    checklist:CL.render,team:renderTeam,matrix:Matrix.render})[v]?.();
+  const map={
+    home:renderHome,
+    ttk:()=>TTK.render(),
+    recipe:renderRecipe,
+    schedule:()=>Schedule.render(),
+    checklist:()=>CL.render(),
+    team:renderTeam,
+    matrix:()=>Matrix.render()
+  };
+  map[v]?.();
 }
 const backBtn=()=>`<button class="back hit" ${act('Nav.goBack')} aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>`;
 const refreshBtn=a=>`<button class="refresh-btn hit" ${act(a)} data-haptic="hard" aria-label="Обновить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>`;
@@ -1021,6 +1027,7 @@ window.Recipes={
 
 /* ---------- График ---------- */
 let scheduleData=null,isLoading=false;
+let expandedLocations=new Set();
 const Schedule={
   weekStart:null,dayIdx:null,
   render(){
@@ -1100,7 +1107,7 @@ const Schedule={
         const stats=[...loc.staff].sort((a,b)=>b.total-a.total);
         return `
         <div class="card loc-card" style="padding:0;overflow:hidden">
-          <button class="loc-head" ${act('Schedule.toggleLoc',loc.name)}>
+          <button class="loc-head" ${act('Schedule.toggleLoc',loc.name,EL)}>
             <div style="flex:1;min-width:0">
               <div style="font-weight:700;font-size:var(--fs-body);margin-bottom:var(--sp-1)">${esc(loc.name)}</div>
               <div class="small" style="color:var(--text-2)">👥 На смене: <span style="color:var(--primary);font-weight:700">${working.length}</span> из ${loc.staff.length}</div>
@@ -1186,7 +1193,6 @@ function parseComplexCSV(csvText){
   }
   return locations.length?{month:'Август 2026',locations}:null;
 }
-let expandedLocations=new Set();
 
 /* ---------- Чек-листы ---------- */
 const CL={
@@ -1210,7 +1216,7 @@ const CL={
     const managers=(locData?.staff||[]).filter(p=>p.role.includes('Су-шеф')||p.role.includes('ИО')||p.role.includes('Верховный'));
     const list=this.tab==='close'?CHECKLISTS.close:CHECKLISTS.open;
     el.innerHTML=`
-      ${backBtn()}
+      <button class="back hit" ${act('CL.backLoc')} aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
       <h1>${esc(this.loc)}</h1>
       <div class="card" style="margin-bottom:var(--sp-4)">
         <label class="form-label" for="cl-manager">Ответственный сегодня</label>
@@ -1235,7 +1241,7 @@ const CL={
     document.getElementById('cl-manager').addEventListener('change',e=>this.saveManager(e.target.value));
   },
   openLoc(name){this.loc=name;this.render();},
-  back(){this.loc=null;this.render();},
+  backLoc(){this.loc=null;this.render();},
   setTab(t){this.tab=t;this.render();},
   saveManager(name){
     const key='cl_'+new Date().toISOString().slice(0,10)+'_'+this.loc;
@@ -1376,12 +1382,11 @@ const CartUI={
   changeQty(i,d){Cart.changeQty(i,d);},
   deleteItem(i){
     Cart.remove(i);
-    if(!Store.cart.length){Panel.dismiss(Panel.byId('cart'),0,true);return;}
+    if(!Store.cart.length){const st=Panel.byId('cart');if(st)Panel.dismiss(st,0,true);}
   },
   clear(){
     Cart.clear();
-    Panel.dismiss(Panel.byId('cart'),0,true);
-    Matrix.render();
+    const st=Panel.byId('cart');if(st)Panel.dismiss(st,0,true);
   },
   copy(){
     if(!Store.cart.length){Toast.show('Корзина пуста','error');return;}
@@ -1438,7 +1443,7 @@ function updateCartFab(){
 }
 
 /* ============================================================
-   АДМИНКА + CRUD с Undo (S018)
+   АДМИНКА + CRUD с Undo
 ============================================================ */
 window.Admin={
   tab:localStorage.getItem('chef_admin_tab')||'recipes',
@@ -1447,7 +1452,7 @@ window.Admin={
     const labels={recipes:'ТТК',news:'Новости',team:'Команда',matrix:'Матрица'};
     Panel.open({id:'admin',variant:'sheet',title:'⚙️ Редактор',
       body:`<div class="panel-tabs">
-        ${tabs.map(t=>`<button class="tab-btn ${t===this.tab?'on':''}" data-tab="${t}" ${act('Admin.setTab',t)}>${labels[t]}</button>`).join('')}
+        ${tabs.map(t=>`<button class="tab-btn ${t===this.tab?'on':''}" data-tab="${t}" ${act('Admin.setTab',t,EL)}>${labels[t]}</button>`).join('')}
       </div><div id="admin-content"></div>`,
       afterRender:()=>this.renderContent()});
   },
@@ -1492,7 +1497,6 @@ window.Admin={
           </div></div></div>`).join('');
     }
   },
-  /* --- ТТК --- */
   editRecipe(id){
     Panel.killInstant('edit-modal');
     const r=id?Store.recipes.find(x=>x.id===id):{id:null,name:'',cat:'Горячее',time:'',yield:'',kcal:0,note:'',ingr:[['',0,0]],steps:['']};
@@ -1559,7 +1563,6 @@ window.Admin={
       Store.recipes.splice(idx,0,removed);Store.save();FB.sync();this.renderContent();
     }}});
   },
-  /* --- Новости --- */
   editNews(i){
     Panel.killInstant('edit-modal');
     const isEdit=i!==undefined&&i!==null;
@@ -1587,7 +1590,6 @@ window.Admin={
       Store.news.splice(i,0,removed);Store.save();FB.sync();this.renderContent();
     }}});
   },
-  /* --- Команда --- */
   editTeamMember(i){
     Panel.killInstant('edit-modal');
     const isEdit=i!==undefined&&i!==null;
@@ -1614,7 +1616,6 @@ window.Admin={
       Store.team.splice(i,0,removed);Store.save();FB.sync();this.renderContent();
     }}});
   },
-  /* --- Поставщики --- */
   editSupplier(index){
     Panel.killInstant('edit-supplier-modal');
     const isEdit=index!==undefined&&index!==null;
@@ -1663,13 +1664,13 @@ function ingrRow(i,idx){
     <input class="form-input" placeholder="Продукт" aria-label="Продукт" data-ing="${idx}" data-f="name" value="${esc(i[0]||'')}">
     <input class="form-input" placeholder="Брутто" aria-label="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
     <input class="form-input" placeholder="Нетто" aria-label="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger hit" ${act('Admin.removeRow')} aria-label="Удалить строку">✕</button>
+    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить строку">✕</button>
   </div></div>`;
 }
 function stepRow(s,idx){
   return `<div style="display:flex;gap:var(--sp-1);margin-bottom:var(--sp-2);align-items:flex-start">
     <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" aria-label="Шаг ${idx+1}" style="flex:1;min-height:2.625rem">${esc(s||'')}</textarea>
-    <button class="icon-btn danger hit" ${act('Admin.removeRow')} aria-label="Удалить шаг">✕</button>
+    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить шаг">✕</button>
   </div>`;
 }
 function supplierItemRow(it,idx){
@@ -1677,12 +1678,12 @@ function supplierItemRow(it,idx){
     <input class="form-input" placeholder="Продукт" aria-label="Продукт" value="${esc(it.name)}" data-midx="${idx}" data-f="name">
     <input class="form-input" placeholder="Ед." aria-label="Единица" value="${esc(it.unit)}" data-midx="${idx}" data-f="unit">
     <input class="form-input" placeholder="Лимит" aria-label="Лимит" type="number" value="${it.limit!==null?it.limit:''}" data-midx="${idx}" data-f="limit">
-    <button class="icon-btn danger hit" ${act('Admin.removeRow')} aria-label="Удалить товар">✕</button>
+    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить товар">✕</button>
   </div></div>`;
 }
 
 /* ============================================================
-   ГЛОБАЛЬНЫЕ КЛАВИАТОРНЫЕ ПУТИ (G023)
+   ГЛОБАЛЬНЫЕ ОБРАБОТЧИКИ
 ============================================================ */
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -1690,10 +1691,6 @@ document.addEventListener('keydown',e=>{
     else if(Nav.stack.length>1)Nav.goBack();
   }
 });
-
-/* ============================================================
-   СТАРТ
-============================================================ */
 document.addEventListener('focusout',e=>{
   if(e.target.classList?.contains('cart-qty-input')){
     const scroller=Nav.current()?.el;
@@ -1715,6 +1712,9 @@ window.addEventListener('storage',()=>{
   render();
 });
 
+/* ============================================================
+   СТАРТ
+============================================================ */
 Nav.init();
 Tap.init();
 initSwipeBack();
