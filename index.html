@@ -754,32 +754,32 @@ let screenAnim = null;
    ⬅️ GLOBAL SWIPE-BACK (iOS-style interactive pop)
    ============================================================ */
 (function initSwipeBack(){
-  let sbStartX = 0, sbStartY = 0, sbDragging = false, sbAnim = null;
+  let sbStartX = 0, sbStartY = 0, sbStartTime = 0, sbDragging = false, sbAnim = null;
   let sbCurrentScreen = null, sbPrevScreen = null;
 
-  app.addEventListener('pointerdown', e => {
+  document.body.addEventListener('touchstart', e => {
     if(viewStack.length <= 1) return;
-    if(e.clientX > 24) return; // left edge zone only
+    const t = e.touches[0];
+    if(t.clientX > 30) return;
     const cur = app.querySelector('.screen.current');
     if(!cur) return;
     sbDragging = true;
-    sbStartX = e.clientX;
+    sbStartX = t.clientX;
+    sbStartY = t.clientY;
     sbStartTime = e.timeStamp;
-    sbStartY = e.clientY;
     sbCurrentScreen = cur;
     sbPrevScreen = app.querySelector('.screen:not(.current)');
     if(sbAnim) sbAnim.cancel();
-    if(e.pointerId) app.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
+  }, {passive: true});
 
-  app.addEventListener('pointermove', e => {
+  document.body.addEventListener('touchmove', e => {
     if(!sbDragging || !sbCurrentScreen) return;
-    const dx = e.clientX - sbStartX;
-    const dy = e.clientY - sbStartY;
-    // Cancel if vertical scroll dominates
+    const t = e.touches[0];
+    const dx = t.clientX - sbStartX;
+    const dy = t.clientY - sbStartY;
     if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12){ sbDragging = false; return; }
     if(dx < 0){ sbDragging = false; return; }
+    if(dx > 5) e.preventDefault();
     const pct = dx / window.innerWidth;
     sbCurrentScreen.style.transition = 'none';
     sbCurrentScreen.style.transform = `translateX(${dx}px)`;
@@ -790,14 +790,16 @@ let screenAnim = null;
       sbPrevScreen.style.transform = `translateX(${(pct * 30 - 30)}%)`;
       sbPrevScreen.style.opacity = Math.max(0.4, 1 - pct * 0.6);
     }
-  });
+  }, {passive: false});
 
-  app.addEventListener('pointerup', e => {
+  document.body.addEventListener('touchend', e => {
     if(!sbDragging || !sbCurrentScreen) return;
     sbDragging = false;
-    const dx = e.clientX - sbStartX;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sbStartX;
+    const dt = e.timeStamp - sbStartTime;
     const threshold = window.innerWidth * 0.28;
-    const velocity = dx / (e.timeStamp - (sbStartTime || e.timeStamp - 100)) * 1000 || 0;
+    const velocity = dt > 0 ? dx / dt * 1000 : 0;
     const commit = dx > threshold || (dx > 60 && velocity > 400);
 
     if(commit){
@@ -847,7 +849,7 @@ let screenAnim = null;
         }
       });
     }
-  });
+  }, {passive: true});
 })();
 
 
@@ -924,12 +926,17 @@ function navigate(view, data){
         prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
       },
       onComplete: () => {
-        prevScreen.style.display = 'none';
-        prevScreen.style.visibility = 'hidden';
+        if(prevScreen){
+          prevScreen.style.display = 'none';
+          prevScreen.style.visibility = 'hidden';
+          prevScreen.style.transform = '';
+          prevScreen.style.opacity = '';
+        }
+        newScreen.style.transform = '';
       }
     });
   } else {
-    newScreen.style.transform = 'translateX(0)';
+    newScreen.style.transform = '';
   }
   newScreen.classList.add('current');
   viewStack.push({view, data});
@@ -2301,14 +2308,17 @@ window.deleteTeamMember = function(i){
    🚀 СТАРТ
    ============================================================ */
 // Сначала пробуем загрузить из Firebase, потом рендерим
-// Tap on <h1> to scroll to top
-document.addEventListener('click', e => {
-  if(e.target.tagName === 'H1' || e.target.closest('h1')){
-    const scroller = app.querySelector('.screen.current') || app;
-    scroller.scrollTo({ top: 0, behavior: 'smooth' });
-    haptic();
+// Tap in top zone to scroll to top (like iOS status bar tap)
+document.addEventListener('touchend', e => {
+  const t = e.changedTouches[0];
+  if(t.clientY < 80 && viewStack.length > 1){
+    const scroller = app.querySelector('.screen.current');
+    if(scroller){
+      scroller.scrollTo({ top: 0, behavior: 'smooth' });
+      haptic();
+    }
   }
-});
+}, {passive: true});
 
 (async function init(){
   const loaded = await loadFromFirebase();
