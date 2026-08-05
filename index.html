@@ -11,9 +11,15 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 ::-webkit-scrollbar{width:0;height:0}
 body{scrollbar-width:none}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent}
-#app{position:relative;overflow-x:hidden;min-height:100vh}
-.screen{position:absolute;top:0;left:0;right:0;min-height:100vh;background:var(--bg);will-change:transform,opacity;transform:translateX(0)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent;overflow:hidden}
+#app{position:relative;width:100%;height:100vh;overflow:hidden}
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px;will-change:transform,opacity}
+@media (prefers-reduced-motion:reduce){
+  .screen{transition:none!important;animation:none!important}
+  .sheet{transition:none!important;transform:none!important}
+  .sheet-bg{transition:none!important;background:rgba(0,0,0,.55)}
+  .sheet-bg.open .sheet{transform:translateY(0)!important}
+}
 h1{font-weight:800;font-size:26px;margin-bottom:16px}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
@@ -79,6 +85,10 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 /* === СТАРЫЕ МОДАЛКИ (редактирование) === */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .modal{animation:none!important;transform:none!important;opacity:0;transition:opacity .15s ease!important}
+  .modal.show{opacity:1}
+}
 
 @media (prefers-reduced-motion:reduce){
   .sheet{transition:none!important;transform:none!important}
@@ -734,7 +744,9 @@ function project(initialVelocity, decelerationRate = PHYS.decelerationRate) {
 }
 
 const app = $('#app');
-let activeContainer = app;
+let currentScreen = app;
+let viewStack = [{view: 'home', data: null}];
+let screenAnim = null;
 let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
@@ -774,26 +786,31 @@ function toast(msg, type='info'){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
 }
 
-let viewStack = [{view: 'home', data: null}];
-let screenAnim = null;
+function getCurrentScreen() {
+  const screens = app.querySelectorAll('.screen');
+  return screens[screens.length - 1] || app;
+}
 
 function navigate(view, data){
   haptic();
   if(data !== undefined) currentRecipeId = data;
 
+  const prevScreen = getCurrentScreen();
+  if (prevScreen && prevScreen !== app) {
+    prevScreen.classList.remove('current');
+  }
+
   const newScreen = document.createElement('div');
   newScreen.className = 'screen';
   newScreen.style.transform = 'translateX(100%)';
   app.appendChild(newScreen);
+  currentScreen = newScreen;
 
-  activeContainer = newScreen;
   currentView = view;
   render();
   window.scrollTo(0,0);
 
-  const prevScreen = app.querySelector('.screen.current');
-  if(prevScreen){
-    prevScreen.classList.remove('current');
+  if(prevScreen && prevScreen !== app){
     if(screenAnim) screenAnim.cancel();
     screenAnim = springAnimate({
       from: 100, to: 0, velocity: 0,
@@ -802,7 +819,10 @@ function navigate(view, data){
         prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
         prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
       },
-      onComplete: () => { if(prevScreen) prevScreen.style.display = 'none'; }
+      onComplete: () => {
+        prevScreen.style.display = 'none';
+        prevScreen.style.visibility = 'hidden';
+      }
     });
   } else {
     newScreen.style.transform = 'translateX(0)';
@@ -819,32 +839,35 @@ function goBack(){
   currentView = prevState.view;
   if(prevState.data !== undefined) currentRecipeId = prevState.data;
 
-  const currentScreen = app.querySelector('.screen.current');
-  const prevScreen = app.querySelector('.screen:not(.current)');
-
-  if(prevScreen){
-    prevScreen.style.display = '';
-    prevScreen.classList.add('current');
+  const screens = app.querySelectorAll('.screen');
+  if (screens.length < 2) {
+    currentScreen = app;
+    render();
+    return;
   }
+
+  const curScreen = screens[screens.length - 1];
+  const prevScreen = screens[screens.length - 2];
+
+  prevScreen.style.display = '';
+  prevScreen.style.visibility = '';
+  prevScreen.classList.add('current');
+  currentScreen = prevScreen;
 
   if(screenAnim) screenAnim.cancel();
   screenAnim = springAnimate({
     from: 0, to: 100, velocity: 0,
     onUpdate: x => {
-      if(currentScreen) currentScreen.style.transform = `translateX(${x}%)`;
-      if(prevScreen){
-        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
-        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
-      }
+      curScreen.style.transform = `translateX(${x}%)`;
+      prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
+      prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
     },
     onComplete: () => {
-      if(currentScreen) currentScreen.remove();
-      if(prevScreen){
+      curScreen.remove();
+      if (prevScreen) {
         prevScreen.style.transform = '';
         prevScreen.style.opacity = '';
       }
-      activeContainer = prevScreen || app;
-      render();
     }
   });
 }
@@ -857,11 +880,12 @@ function render(){
   else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
   else if(currentView === 'matrix') renderMatrix();
+  else if(currentView === 'favorites') renderFavorites();
 }
 
 function renderFavorites(){
   const favs = RECIPES.filter(r => FAVORITES.includes(r.id));
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <div class="header">
       <h1>⭐ Избранное</h1>
       <p style="color:var(--muted);font-size:14px">${favs.length} блюд</p>
@@ -898,7 +922,7 @@ function renderHome(){
       });
   }
 
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <h1>${greet}</h1>
     
     <div class="card">
@@ -933,6 +957,11 @@ function renderHome(){
         <div class="tile-emoji">👥</div>
         <div class="tile-title">Команда</div>
         <div class="tile-desc">${TEAM.length} чел</div>
+      </button>
+      <button class="tile" onclick="navigate('favorites');haptic()">
+        <div class="tile-emoji">⭐</div>
+        <div class="tile-title">Избранное</div>
+        <div class="tile-desc">${FAVORITES.length} блюд</div>
       </button>
     </div>
 
@@ -980,7 +1009,7 @@ function renderTTK(){
   }
 
   // Первый рендер
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <button class="back" onclick="goBack();haptic()" style="margin-bottom:0">← Назад</button>
         <button class="refresh-btn" onclick="refreshTTKData();haptic('hard')">
@@ -1029,7 +1058,7 @@ function renderRecipe(){
   const r = RECIPES.find(x => x.id === currentRecipeId);
   if(!r){ navigate('ttk'); return; }
 
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <button class="back" onclick="goBack();haptic()">← Назад</button>
     <div style="display:flex;align-items:center;gap:12px">
         <h1 style="flex:1">${r.name}</h1>
@@ -1204,7 +1233,7 @@ function renderSchedule(){
         selectedDayIndex = today.getDate() - 1;
     }
     
-    activeContainer.innerHTML = `
+    currentScreen.innerHTML = `
     <button class="back" onclick="goBack();haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">График</h1>
@@ -1362,7 +1391,7 @@ function renderScheduleContent() {
     </a>
   `;
   
-  activeContainer.innerHTML = html;
+  currentScreen.innerHTML = html;
 }
 
 window.changeWeek = function(offset) {
@@ -1398,7 +1427,7 @@ function toggleLoc(name) {
 
 function renderChecklist(){
   if (!window._clLoc) {
-    activeContainer.innerHTML = `
+    currentScreen.innerHTML = `
       <button class="back" onclick="goBack();haptic()">← Назад</button>
       <h1>Чек-листы</h1>
       <div style="display:grid;gap:10px">
@@ -1436,7 +1465,7 @@ function renderChecklist(){
   // Фильтруем только Су-шефов, ИО и Верховных из всего списка сотрудников локации
   const managers = allLocStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
     <h1>${locName}</h1>
     
@@ -1538,7 +1567,7 @@ function renderTeam(){
       });
   });
 
-  activeContainer.innerHTML = html;
+  currentScreen.innerHTML = html;
 }
 
 function renderMatrix(){
@@ -1586,7 +1615,7 @@ function renderMatrix(){
       return;
   }
 
-  activeContainer.innerHTML = `
+  currentScreen.innerHTML = `
     <button class="back" onclick="goBack();haptic()">← Назад</button>
     <h1>Матрица заявок</h1>
     <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
@@ -1667,7 +1696,7 @@ function showAdminModal(){
     sheet.classList.add('open');
   });
 
-    // === DRAG ЛОГИКА (Spring Physics) ===
+  // === DRAG ЛОГИКА (Spring Physics) ===
   let sheetAnim = null;
   let sheetY = 0;
   let isDraggingSheet = false;
@@ -1761,8 +1790,7 @@ function showAdminModal(){
     if (e.target === bg) closeSheet();
   });
 
-  renderAdminContent();
-}
+  renderAdminContent();}
 
 // Функция закрытия
 function closeSheet(){
