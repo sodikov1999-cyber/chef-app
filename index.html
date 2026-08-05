@@ -91,6 +91,8 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .cart-qty-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .cart-qty-btn:active{background:rgba(255,255,255,.15)}
 .cart-qty-val{font-weight:700;font-size:15px;min-width:24px;text-align:center}
+.cart-qty-input{width:56px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:15px;font-weight:700;text-align:center;outline:none;padding:0 4px}
+.cart-qty-input:focus{border-color:var(--accent)}
 /* === НОВАЯ МОДАЛКА С DRAG === */
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .25s ease}
 .sheet-bg.open{background:rgba(0,0,0,.55);pointer-events:auto}
@@ -768,6 +770,29 @@ const app = $('#app');
 let currentScreen = app;
 let viewStack = [{view: 'home', data: null}];
 let screenAnim = null;
+
+/* Cart FAB — глобальная кнопка корзины */
+const cartFab = document.createElement('button');
+cartFab.className = 'cart-fab';
+cartFab.style.display = 'none';
+cartFab.innerHTML = '<span>📋</span>';
+cartFab.onclick = () => { renderCartSheet(); haptic('hard'); };
+document.body.appendChild(cartFab);
+
+function updateCartFab(){
+  if(orderCart.length > 0){
+    cartFab.style.display = 'flex';
+    let badge = cartFab.querySelector('.cart-badge');
+    if(!badge){
+      badge = document.createElement('span');
+      badge.className = 'cart-badge';
+      cartFab.appendChild(badge);
+    }
+    badge.textContent = orderCart.length;
+  } else {
+    cartFab.style.display = 'none';
+  }
+}
 
 /* ============================================================
    ⬅️ GLOBAL SWIPE-BACK (iOS-style interactive pop)
@@ -1716,6 +1741,7 @@ function addToCart(supplier, item){
     });
   }
   saveData();
+  updateCartFab();
   haptic('hard');
   renderMatrix();
   toast('Добавлено в заявку', 'success');
@@ -1724,20 +1750,36 @@ function addToCart(supplier, item){
 function removeFromCart(supplier, name){
   orderCart = orderCart.filter(c => !(c.supplier === supplier && c.name === name));
   saveData();
+  updateCartFab();
   haptic();
   renderMatrix();
 }
 
 function updateCartQty(idx, delta){
-  orderCart[idx].qty = Math.max(0.1, parseFloat((orderCart[idx].qty + delta).toFixed(2)));
+  orderCart[idx].qty = Math.max(0.01, parseFloat((orderCart[idx].qty + delta).toFixed(3)));
   if(orderCart[idx].qty <= 0) orderCart.splice(idx, 1);
   saveData();
   renderCartSheet();
 }
 
+function setCartQty(idx, rawVal){
+  const val = rawVal.replace(',', '.').replace(/[^0-9.]/g, '');
+  const num = parseFloat(val);
+  if(isNaN(num) || num <= 0){
+    orderCart.splice(idx, 1);
+  } else {
+    orderCart[idx].qty = Math.round(num * 1000) / 1000;
+  }
+  saveData();
+  updateCartFab();
+  renderCartSheet();
+  if(orderCart.length === 0) closeCartSheet();
+}
+
 function deleteCartItem(idx){
   orderCart.splice(idx, 1);
   saveData();
+  updateCartFab();
   renderCartSheet();
   if(orderCart.length === 0) closeCartSheet();
 }
@@ -1816,7 +1858,9 @@ function renderCartSheet(){
           </div>
           <div class="cart-qty-wrap">
             <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
-            <div class="cart-qty-val">${it.qty}</div>
+            <input class="cart-qty-input" type="text" inputmode="decimal" value="${it.qty}" 
+                   onchange="setCartQty(${it.idx}, this.value)" 
+                   onclick="this.select()">
             <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, 1)">+</button>
           </div>
           <button class="icon-btn danger" style="width:28px;height:28px" onclick="deleteCartItem(${it.idx})">✕</button>
@@ -1903,7 +1947,6 @@ function renderMatrix(){
     <div id="matrix-list-container">
         ${listHtml}
     </div>
-    ${orderCart.length ? `<button class="cart-fab" onclick="renderCartSheet();haptic('hard')"><span>📋</span><span class="cart-badge">${orderCart.length}</span></button>` : ''}
   `;
 
   const input = document.getElementById(searchInputId);
@@ -2491,6 +2534,8 @@ document.addEventListener('touchend', e => {
     }
   }
 }, {passive: true});
+
+updateCartFab();
 
 (async function init(){
   const loaded = await loadFromFirebase();
