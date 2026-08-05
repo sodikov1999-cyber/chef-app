@@ -12,6 +12,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 ::-webkit-scrollbar{width:0;height:0}
 body{scrollbar-width:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-tap-highlight-color:transparent}
+#app{position:relative;overflow-x:hidden;min-height:100vh}
+.screen{position:absolute;top:0;left:0;right:0;min-height:100vh;background:var(--bg);will-change:transform,opacity;transform:translateX(0)}
 h1{font-weight:800;font-size:26px;margin-bottom:16px}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
@@ -680,12 +682,66 @@ const tg = window.Telegram?.WebApp;
 if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
 
 const $ = s => document.querySelector(s);
+
+/* ============================================================
+   🌀 PHYSICS ENGINE
+   ============================================================ */
+const PHYS = {
+  stiffness: 380,
+  damping: 32,
+  mass: 1,
+  decelerationRate: 0.998
+};
+
+function springAnimate({ from, to, velocity = 0, onUpdate, onComplete, stiffness = PHYS.stiffness, damping = PHYS.damping, mass = PHYS.mass }) {
+  let current = from;
+  let vel = velocity;
+  let rafId = null;
+  let lastTime = performance.now();
+  let running = true;
+
+  function tick(now) {
+    if (!running) return;
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    const displacement = current - to;
+    const springForce = -stiffness * displacement;
+    const dampingForce = -damping * vel;
+    const acceleration = (springForce + dampingForce) / mass;
+    vel += acceleration * dt;
+    current += vel * dt;
+    onUpdate(current);
+    if (Math.abs(displacement) < 0.5 && Math.abs(vel) < 0.5) {
+      onUpdate(to);
+      if (onComplete) onComplete();
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+  return {
+    cancel() { running = false; if (rafId) cancelAnimationFrame(rafId); },
+    getVelocity() { return vel; }
+  };
+}
+
+function rubberband(overshoot, dimension, constant = 0.55) {
+  return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
+}
+
+function project(initialVelocity, decelerationRate = PHYS.decelerationRate) {
+  return (initialVelocity / 1000) * decelerationRate / (1 - decelerationRate);
+}
+
 const app = $('#app');
+let activeContainer = app;
 let currentView = 'home';
 let currentRecipeId = null;
 let currentMult = 1;
 let expandedLocations = new Set();
 let FAVORITES = [];
+let ttkSearchRaf = null;
+let matrixSearchRaf = null;
 
 function toggleFavorite(id){
   const idx = FAVORITES.indexOf(id);
@@ -718,11 +774,79 @@ function toast(msg, type='info'){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
 }
 
+let viewStack = [{view: 'home', data: null}];
+let screenAnim = null;
+
 function navigate(view, data){
-  currentView = view;
+  haptic();
   if(data !== undefined) currentRecipeId = data;
+
+  const newScreen = document.createElement('div');
+  newScreen.className = 'screen';
+  newScreen.style.transform = 'translateX(100%)';
+  app.appendChild(newScreen);
+
+  activeContainer = newScreen;
+  currentView = view;
   render();
   window.scrollTo(0,0);
+
+  const prevScreen = app.querySelector('.screen.current');
+  if(prevScreen){
+    prevScreen.classList.remove('current');
+    if(screenAnim) screenAnim.cancel();
+    screenAnim = springAnimate({
+      from: 100, to: 0, velocity: 0,
+      onUpdate: x => {
+        newScreen.style.transform = `translateX(${x}%)`;
+        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
+        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
+      },
+      onComplete: () => { if(prevScreen) prevScreen.style.display = 'none'; }
+    });
+  } else {
+    newScreen.style.transform = 'translateX(0)';
+  }
+  newScreen.classList.add('current');
+  viewStack.push({view, data});
+}
+
+function goBack(){
+  if(viewStack.length <= 1) return;
+  haptic();
+  viewStack.pop();
+  const prevState = viewStack[viewStack.length - 1];
+  currentView = prevState.view;
+  if(prevState.data !== undefined) currentRecipeId = prevState.data;
+
+  const currentScreen = app.querySelector('.screen.current');
+  const prevScreen = app.querySelector('.screen:not(.current)');
+
+  if(prevScreen){
+    prevScreen.style.display = '';
+    prevScreen.classList.add('current');
+  }
+
+  if(screenAnim) screenAnim.cancel();
+  screenAnim = springAnimate({
+    from: 0, to: 100, velocity: 0,
+    onUpdate: x => {
+      if(currentScreen) currentScreen.style.transform = `translateX(${x}%)`;
+      if(prevScreen){
+        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
+        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
+      }
+    },
+    onComplete: () => {
+      if(currentScreen) currentScreen.remove();
+      if(prevScreen){
+        prevScreen.style.transform = '';
+        prevScreen.style.opacity = '';
+      }
+      activeContainer = prevScreen || app;
+      render();
+    }
+  });
 }
 
 function render(){
@@ -733,13 +857,11 @@ function render(){
   else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
   else if(currentView === 'matrix') renderMatrix();
-  app.classList.add('fade');
-  setTimeout(()=>app.classList.remove('fade'), 300);
 }
 
 function renderFavorites(){
   const favs = RECIPES.filter(r => FAVORITES.includes(r.id));
-  $('#app').innerHTML = `
+  activeContainer.innerHTML = `
     <div class="header">
       <h1>⭐ Избранное</h1>
       <p style="color:var(--muted);font-size:14px">${favs.length} блюд</p>
@@ -776,7 +898,7 @@ function renderHome(){
       });
   }
 
-  app.innerHTML = `
+  activeContainer.innerHTML = `
     <h1>${greet}</h1>
     
     <div class="card">
@@ -858,9 +980,9 @@ function renderTTK(){
   }
 
   // Первый рендер
-  app.innerHTML = `
+  activeContainer.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <button class="back" onclick="navigate('home');haptic()" style="margin-bottom:0">← Назад</button>
+        <button class="back" onclick="goBack();haptic()" style="margin-bottom:0">← Назад</button>
         <button class="refresh-btn" onclick="refreshTTKData();haptic('hard')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
@@ -886,7 +1008,8 @@ function renderTTK(){
   const input = document.getElementById('ttk-search-input');
   input.addEventListener('input', (e) => {
       window._ttkQ = e.target.value;
-      renderTTK(); // Теперь это вызовет ветку "обновления списка", а не полный ререндер
+      if (ttkSearchRaf) cancelAnimationFrame(ttkSearchRaf);
+      ttkSearchRaf = requestAnimationFrame(() => renderTTK());
   });
 }
 
@@ -906,8 +1029,8 @@ function renderRecipe(){
   const r = RECIPES.find(x => x.id === currentRecipeId);
   if(!r){ navigate('ttk'); return; }
 
-  app.innerHTML = `
-    <button class="back" onclick="navigate('ttk');haptic()">← Назад</button>
+  activeContainer.innerHTML = `
+    <button class="back" onclick="goBack();haptic()">← Назад</button>
     <div style="display:flex;align-items:center;gap:12px">
         <h1 style="flex:1">${r.name}</h1>
         <button onclick="event.stopPropagation();toggleFavorite(${r.id})" style="background:none;border:none;font-size:28px;cursor:pointer;padding:4px;color:${FAVORITES.includes(r.id)?'var(--accent)':'var(--muted)'};transition:transform .15s">
@@ -1081,8 +1204,8 @@ function renderSchedule(){
         selectedDayIndex = today.getDate() - 1;
     }
     
-    app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    activeContainer.innerHTML = `
+    <button class="back" onclick="goBack();haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">График</h1>
         <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
@@ -1150,7 +1273,7 @@ function renderScheduleContent() {
     const source = scheduleData || DEFAULT_LOCAL_DATA;
     
     let html = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()">← Назад</button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
         <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
@@ -1239,7 +1362,7 @@ function renderScheduleContent() {
     </a>
   `;
   
-  app.innerHTML = html;
+  activeContainer.innerHTML = html;
 }
 
 window.changeWeek = function(offset) {
@@ -1275,8 +1398,8 @@ function toggleLoc(name) {
 
 function renderChecklist(){
   if (!window._clLoc) {
-    app.innerHTML = `
-      <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    activeContainer.innerHTML = `
+      <button class="back" onclick="goBack();haptic()">← Назад</button>
       <h1>Чек-листы</h1>
       <div style="display:grid;gap:10px">
         ${DEFAULT_LOCAL_DATA.locations.map(loc => `
@@ -1313,7 +1436,7 @@ function renderChecklist(){
   // Фильтруем только Су-шефов, ИО и Верховных из всего списка сотрудников локации
   const managers = allLocStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
 
-  app.innerHTML = `
+  activeContainer.innerHTML = `
     <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()">← Назад</button>
     <h1>${locName}</h1>
     
@@ -1394,7 +1517,7 @@ function renderTeam(){
   }
 
   let html = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+    <button class="back" onclick="goBack();haptic()">← Назад</button>
     <h1>Команда</h1>
     ${user ? `
       <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
@@ -1415,7 +1538,7 @@ function renderTeam(){
       });
   });
 
-  app.innerHTML = html;
+  activeContainer.innerHTML = html;
 }
 
 function renderMatrix(){
@@ -1463,8 +1586,8 @@ function renderMatrix(){
       return;
   }
 
-  app.innerHTML = `
-    <button class="back" onclick="navigate('home');haptic()">← Назад</button>
+  activeContainer.innerHTML = `
+    <button class="back" onclick="goBack();haptic()">← Назад</button>
     <h1>Матрица заявок</h1>
     <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
            value="${window._matrixQ}" 
@@ -1479,7 +1602,8 @@ function renderMatrix(){
   if (input) {
       input.addEventListener('input', (e) => {
           window._matrixQ = e.target.value;
-          renderMatrix();
+          if (matrixSearchRaf) cancelAnimationFrame(matrixSearchRaf);
+          matrixSearchRaf = requestAnimationFrame(() => renderMatrix());
       });
   }
 }
@@ -1543,63 +1667,90 @@ function showAdminModal(){
     sheet.classList.add('open');
   });
 
-  // === DRAG ЛОГИКА ===
-  let startY = 0;
-  let currentY = 0;
-  let isDragging = false;
-  let startTransform = 0;
-  let velocity = 0;
-  let lastY = 0;
-  let lastTime = 0;
+    // === DRAG ЛОГИКА (Spring Physics) ===
+  let sheetAnim = null;
+  let sheetY = 0;
+  let isDraggingSheet = false;
+  let dragStartY = 0;
+  let dragStartSheetY = 0;
+  let dragHistory = [];
 
-  function onPointerDown(e){
-    // Только если тапнули по drag-области или по самой панели (не по кнопкам внутри)
-    if(e.target.closest('button, input, textarea, select')) return;
-    isDragging = true;
-    startY = e.clientY || e.touches[0].clientY;
-    lastY = startY;
-    lastTime = Date.now();
-    if(e.pointerId) sheet.setPointerCapture(e.pointerId);
+  function setSheetY(y) {
+    sheetY = y;
+    sheet.style.transform = `translateY(${y}px)`;
+  }
+
+  function snapSheet(target, velocity = 0) {
+    if (sheetAnim) sheetAnim.cancel();
+    sheetAnim = springAnimate({
+      from: sheetY,
+      to: target,
+      velocity: velocity,
+      stiffness: 380,
+      damping: 32,
+      onUpdate: y => setSheetY(y),
+      onComplete: () => {
+        if (target > 0) closeSheet();
+      }
+    });
+  }
+
+  function onPointerDown(e) {
+    if (e.target.closest('button, input, textarea, select, .sheet-body')) return;
+    isDraggingSheet = true;
+    dragStartY = e.clientY;
+    dragStartSheetY = sheetY;
+    dragHistory = [];
+    if (sheetAnim) sheetAnim.cancel();
     sheet.style.transition = 'none';
-    startTransform = 0;
+    if (e.pointerId) sheet.setPointerCapture(e.pointerId);
     e.preventDefault();
   }
 
-  function onPointerMove(e){
-    if(!isDragging) return;
-    const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-    const delta = y - startY;
-    
-    // Rubber-banding: нельзя тянуть вверх (delta < 0)
-    currentY = delta > 0 ? delta : delta * 0.3;
-    sheet.style.transform = `translateY(${currentY}px)`;
+  function onPointerMove(e) {
+    if (!isDraggingSheet) return;
+    const y = e.clientY;
+    const delta = y - dragStartY;
+    let targetY = dragStartSheetY + delta;
 
-    // Считаем velocity для handoff
-    const now = Date.now();
-    const dt = now - lastTime;
-    if(dt > 0){
-      velocity = (y - lastY) / dt * 1000; // px/s
+    // Rubber-banding: can't pull above 0
+    if (targetY < 0) {
+      targetY = -rubberband(-targetY, sheet.offsetHeight * 0.5);
     }
-    lastY = y;
-    lastTime = now;
+
+    // Track velocity history
+    dragHistory.push({ y, t: performance.now() });
+    if (dragHistory.length > 6) dragHistory.shift();
+
+    setSheetY(targetY);
   }
 
-  function onPointerUp(e){
-    if(!isDragging) return;
-    isDragging = false;
-    sheet.style.transition = 'transform .35s cubic-bezier(.32,.72,0,1)';
+  function onPointerUp(e) {
+    if (!isDraggingSheet) return;
+    isDraggingSheet = false;
 
-    // Если потянули достаточно далеко ИЛИ быстро — закрываем
-    if(currentY > 120 || velocity > 600){
-      closeSheet();
+    // Calculate release velocity from recent history
+    const now = performance.now();
+    const recent = dragHistory.filter(h => now - h.t < 80);
+    let releaseVelocity = 0;
+    if (recent.length >= 2) {
+      const first = recent[0];
+      const last = recent[recent.length - 1];
+      const dt = last.t - first.t;
+      if (dt > 0) releaseVelocity = (last.y - first.y) / dt * 1000;
+    }
+
+    // Momentum projection
+    const projected = sheetY + project(releaseVelocity);
+    const threshold = sheet.offsetHeight * 0.35;
+
+    if (projected > threshold || (sheetY > threshold && releaseVelocity > 0)) {
+      snapSheet(sheet.offsetHeight, releaseVelocity);
     } else {
-      // Возвращаем на место
-      sheet.style.transform = 'translateY(0)';
+      snapSheet(0, releaseVelocity);
     }
-    currentY = 0;
   }
 
-  // Используем Pointer Events (работают и на мышь, и на тач)
   dragArea.addEventListener('pointerdown', onPointerDown);
   sheet.addEventListener('pointermove', onPointerMove);
   sheet.addEventListener('pointerup', onPointerUp);
@@ -1607,7 +1758,7 @@ function showAdminModal(){
 
   // Клик по фону = закрыть
   bg.addEventListener('click', (e) => {
-    if(e.target === bg) closeSheet();
+    if (e.target === bg) closeSheet();
   });
 
   renderAdminContent();
