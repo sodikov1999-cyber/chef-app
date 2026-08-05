@@ -6,24 +6,33 @@
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF;--red:#FF6B5E;--glass:rgba(27,22,19,0.85);--glass-border:rgba(255,255,255,0.1)}
+:root{
+  --bg:#0F0D0B;
+  --card:#1B1613;
+  --text:#F5ECE2;
+  --muted:#9C8D7E;
+  --accent:#FF8A3D;
+  --accent-soft:rgba(255,138,61,.14);
+  --green:#5FD38A;
+  --blue:#6FA8FF;
+  --red:#FF6B5E;
+  --glass:rgba(255,255,255,.06);
+  --glass-border:rgba(255,255,255,.1);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;padding-bottom:40px;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+html,body{overflow:hidden;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 ::-webkit-scrollbar{width:0;height:0}
 body{scrollbar-width:none}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-#app{position:relative;width:100%;height:100vh;overflow:hidden}
-.screen{position:absolute;top:0;left:0;right:0;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px}
+#app{position:fixed;inset:0;overflow:hidden}
 
-@media (prefers-reduced-motion:reduce){
-  .screen{transition:none!important;animation:none!important}
-  .sheet{transition:none!important;transform:none!important}
-  .sheet-bg{transition:none!important;background:rgba(0,0,0,.55)}
-  .sheet-bg.open .sheet{transform:translateY(0)!important}
-}
-h1{font-weight:800;font-size:26px;margin-bottom:16px}
+/* Screens */
+.screen{position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;padding:20px;padding-bottom:100px;background:var(--bg);display:none}
+.screen.current{display:block}
+
+h1{font-weight:800;font-size:26px;margin-bottom:16px;letter-spacing:-0.02em}
 h2{font-weight:700;font-size:18px;margin:22px 0 12px}
 h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
+
 .card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
 .tile{padding:18px 14px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
@@ -31,720 +40,346 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .tile-emoji{font-size:28px;margin-bottom:8px}
 .tile-title{font-weight:700;font-size:15px}
 .tile-desc{font-size:12px;color:var(--muted);margin-top:3px}
+
 .pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
 .btn{display:block;width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:center}
 .btn:active{transform:scale(.98)}
 .btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1)}
 .btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px}
-.back{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;background:rgba(255,255,255,.08);border-radius:50%;color:var(--text);margin-bottom:16px;cursor:pointer;border:1px solid rgba(255,255,255,.1);font-size:18px;font-weight:600;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:manipulation}
-.back svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+/* iOS-style back button */
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:inline-flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer;margin-bottom:16px;font-size:18px}
+.back-btn svg{width:20px;height:20px;fill:currentColor}
+.back-btn:active{transform:scale(.93)}
+
 .recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
 .recipe:active{background:rgba(255,255,255,.07)}
 .recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
 .recipe-meta{font-size:12px;color:var(--muted)}
+
 .ingredient{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:14px}
 .ingredient:last-child{border:none}
 .ingredient b{color:var(--accent)}
+
 .step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word}
 .step-num{display:inline-block;width:20px;height:20px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:20px;font-weight:700;font-size:11px;margin-right:8px;flex-shrink:0}
+
 .news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
 .news-title{font-weight:700;font-size:14px;margin-bottom:3px}
 .news-text{font-size:13px;color:var(--muted);line-height:1.4}
 .news-date{font-size:11px;color:var(--muted);margin-top:5px}
+
 .check-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
 .check-item:last-child{border:none}
-.check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;color:transparent;font-size:13px;transition:all .2s}
-.check-item.done .check-box{background:var(--green);border-color:var(--green);color:#000}
-.check-item.done span{text-decoration:line-through;color:var(--muted)}
-.kpi{display:flex;gap:8px;margin-bottom:14px}
-.kpi-box{flex:1;padding:10px;background:rgba(255,255,255,.03);border-radius:10px;text-align:center}
-.kpi-label{font-size:11px;color:var(--muted);margin-bottom:3px}
-.kpi-value{font-weight:700;font-size:14px}
-.mults{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.mult{padding:7px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text)}
-.mult.on{background:var(--accent);color:#000;border-color:var(--accent)}
-.user{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
-.avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#FFB067,var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;flex-shrink:0}
-.user-info b{display:block;font-size:15px}
-.user-info span{font-size:12px;color:var(--muted)}
-.note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:14px;font-size:13px;line-height:1.5}
-.admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
-.admin-btn:active{transform:scale(.9)}
+.check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--bg);transition:.15s}
+.check-item.done .check-box{background:var(--green);border-color:var(--green)}
+.check-item.done .check-text{text-decoration:line-through;color:var(--muted)}
 
-/* Order buttons in matrix */
-.order-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s ease}
-.order-btn:active{transform:scale(.85)}
-.order-btn.on{background:var(--green);border-color:var(--green);color:#000}
+/* Search */
+.search-wrap{position:sticky;top:0;z-index:10;padding:8px 0;background:var(--bg)}
+.search-wrap input{width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;outline:none}
+.search-wrap input::placeholder{color:var(--muted)}
+
+/* Sheet / Modal */
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;opacity:0}
+.sheet-overlay.show{display:block;opacity:1;transition:opacity .25s ease}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:0 0 30px;z-index:101;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,.35,1);max-height:85vh;display:flex;flex-direction:column}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{width:36px;height:5px;background:rgba(255,255,255,.2);border-radius:3px;margin:10px auto}
+.sheet-head{padding:8px 20px 12px;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sheet-body{overflow-y:auto;padding:0 20px 20px;flex:1;-webkit-overflow-scrolling:touch}
 
 /* Cart FAB */
-.cart-fab{position:fixed;bottom:14px;right:70px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:18px;z-index:100;display:flex;align-items:center;justify-content:center}
-.cart-fab:active{transform:scale(.9)}
-.cart-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--green);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.cart-fab{position:fixed;bottom:24px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#000;border:none;z-index:90;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(255,138,61,.35)}
+.cart-fab:active{transform:scale(.92)}
+.cart-badge{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;background:var(--red);color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
 
-/* Cart sheet */
-.cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+/* Admin FAB */
+.admin-fab{position:fixed;bottom:24px;right:88px;width:48px;height:48px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(12px);color:var(--text);z-index:90;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+.admin-fab:active{transform:scale(.92)}
+
+/* Matrix / Write-off items */
+.m-item{display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px}
+.m-item-info{flex:1;min-width:0}
+.m-item-name{font-weight:600;font-size:14px;margin-bottom:2px}
+.m-item-meta{font-size:12px;color:var(--muted)}
+.m-item-actions{display:flex;align-items:center;gap:8px}
+.m-add-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;flex-shrink:0}
+.m-add-btn.added{background:var(--green);border-color:var(--green);color:#000}
+.m-add-btn:active{transform:scale(.9)}
+
+/* Cart sheet items */
+.cart-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .cart-item:last-child{border:none}
-.cart-name{flex:1;font-size:14px;min-width:0}
-.cart-supplier{font-size:11px;color:var(--muted);display:block}
-.cart-qty-wrap{display:flex;align-items:center;gap:6px}
-.cart-qty-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.cart-qty-btn:active{background:rgba(255,255,255,.15)}
-.cart-qty-val{font-weight:700;font-size:15px;min-width:24px;text-align:center}
-.cart-qty-input{width:56px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:15px;font-weight:700;text-align:center;outline:none;padding:0 4px}
-.cart-qty-input:focus{border-color:var(--accent)}
-/* === НОВАЯ МОДАЛКА С DRAG === */
-.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .25s ease}
-.sheet-bg.open{background:rgba(0,0,0,.55);pointer-events:auto}
-.sheet{position:relative;width:100%;max-width:500px;background:var(--glass);border-radius:20px 20px 0 0;transform:translateY(100%);will-change:transform;touch-action:none;box-shadow:0 -8px 32px rgba(0,0,0,.5),inset 0 1px 0 var(--glass-border);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);transition:transform .35s cubic-bezier(.32,.72,0,1)}
-.sheet.open{transform:translateY(0)}
-.sheet-handle{position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:8px;z-index:10;pointer-events:none}
-.sheet-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 12px;flex-shrink:0}
-.sheet-title{font-weight:800;font-size:18px}
-.sheet-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
-.sheet-body{flex:1;overflow-y:auto;padding:0 20px 30px;max-height:70vh}
-.sheet-drag-area{position:absolute;top:0;left:0;right:0;height:40px;z-index:5;cursor:grab}
-.sheet-drag-area:active{cursor:grabbing}
+.cart-item-info{flex:1;min-width:0}
+.cart-item-name{font-weight:600;font-size:14px}
+.cart-item-meta{font-size:12px;color:var(--muted)}
+.cart-qty{display:flex;align-items:center;gap:6px}
+.cart-qty button{width:28px;height:28px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cart-qty button:active{transform:scale(.9)}
+.cart-qty input{width:60px;height:32px;text-align:center;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-size:14px;font-weight:600}
+.cart-qty input:focus{outline:none;border-color:var(--accent)}
+.cart-remove{width:28px;height:28px;border-radius:50%;background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cart-remove:active{color:var(--red)}
 
-/* === СТАРЫЕ МОДАЛКИ (редактирование) === */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+/* Write-off location cards */
+.loc-card{padding:16px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.06);margin-bottom:10px;cursor:pointer}
+.loc-card:active{transform:scale(.98)}
+.loc-card-title{font-weight:700;font-size:16px;margin-bottom:4px}
+.loc-card-desc{font-size:13px;color:var(--muted)}
+
+/* Reason select */
+.reason-select{padding:6px 10px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);font-size:12px;outline:none}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--card);border:1px solid var(--glass-border);padding:12px 20px;border-radius:12px;font-size:14px;z-index:200;transition:transform .3s cubic-bezier(.32,.72,.35,1);backdrop-filter:blur(12px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Period tabs */
+.period-tabs{display:flex;gap:6px;margin-bottom:16px}
+.period-tab{flex:1;padding:10px;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;text-align:center;cursor:pointer}
+.period-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+
+/* Accessibility */
 @media (prefers-reduced-motion:reduce){
-  .modal{animation:none!important;transform:none!important;opacity:0;transition:opacity .15s ease!important}
-  .modal.show{opacity:1}
+  .screen{transition:none !important}
+  .sheet{transition:opacity .2s ease;transform:none !important}
+  .sheet-overlay{transition:opacity .2s ease}
+  .toast{transition:opacity .2s ease;transform:translateX(-50%) !important}
 }
-
-@media (prefers-reduced-motion:reduce){
-  .sheet{transition:none!important;transform:none!important}
-  .sheet-bg{transition:none!important;background:rgba(0,0,0,.55)}
-  .sheet-bg.open .sheet{transform:translateY(0)!important}
+@media (prefers-reduced-transparency:reduce){
+  .back-btn,.admin-fab{background:rgba(40,35,30,.95);backdrop-filter:none}
 }
-.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
-.modal-title{font-weight:800;font-size:18px}
-.modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
-.form-field{margin-bottom:14px}
-.form-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.form-input,.form-textarea,.form-select{width:100%;padding:12px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none}
-.form-input:focus,.form-textarea:focus{border-color:var(--accent)}
-.form-textarea{min-height:80px;resize:vertical}
-.item-card{padding:14px;background:var(--card);border-radius:12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.06)}
-.item-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.item-card-title{font-weight:700;font-size:15px}
-.icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
-.icon-btn:active{background:rgba(255,255,255,.1)}
-.icon-btn.danger{background:rgba(255,107,94,.15);color:var(--red)}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;z-index:300;max-width:85vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.fade{animation:fade .3s ease-out}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.refresh-btn {
-    background: var(--accent);
-    color: #000;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: transform 0.2s;
-    margin-left: auto;
-}
-.refresh-btn:active { transform: scale(0.95); }
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    background: rgba(255,255,255,0.05);
-    border: none;
-    color: var(--muted);
-    font-weight: 600;
-    border-radius: 8px;
-    margin-right: 4px;
-    cursor: pointer;
-}
-.tab-btn.on {
-    background: var(--accent);
-    color: #000;
-}
-.modal-body {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 20px;
-}
-/* Стили для матрицы */
-.supplier-block { margin-bottom: 20px; }
-.supplier-header { 
-    background: rgba(255,138,61,0.1); 
-    border-left: 3px solid var(--accent); 
-    padding: 12px; 
-    border-radius: 8px; 
-    margin-bottom: 10px;
-}
-.supplier-name { font-weight: 700; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
-.supplier-schedule { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.matrix-item { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 10px 0; 
-    border-bottom: 1px solid rgba(255,255,255,0.05); 
-}
-.matrix-item:last-child { border-bottom: none; }
-.matrix-name { font-size: 14px; font-weight: 500; flex: 1; padding-right: 10px; word-break: break-word; }
-.matrix-meta { text-align: right; flex-shrink: 0; margin-left: 10px; }
-.matrix-unit { font-size: 11px; color: var(--muted); display: block; }
-.matrix-limit { font-size: 13px; font-weight: 700; color: var(--green); }
-
-/* Навигация по неделям */
-.week-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    gap: 10px;
-}
-.week-nav-btn {
-    background: rgba(255,255,255,0.1);
-    border: none;
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-}
-.week-nav-btn:active { background: var(--accent); color: #000; }
-.week-title {
-    font-weight: 700;
-    font-size: 14px;
-    text-align: center;
-    flex: 1;
-    color: var(--muted);
-}
-.today-btn {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.today-btn:active { background: var(--accent); color: #000; border-color: var(--accent); }
-
-.day-card {
-    flex: 1;
-    text-align: center;
-    padding: 8px 4px;
-    background: var(--card);
-    border-radius: 10px;
-    color: var(--text);
-    cursor: pointer;
-    transition: transform 0.12s ease-out, background 0.2s ease, border-color 0.2s ease;
-    border: 2px solid transparent;
-    min-width: 45px;
-    -webkit-tap-highlight-color: transparent;
-}
-.day-card:active { transform: scale(0.92); transition: transform 0.05s ease-out; }
-.day-card.selected {
-    background: var(--accent);
-    color: #000;
-    border-color: #fff;
-}
-.day-card.today {
-    border-color: var(--green);
-}
-.day-card .dow-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-.day-card.selected .dow-name { color: #000; }
-.day-card .day-num { font-weight: 800; font-size: 17px; margin: 3px 0; }
-.day-card .count { font-size: 11px; color: var(--muted); }
-.day-card.selected .count { color: #000; }
-
-/* Исправление для ТТК (Задача 3) */
-.recipe-detail-container {
-    width: 100%;
-    height: auto !important;
-    overflow: visible !important;
-    padding-bottom: 20px;
-}
-.recipe-detail-container .card {
-    height: auto;
-    overflow: visible;
-}
-.recipe-detail-container .ingredient, 
-.recipe-detail-container .step {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
-}
-    @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-  .modal{animation:none!important;transform:none!important;opacity:0;transition:opacity .15s ease!important}
-  .modal.show{opacity:1}
+@media (prefers-contrast:more){
+  .card,.tile,.loc-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3)}
 }
 </style>
 </head>
 <body>
-
 <div id="app"></div>
-<button id="admin-btn" class="admin-btn" onclick="haptic('hard');openAdmin()">✏️</button>
 
-<script>
-/* ============================================================
-   🔗 НАСТРОЙКИ
-   ============================================================ */
-const SHEET_ID = '1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+<!-- Global FABs -->
+<button id="cartFab" class="cart-fab" style="display:none" onclick="renderCartSheet();haptic('hard')"><span>📋</span><span id="cartBadge" class="cart-badge" style="display:none">0</span></button>
+<button id="adminFab" class="admin-fab" style="display:none" onclick="showAdminModal();haptic('light')">✏️</button>
 
-/* ============================================================
-   🔥 FIREBASE — СИНХРОНИЗАЦИЯ МЕЖДУ УСТРОЙСТВАМИ
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-   Инструкция:
-   1. Перейди на https://console.firebase.google.com
-   2. Создай проект (назови "ChefBook")
-   3. Слева меню → Build → Realtime Database → Создать базу
-   4. Выбери регион (eur3 — Европа)
-   5. На вкладке "Правила" замени всё на:
-      {
-        "rules": {
-          ".read": true,
-          ".write": true
-        }
-      }
-      Нажми "Опубликовать"
-   6. Скопируй URL базы (пример: https://chefbook-xxx-default-rtdb.europe-west1.firebasedatabase.app)
-   7. Вставь его ниже в FIREBASE_URL
-   ============================================================ */
-const FIREBASE_URL = 'https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app'; // ← ЗАМЕНИ ЭТО
-const FB_PATH = '/chefbook';
+const firebaseConfig = {
+  apiKey: "AIzaSyD0Xv1L9FBCH1Wz7H4FJ7y8v9kLmN2PqR5",
+  authDomain: "shefbuk.firebaseapp.com",
+  databaseURL: "https://shefbuk-default-rtdb.firebaseio.com",
+  projectId: "shefbuk",
+  storageBucket: "shefbuk.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890"
+};
 
-/* ============================================================
-   📦 ДАННЫЕ
-   ============================================================ */
-const DEFAULT_RECIPES = [
-  {id:1, name:'Борщ с говядиной', cat:'Горячее', time:'45 мин', yield:'350 г', kcal:96, note:'Срок хранения основы — 12 ч.', ingr:[['Говядина',121,80]], steps:['Варить.']},
-  {id:2, name:'Цезарь', cat:'Салаты', time:'25 мин', yield:'220 г', kcal:185, note:'', ingr:[['Курица',90,70]], steps:['Обжарить.']},
-  {id:3, name:'Карбонара', cat:'Горячее', time:'20 мин', yield:'320 г', kcal:265, note:'', ingr:[['Паста',120,120]], steps:['Варить.']},
-  {id:4, name:'Сырники', cat:'Десерты', time:'20 мин', yield:'180 г', kcal:210, note:'', ingr:[['Творог',140,135]], steps:['Жарить.']},
-  {id:5, name:'Тирамису', cat:'Десерты', time:'30 мин', yield:'140 г', kcal:298, note:'', ingr:[['Маскарпоне',70,70]], steps:['Собрать.']},
-  {id:6, name:'Греческий', cat:'Салаты', time:'15 мин', yield:'230 г', kcal:122, note:'', ingr:[['Фета',50,50]], steps:['Нарезать.']},
-  {id:7, name:'Глинтвейн', cat:'Напитки', time:'15 мин', yield:'250 мл', kcal:64, note:'', ingr:[['Сок',200,200]], steps:['Нагреть.']},
-  {id:8, name:'Пюре', cat:'Заготовки', time:'40 мин', yield:'1000 г', kcal:118, note:'', ingr:[['Картофель',1350,1000]], steps:['Сварить.']}
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+window.db = db;
+window.dbRef = ref;
+window.dbOnValue = onValue;
+window.dbSet = set;
+window.dbPush = push;
+window.dbRemove = remove;
+
+// Data
+const RECIPES = [
+  {id:1,name:"Борщ",time:"2ч",cat:"Супы",diff:"Средняя",img:"🍲",
+   ingredients:["Свекла — 300г","Капуста — 400г","Картофель — 500г","Говядина — 600г","Томатная паста — 100г"],
+   steps:["Отварить говядину до готовности","Нарезать свеклу соломкой и обжарить","Добавить капусту и картофель в бульон","Заправить свёклой и томатной пастой","Варить 20 минут и настоять под крышкой"]},
+  {id:2,name:"Цезарь",time:"20мин",cat:"Салаты",diff:"Лёгкая",img:"🥗",
+   ingredients:["Куриное филе — 400г","Салат романо — 200г","Сыр пармезан — 100г","Сухарики — 100г","Соус цезарь — 100г"],
+   steps:["Обжарить куриное филе до готовности","Нарвать салат руками","Нарезать филе кубиками","Смешать всё с соусом и сыром","Посыпать сухариками перед подачей"]},
+  {id:3,name:"Паста Карбонара",time:"25мин",cat:"Паста",diff:"Средняя",img:"🍝",
+   ingredients:["Спагетти — 400г","Бекон — 200г","Яйца — 3шт","Сыр пармезан — 100г","Сливки — 100мл"],
+   steps:["Отварить пасту аль денте","Обжарить бекон до хрустящей корочки","Смешать яйца с тертым сыром","Соединить пасту с беконом","Добавить яичную смесь, помешивая"]},
+  {id:4,name:"Стейк Рибай",time:"15мин",cat:"Мясо",diff:"Средняя",img:"🥩",
+   ingredients:["Рибай — 800г","Масло сливочное — 50г","Чеснок — 3 зубчика","Тимьян — 2 веточки","Соль, перец"],
+   steps:["Достать мясо из холодильника за 1 час","Обсушить бумажным полотенцем","Обжарить на сильном огне по 3 минуты с каждой стороны","Добавить масло, чеснок и тимьян","Дать отдохнуть 5 минут перед нарезкой"]},
+  {id:5,name:"Том Ям",time:"40мин",cat:"Супы",diff:"Средняя",img:"🍜",
+   ingredients:["Креветки — 500г","Грибы — 200г","Паста том ям — 50г","Кокосовое молоко — 400мл","Лемонграсс — 2 стебля"],
+   steps:["Обжарить пасту том ям","Добавить кокосовое молоко и бульон","Варить грибы 5 минут","Добавить креветки на 3 минуты","Добавить лайм и кинзу перед подачей"]}
 ];
 
-const DEFAULT_NEWS = [
-  {tag:'Поставка', title:'Лосось в среду', text:'Перенос.', date:'Сегодня'},
-  {tag:'Событие', title:'Дегустация', text:'Пятница 16:00', date:'Вчера'},
-  {tag:'Важно', title:'ТТК обновлены', text:'Сливки 33%', date:'2 дня назад'}
-];
-
-const DEFAULT_TEAM = [
-  {name:'Марина К.', role:'Су-шеф', init:'МК'},
-  {name:'Олег С.', role:'Повар', init:'ОС'},
-  {name:'Даша П.', role:'Кондитер', init:'ДП'}
-];
-
-// Матрица заявок
-const DEFAULT_MATRIX = [
-  {
-    supplier: "ИП Максимова",
-    schedule: "Ежедневно (сегодня на завтра)",
-    items: [ {name: "Лаваш традиционный", unit: "шт", limit: 40} ]
-  },
-  {
-    supplier: "Булочная Пирогов",
-    schedule: "Ежедневно (сегодня на завтра)",
-    items: [
-      {name: "Панини", unit: "шт", limit: 10}, {name: "Чиабатта", unit: "шт", limit: 10},
-      {name: "Багет французский", unit: "шт", limit: 10}, {name: "Хлеб Бородинский без тмина", unit: "шт", limit: 15},
-      {name: "Хлеб Датский", unit: "шт", limit: 10}, {name: "Пампушки Бородинские", unit: "шт", limit: 40}
-    ]
-  },
-  {
-    supplier: "Пионер (Заготовки)",
-    schedule: "Заявка в воскресенье, отгрузка в чт-пт",
-    items: [
-      {name: "Ребра запеченые", unit: "кг", limit: 10}, {name: "Щечки томленые", unit: "кг", limit: 10},
-      {name: "Фарш штат", unit: "кг", limit: 10}, {name: "Фарш 70/30", unit: "кг", limit: 10},
-      {name: "Ростбиф", unit: "кг", limit: 10}, {name: "Смалец", unit: "кг", limit: 2}
-    ]
-  },
-  {
-    supplier: "Партнер",
-    schedule: "Ежедневно, кроме сб. Отгрузка на след. день.",
-    items: [
-      {name: "АДЖИКА Грузинская 1л", unit: "шт", limit: 2}, {name: "АНАНАСЫ кольца 580мл", unit: "шт", limit: 5},
-      {name: "ВЕТЧИНА с индейкой ~2.8кг", unit: "шт", limit: 1}, {name: "ГОРЧИЦА Дижонская 1кг", unit: "шт", limit: 6},
-      {name: "ГОРЧИЦА зернистая 190гр", unit: "шт", limit: 6}, {name: "ГОРЧИЦА Русская 1л", unit: "шт", limit: 1},
-      {name: "ДРОЖЖИ красные сухие 500гр", unit: "шт", limit: 10}, {name: "КАРТОФЕЛЬ фри БАТАТ 9*9", unit: "кг", limit: 5},
-      {name: "КЕТЧУП томатный 1кг", unit: "шт", limit: 2}, {name: "КОЛБАСКИ Охотничьи 1кг", unit: "шт", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "шт", limit: 2}, {name: "КРАХМАЛ кукурузный", unit: "уп", limit: 4},
-      {name: "КУКУРУЗА 340мл", unit: "шт", limit: 10}, {name: "КУКУРУЗА ~450гр (2шт)", unit: "шт", limit: 5},
-      {name: "ЛИСТ бамбука маринованный", unit: "шт", limit: 1}, {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2},
-      {name: "МАСЛИНЫ б/к 300мл", unit: "шт", limit: 6}, {name: "МАСЛО для фритюра 5л", unit: "л", limit: 15},
-      {name: "МАСЛО оливковое pomace 1л", unit: "л", limit: 4}, {name: "МАСЛО подсолнечное 1л", unit: "л", limit: 15},
-      {name: "МОЛОКО ультрапастеризованное 3.5%", unit: "л", limit: 36}, {name: "НАГГЕТСЫ куриные", unit: "уп", limit: 3},
-      {name: "ОГУРЦЫ корнишоны 720мл", unit: "шт", limit: 3}, {name: "ОЛИВКИ б/к 300мл", unit: "шт", limit: 6},
-      {name: "ПАСТА томатная 1л", unit: "шт", limit: 2}, {name: "ПЕЛЬМЕНИ Сибирские 5кг", unit: "кг", limit: 5},
-      {name: "ПУДРА сахарная 500гр", unit: "кг", limit: 1}, {name: "СЛИВКИ взбитые 250г", unit: "шт", limit: 10},
-      {name: "СОСИСКИ молочные 5кг (мини)", unit: "кг", limit: 2}, {name: "СОУС сырный 1кг", unit: "шт", limit: 2},
-      {name: "СОУС барбекю 1кг", unit: "шт", limit: 2}, {name: "СОУС Ворчестер", unit: "шт", limit: 1},
-      {name: "СОУС гранатовый Наршараб 380гр", unit: "шт", limit: 2}, {name: "СОУС соевый 1л", unit: "шт", limit: 2},
-      {name: "СОУС Терияки Премиум 1.8кг", unit: "шт", limit: 1}, {name: "Сыр President творожный 2.2кг", unit: "шт", limit: 4},
-      {name: "ХРЕН столовый 1л", unit: "шт", limit: 1}
-    ]
-  },
-  {
-    supplier: "Интегрита",
-    schedule: "Заявка в ВС или утро ПН, отгрузка ВТ",
-    items: [
-      {name: "БЕКОН сырокопченый нарезка 1кг", unit: "уп", limit: 5}, {name: "БУЛЬОН говяжий ГУРМИКС 2кг", unit: "уп", limit: 2},
-      {name: "БУЛЬОН куриный ГУРМИКС 2кг", unit: "уп", limit: 2}, {name: "КАЛЬМАР кольца в панировке 500г", unit: "уп", limit: 3},
-      {name: "КАРТОФЕЛЬ дольки с кожурой 2.5кг", unit: "уп", limit: 5}, {name: "КАРТОФЕЛЬ-ФРИ 9х9 2.5кг", unit: "уп", limit: 5},
-      {name: "КОЛБАСА Пепперони 0.8кг", unit: "уп", limit: 3}, {name: "КОЛЬЦА луковые в панировке 1.5кг", unit: "уп", limit: 2},
-      {name: "КРЕВЕТКИ Панко 1кг", unit: "уп", limit: 2}, {name: "МАКАРОНЫ Спагетти Дельверде 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Тальятелле со шпинатом 0.25кг", unit: "уп", limit: 5}, {name: "МАКАРОНЫ Пенне Ригате 0.5кг", unit: "уп", limit: 5},
-      {name: "МАКАРОНЫ Спагетти нери 0.5кг", unit: "уп", limit: 4}, {name: "МУКА для пиццы ARTIGIANO 25кг", unit: "шт", limit: 2},
-      {name: "НАГГЕТСЫ фирменные", unit: "уп", limit: 3}, {name: "ПАЛОЧКИ сырные Моцарелла 1кг", unit: "уп", limit: 3},
-      {name: "ПАЛОЧКИ хлебные Гриссини 250г", unit: "уп", limit: 5}, {name: "ПЕЧЕНЬЕ Савоярди 0.4кг", unit: "уп", limit: 2},
-      {name: "СЛИВКИ ПЕТМОЛ 22% 1л", unit: "шт", limit: 24}, {name: "СЛИВКИ ПЕТМОЛ 33% 1л", unit: "шт", limit: 3},
-      {name: "СЛИВКИ 10% БМК 1л", unit: "шт", limit: 3}, {name: "СОУС Бальзамик 500мл", unit: "шт", limit: 3},
-      {name: "СОУС Устричный 510гр", unit: "шт", limit: 6}, {name: "СОУС рыбный AROY-D 700мл", unit: "шт", limit: 1},
-      {name: "СОУС Чили сладкий 1.8л", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные ПАНКО 1кг", unit: "уп", limit: 5},
-      {name: "ТОМАТЫ С/С Mutti 2.5кг", unit: "шт", limit: 6}, {name: "ТУНЕЦ филе с/м Еллоуфин 0.5кг", unit: "шт", limit: 4},
-      {name: "Штрудель яблочный (Сибирь, Лазурная)", unit: "уп", limit: 4}, {name: "Щеки говяжьи (только Пионер)", unit: "кг", limit: 50}
-    ]
-  },
-  {
-    supplier: "Восток Запад",
-    schedule: "Заявка в ВС или ПН до 12:00 (отгрузка ВТ). Заявка ПТ до 12:00 (отгрузка СБ).",
-    items: [
-      {name: "КРАБОВЫЕ ПАЛОЧКИ 6кг", unit: "уп", limit: 1}, {name: "МОЛОКО кокосовое AROY-D 400мл", unit: "шт", limit: 5},
-      {name: "МАЙОНЕЗ универсальный 9.4кг", unit: "шт", limit: 2}, {name: "МАСЛО сливочное RENFERLY 400г", unit: "шт", limit: 5},
-      {name: "МОЛОКО 3.2% Молочная речка", unit: "шт", limit: 36}, {name: "ПАСТА Том-Ям AROY-D 400г", unit: "шт", limit: 6},
-      {name: "Сливки 22% Молочная Речка", unit: "шт", limit: 24}, {name: "Сливки 33% Молочная Речка", unit: "шт", limit: 3},
-      {name: "СОУС Рыбный AROY-D 0.84л", unit: "шт", limit: 1}, {name: "СОУС сырный ЧЕДДЕР 1кг", unit: "шт", limit: 2},
-      {name: "СЫР Монблю с голубой плесенью 100г", unit: "шт", limit: 5}, {name: "СЫР Фета в рассоле 400г", unit: "шт", limit: 10},
-      {name: "СЫР Пармезан тертый 300г", unit: "шт", limit: 10}, {name: "СЫР плавленный ломтевой 1.1кг", unit: "уп", limit: 1},
-      {name: "СЫР Моцарелла для пиццы 1кг", unit: "шт", limit: 10}, {name: "СЫР СУЛУГУНИ 2.6кг", unit: "шт", limit: 1},
-      {name: "СОУС Деми Глас 1.8кг", unit: "шт", limit: 2}, {name: "СУХАРИ панировочные Панко 1кг", unit: "шт", limit: 5},
-      {name: "ПЮРЕ манго без сахара 1кг", unit: "шт", limit: 3}, {name: "ТОППИНГ карамель 1кг", unit: "шт", limit: 2},
-      {name: "ТОППИНГ клубничный 1кг", unit: "шт", limit: 2}, {name: "ТОППИНГ шоколад 1кг", unit: "шт", limit: 2},
-      {name: "ТОРТИЛЬЯ пшеничная 10 дюймов", unit: "уп", limit: 4}, {name: "Треска филе с/м (коробка 10кг)", unit: "кор", limit: "10 кг"},
-      {name: "ТУНЕЦ Yellowfin филе SAKU 600-800г", unit: "уп", limit: 3}, {name: "ТУНЕЦ кусочки в соб. соку 130г", unit: "шт", limit: 10},
-      {name: "ЧИЗКЕЙК Американский 1.2кг", unit: "кор", limit: 3}, {name: "ЧИЗКЕЙК Баскский 1.2кг", unit: "кор", limit: 2}
-    ]
-  },
-  {
-    supplier: "Снежный Городок",
-    schedule: "Заявка в ПН, ВТ. Доставка ЧТ-ПТ",
-    items: [
-      {name: "Мороженое ваниль для коктейля 2.5кг", unit: "шт", limit: 4},
-      {name: "Мороженое шоколад 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое клубничное 2.5кг", unit: "шт", limit: 2},
-      {name: "Мороженое дорогое (разные вкусы)", unit: "шт", limit: 3}
-    ]
-  },
-  {
-    supplier: "Мираторг",
-    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
-    items: [
-      {name: "Свиная шейка", unit: "кг", limit: 20}, {name: "Свиная вырезка", unit: "кг", limit: 15},
-      {name: "Диафрагма толстый край", unit: "кг", limit: 10}, {name: "Вырезка фермерского бычка", unit: "кг", limit: 10}
-    ]
-  },
-  {
-    supplier: "Вкусная Жизнь",
-    schedule: "Заявка ВСК-СР. Отгрузка Ср-Пт",
-    items: [
-      {name: "Мясник толстый край", unit: "кг", limit: 2}, {name: "Сосиски молочные стафф", unit: "кг", limit: 2},
-      {name: "Колбаски горчичные", unit: "уп", limit: 5}, {name: "Колбаски с сыром", unit: "уп", limit: 5}
-    ]
-  },
-  {
-    supplier: "ИП Орлов",
-    schedule: "Ежедневно",
-    items: [
-      {name: "Черная смородина с/м", unit: "кг", limit: 4}, {name: "Черника с/м", unit: "кг", limit: 2},
-      {name: "Облепиха", unit: "кг", limit: 1}, {name: "Клюква", unit: "кг", limit: 3},
-      {name: "Брусника", unit: "кг", limit: 0.5}, {name: "Малина", unit: "кг", limit: 3},
-      {name: "Огурец свежий", unit: "кг", limit: 5}, {name: "Томат свежий", unit: "кг", limit: 0},
-      {name: "Томат черри", unit: "кг", limit: 4}, {name: "Баклажан", unit: "кг", limit: 0.1},
-      {name: "Цукини", unit: "кг", limit: 5}, {name: "Капуста б/к", unit: "кг", limit: 10},
-      {name: "Айсберг", unit: "кг", limit: 5}, {name: "Романо", unit: "кг", limit: 2},
-      {name: "Перец Болгарский", unit: "кг", limit: 5}, {name: "Перец чили", unit: "кг", limit: 5},
-      {name: "Морковь", unit: "кг", limit: 0.4}, {name: "Картофель", unit: "кг", limit: 0.5},
-      {name: "Картофель беби", unit: "кг", limit: 0.5}, {name: "Чеснок", unit: "кг", limit: 0.4},
-      {name: "Лук репчатый", unit: "кг", limit: 0.3}, {name: "Лук красный", unit: "кг", limit: 0.1},
-      {name: "Лук зелёный", unit: "кг", limit: 0.1}, {name: "Петрушка", unit: "шт", limit: 2},
-      {name: "Укроп", unit: "шт", limit: 2}, {name: "Кинза", unit: "кг", limit: 1},
-      {name: "Базилик свежий", unit: "шт", limit: 5}, {name: "Тимьян", unit: "кг", limit: 1}
-    ]
-  },
-  {
-    supplier: "ИП Филатова",
-    schedule: "С ВС по ЧТ с 8 до 18 ч, доставка на след. день",
-    items: [
-      {name: "Крупа гречневая 750г", unit: "уп", limit: null}, {name: "Крупа манная 1кг", unit: "уп", limit: null},
-      {name: "Крупа персонал (пшено, перловка...)", unit: "уп", limit: null}, {name: "Макароны персонал", unit: "уп", limit: null},
-      {name: "Мука Алейка", unit: "уп", limit: null}, {name: "Рис пропаренный 750г", unit: "уп", limit: null},
-      {name: "Соль 1кг", unit: "уп", limit: null}, {name: "Сахар песок 1кг", unit: "уп", limit: null},
-      {name: "Яйцо С1", unit: "уп", limit: null}
-    ]
-  },
-  {
-    supplier: "МЕТРО",
-    schedule: "Заявка ВСК-ВТ. Отгрузка ВТ-ПТ",
-    items: [
-      {name: "Сметана 20% Коровкино", unit: "кг", limit: null}, {name: "Масло сливочное 82.5% 450г", unit: "кг", limit: null},
-      {name: "Яичный желток пастеризованный", unit: "кг", limit: null}, {name: "Меланж пастеризованный", unit: "кг", limit: null},
-      {name: "Паприка", unit: "кг", limit: null}, {name: "Чеснок сушёный", unit: "кг", limit: null},
-      {name: "Чеснок черный ферментированный", unit: "шт", limit: null}, {name: "Приправа гриль", unit: "шт", limit: null},
-      {name: "Чёрный перец горошек", unit: "бут", limit: null}, {name: "Кориандр горошек", unit: "кг", limit: null},
-      {name: "Кориандр молотый", unit: "кг", limit: null}, {name: "Соль гималайская розовая", unit: "кг", limit: null},
-      {name: "Яблочный уксус 0.25л", unit: "кг", limit: null}, {name: "Кефир", unit: "л", limit: null},
-      {name: "Масло сливочное Деревенская Буренка", unit: "кг", limit: null}, {name: "Паста Aroy-D Том ям 1кг", unit: "кг", limit: null},
-      {name: "Соус рыбный Aroy-D 5.4кг", unit: "шт", limit: null}, {name: "Сок лимона 1л", unit: "шт", limit: null},
-      {name: "Соус Aroy-D Чили сладкий 2.4кг", unit: "шт", limit: null}, {name: "Булочка Еврохлеб Пражская 3.2кг", unit: "кор", limit: null},
-      {name: "Сыр творожный President 2.2кг", unit: "кг", limit: null}, {name: "Щеки говяжьи Meat Power (Пионер)", unit: "кг", limit: null},
-      {name: "Филе сельди Матиас в масле 1кг", unit: "кг", limit: null}, {name: "ОГУРЦЫ КОРОТКОПЛОДНЫЕ", unit: "кг", limit: null},
-      {name: "ТОМАТЫ РОЗОВЫЕ", unit: "кг", limit: null}, {name: "Сыр Умалат Сулугуни 1.2кг", unit: "шт", limit: null}
-    ]
-  },
-  {
-    supplier: "СИБМК",
-    schedule: "По наличию",
-    items: [
-      {name: "Форель с/с Trim-D", unit: "кг", limit: null}, {name: "Кальмар командорский", unit: "кг", limit: null},
-      {name: "Креветки 21/25 очищ.", unit: "кг", limit: null}, {name: "Мидии в двух створках", unit: "кг", limit: null},
-      {name: "Мидии в одной створке", unit: "кг", limit: null}, {name: "Сельдь маринованная Матиас", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "О Бэйкери (ИП Фоминых)",
-    schedule: "ПН - заявка на СР. ПТ до 16:00 - заявка на ПН",
-    items: [
-      {name: "Десерт Лаванда/Смородина", unit: "шт", limit: 15}, {name: "Десерт Сникерс нарезной", unit: "шт", limit: 20},
-      {name: "Десерт Красный Бархат нарезной", unit: "шт", limit: 10}, {name: "Безе весовое", unit: "кг", limit: 0.5},
-      {name: "Десерт Фисташка/Малина", unit: "шт", limit: 15}
-    ]
-  },
-  {
-    supplier: "Алтайская Птица",
-    schedule: "По договору",
-    items: [
-      {name: "Филе куриного бедра б/к б/к", unit: "кг", limit: null}, {name: "Крылья куриные рубленые", unit: "кг", limit: null},
-      {name: "Филе куриной грудки", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "Два Сыровара",
-    schedule: "По договору",
-    items: [
-      {name: "Качотта", unit: "кг", limit: null}, {name: "Рулет", unit: "кг", limit: null},
-      {name: "Адыгейский", unit: "кг", limit: null}, {name: "Сулугуни копченый", unit: "кг", limit: null}
-    ]
-  },
-  {
-    supplier: "Вяленое мясо",
-    schedule: "По договору",
-    items: [
-      {name: "Чипсы из мраморной говядины", unit: "уп", limit: null}, {name: "Чипсы из индейки", unit: "уп", limit: null},
-      {name: "Ломтики из свинины с чесноком", unit: "уп", limit: null}, {name: "Чипсы из оленины", unit: "уп", limit: null}
-    ]
-  },
-  {
-    supplier: "Першин (микрозелень)",
-    schedule: "Ежедневно (сегодня на завтра)",
-    items: [
-      {name: "Руккола мини", unit: "уп", limit: null}, {name: "Шпинат мини", unit: "уп", limit: null},
-      {name: "Щавель микро", unit: "уп", limit: null}, {name: "Мята микро", unit: "уп", limit: null},
-      {name: "Фиалки", unit: "уп", limit: null}
-    ]
-  }
-];
-
-const DEFAULT_LOCAL_DATA = {
-  month: 'Август 2026',
-  locations: [
-    { name: 'Галактика', staff: [{name:'Бочаров Вадим', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
-    { name: 'Сибирь', staff: [{name:'Акбар Мирборонов', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1], total:23}] },
-    { name: 'Пионер', staff: [{name:'Романов Алексей', role:'Су-шеф', shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0], total:19}] },
-    { name: 'Европа', staff: [{name:'Александр Кузниченко', role:'Су-шеф', shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1], total:21}] },
-    { name: 'Лазурная', staff: [{name:'Содиков Михаил', role:'Верховный шеф', shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0], total:15}] }
+const CHECKLISTS = {
+  open: [
+    {text: "Проверить температуру холодильников", done: false},
+    {text: "Включить кофемашину и проверить зерно", done: false},
+    {text: "Проверить чистоту зала", done: false},
+    {text: "Проверить наличие меню и визиток", done: false},
+    {text: "Включить музыку и свет", done: false},
+    {text: "Проверить запасы одноразовой посуды", done: false},
+    {text: "Проверить работу кассы и терминала", done: false}
+  ],
+  close: [
+    {text: "Выключить всё оборудование", done: false},
+    {text: "Убрать и помыть рабочие поверхности", done: false},
+    {text: "Вынести мусор", done: false},
+    {text: "Проверить запасы на завтра", done: false},
+    {text: "Заполнить журнал температур", done: false},
+    {text: "Закрыть кассу и сдать выручку", done: false},
+    {text: "Проверить охранную сигнализацию", done: false}
   ]
 };
 
-const CHECKLISTS = {
-  open: ['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
-  close: ['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+const TEAM = [
+  {name:"Алексей", role:"Шеф-повар", phone:"+7 (900) 123-45-67", status:"online"},
+  {name:"Мария", role:"Су-шеф", phone:"+7 (900) 234-56-78", status:"offline"},
+  {name:"Иван", role:"Повар", phone:"+7 (900) 345-67-89", status:"online"},
+  {name:"Ольга", role:"Официант", phone:"+7 (900) 456-78-90", status:"offline"},
+  {name:"Дмитрий", role:"Бармен", phone:"+7 (900) 567-89-01", status:"online"}
+];
+
+const LOCATIONS = ["Галактика","Сибирь","Пионер","Европа","Лазурная"];
+
+const WRITE_OFF_CATEGORIES = ["Овощи-Фрукты-Ягода","Мясо","Крупы","Молочное","Рыбное","Прочее"];
+
+const WRITE_OFF_REASONS = ["Порча","Питание"];
+
+const WRITE_OFF_PRODUCTS = {
+  "Овощи-Фрукты-Ягода": [
+    ["Баклажаны/Цукини","кг"],["Батат","кг"],["Грейпфрут","кг"],["Зелень (укроп, петрушка, лук зеленый)","кг"],
+    ["Имбирь корень","кг"],["Капуста б/к","кг"],["Картофель","кг"],["Картофель фри","кг"],["Картофельные дольки","кг"],
+    ["Корнишоны","кг"],["Кукуруза початок","кг"],["Лайм","кг"],["Лемонграсс","кг"],["Лимон","кг"],["Лист лайма","кг"],
+    ["Лук красный","кг"],["Лук репчатый","кг"],["Морковь","кг"],["Огурец","кг"],["Перец болгарский","кг"],
+    ["Перец чили","кг"],["Редис","кг"],["Салат листовой (Айсберг, Романо)","кг"],["Салат Руккола","кг"],
+    ["Свекла","кг"],["Сельдерей стебель","кг"],["Смесь овощная","кг"],["Томаты","кг"],["Томаты в собственном соку","кг"],
+    ["Томаты Черри","кг"],["Чеснок","кг"],["Чеснок черный","кг"],["Шампиньоны свежие","кг"],["Апельсин","кг"],
+    ["Базилик свежий","кг"],["Зелень дорогая","кг"],["Кинза свежая","кг"],["Мята","кг"],["Микрозелень","кг"],
+    ["Спаржа с/м","кг"],["Малина с/м","кг"],["Ягода с/м","кг"],["Кунжут семя","кг"],["Семена Чиа","кг"],
+    ["Фисташки","кг"],["Орех Арахис","кг"],["Орех грецкий","кг"],["Орех кедровый","кг"],["Орех Кешью","кг"],
+    ["Орех миндаль","кг"],["Орех фундук","кг"]
+  ],
+  "Мясо": [
+    ["Бекон/грудинка","кг"],["Ветчина","кг"],["Говядина вырезка","кг"],["Говядина задок/фарш/хвост/особука","кг"],
+    ["Говядина мраморная/Кострец","кг"],["Говядина Рибай","кг"],["Колбаса Пепперони","кг"],["Колбаски Гриль","кг"],
+    ["Колбаски охотничьи","кг"],["Крылья Куринные маринованные товар","кг"],["Курица/Окорочка бескостные","кг"],
+    ["Ломтики из свинины товар","кг"],["Мясо копченое","кг"],["Наггетсы куриные","кг"],["Свинина на ребре п/ф","кг"],
+    ["Свинина шея/вырезка/фарш","кг"],["Сало копченое/соленое","кг"],["Сало шпик","кг"],["Сосиски/шпикачки","кг"],
+    ["Телячьи щеки п/ф Кинза","кг"],["Утка копченая п/ф","кг"],["Фарш на люля свинин/говядина п/ф","кг"],
+    ["Филе куриное","кг"],["Чипсы из индейки товар","кг"],["Чипсы из мраморной говядины товар","кг"],
+    ["Чипсы из оленины товар","кг"],["Язык горячего копчения п/ф","кг"]
+  ],
+  "Крупы": [
+    ["Бульон сухой","кг"],["Горох","кг"],["Гречка","кг"],["Гриссини товар","кг"],["Дрожжи","кг"],
+    ["Желатин","кг"],["Мука","кг"],["Паста Птитим","кг"],["Сухари Панировочные","кг"],["Печенье Савоярди","кг"],
+    ["Лаваш","шт"],["Пампушка 1 шт","шт"],["Тортилья Пшеничная","шт"],["Чиабатта","кг"],["Хлеб","кг"],
+    ["Макароны","кг"],["Перловка","кг"],["Пшено","кг"],["Рис","кг"],["Фасоль красная сухая","кг"],
+    ["Кукуруза консервированная","кг"],["Крупа манная","кг"],["Лапша для пасты","кг"]
+  ],
+  "Молочное": [
+    ["Кефир","л"],["Кокосовое молоко","кг"],["Масло сливочное","кг"],["Молоко","л"],["Сливки","л"],
+    ["Сметана","кг"],["Сыр Гауда/Моцарелла","кг"],["Сыр Дор Блю","кг"],["Сыр Креметте","кг"],
+    ["Сыр Пармезан","кг"],["Сыр плавленный","кг"],["Сыр Сулугуни/Адыгейский","кг"],["Сыр тостовый","кг"],
+    ["Сыр Фета/Брынза","кг"],["Сыр Чеддер","кг"],["Сыры фермерские","кг"],["Яйцо куриное","кг"],
+    ["Желток яичный пастеризованный","кг"],["Мороженое в ассортименте","кг"],
+    ["Десерт Кинза и мята (лаванда-смородина)","шт"],["Десерт Красный бархат","шт"],
+    ["Десерт Сникерс","шт"],["Десерт Фисташка-малина","шт"],["Чизкейк в ассортименте","шт"],["Топпинг","кг"]
+  ],
+  "Рыбное": [
+    ["Анчоус в масле","кг"],["Кальмар с/м","кг"],["Кольца кальмара","кг"],["Крабовые палочки","кг"],
+    ["Креветка в панировке","кг"],["Креветки тигровые","кг"],["Лосось филе","кг"],["Мидии гигант","кг"],
+    ["Сельдь с/с","кг"],["Треска филе","кг"],["Тунец консервированный","кг"],["Тунец копченый п/ф","кг"],["Тунец филе","кг"]
+  ],
+  "Прочее": [
+    ["Аджика","кг"],["Варенье в ассортименте","кг"],["Вино кухня","л"],["Водка Пять озер","л"],
+    ["Горчица","кг"],["Горчица зернистая/Дижонская","кг"],["Какао-порошок","кг"],["Каперсы","кг"],
+    ["Квас разливной","л"],["Кетчуп Хайнц","кг"],["Майонез","кг"],["Маслины/оливки","кг"],
+    ["Масло для фритюра","л"],["Масло кунжутное","л"],["Масло оливковое","л"],["Масло растительное","л"],
+    ["Мед","кг"],["Паста Том Ям","кг"],["Паста томатная","кг"],["Пельмени 2022 п/ф","кг"],
+    ["Пиво Фирменное фильтрованное","л"],["Пюре/концентрат в ассортименте","кг"],
+    ["Ростбиф Кинза п/ф","кг"],["Сахар","кг"],["Сахарная пудра","кг"],["Сироп в ассортименте","л"],
+    ["Смалец п/ф","кг"],["Сода/крахмал","кг"],["Сок в ассортименте","л"],["Соль","кг"],
+    ["Соль морская","кг"],["Соль нитритная","кг"],["Соус Бальзамик","л"],["Соус барбекю товар","кг"],
+    ["Соус Ворчестер","л"],["Соус Деми Гласс сухой","кг"],["Соус дрессинг Гурмикс в ассортименте","л"],
+    ["Соус Кимчи","кг"],["Соус Наршараб","кг"],["Соус рыбный","кг"],["Соус Соевый","л"],
+    ["Соус Сырный товар","кг"],["Соус Терияки","л"],["Соус Унаги","кг"],["Соус Устричный","кг"],
+    ["Соус Чили/Шрирача","кг"],["Специи","кг"],["Тимьян/розмарин","кг"],["Уксус","л"],
+    ["Уксус Бальзамический","л"],["Уксус винный","л"],["Уксус рисовый/Мицукан","л"],
+    ["Уксус Яблочный","л"],["Хрен консервированый","кг"],["Кофе Эспрессо","кг"],["Луковые кольца","кг"]
+  ]
 };
 
-// === ЗАГРУЗКА ДАННЫХ ИЗ ПАМЯТИ ИЛИ ДЕФОЛТ ===
-let RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
-let NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
-let TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-let MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
-let scheduleData = null;
-let useLocalSchedule = false;
-let isLoading = false;
+const MATRIX_ITEMS = [
+  {name:"Картофель",unit:"кг",supplier:"ИП Максимова",limit:50},
+  {name:"Морковь",unit:"кг",supplier:"ИП Максимова",limit:30},
+  {name:"Лук репчатый",unit:"кг",supplier:"ИП Максимова",limit:25},
+  {name:"Капуста б/к",unit:"кг",supplier:"ИП Максимова",limit:40},
+  {name:"Помидоры",unit:"кг",supplier:"ИП Максимова",limit:35},
+  {name:"Огурцы",unit:"кг",supplier:"ИП Максимова",limit:30},
+  {name:"Перец болгарский",unit:"кг",supplier:"ИП Максимова",limit:20},
+  {name:"Чеснок",unit:"кг",supplier:"ИП Максимова",limit:10},
+  {name:"Свекла",unit:"кг",supplier:"ИП Максимова",limit:20},
+  {name:"Куриное филе",unit:"кг",supplier:"Булочная Пирогов",limit:60},
+  {name:"Говядина вырезка",unit:"кг",supplier:"Булочная Пирогов",limit:40},
+  {name:"Свинина шея",unit:"кг",supplier:"Булочная Пирогов",limit:35},
+  {name:"Фарш мясной",unit:"кг",supplier:"Булочная Пирогов",limit:45},
+  {name:"Бекон",unit:"кг",supplier:"Булочная Пирогов",limit:20},
+  {name:"Колбаса Пепперони",unit:"кг",supplier:"Булочная Пирогов",limit:25},
+  {name:"Ветчина",unit:"кг",supplier:"Булочная Пирогов",limit:20},
+  {name:"Сосиски",unit:"кг",supplier:"Булочная Пирогов",limit:30},
+  {name:"Крылья куриные",unit:"кг",supplier:"Булочная Пирогов",limit:40},
+  {name:"Молоко",unit:"л",supplier:"Молочный комбинат",limit:80},
+  {name:"Сливки",unit:"л",supplier:"Молочный комбинат",limit:40},
+  {name:"Сметана",unit:"кг",supplier:"Молочный комбинат",limit:30},
+  {name:"Масло сливочное",unit:"кг",supplier:"Молочный комбинат",limit:25},
+  {name:"Сыр Моцарелла",unit:"кг",supplier:"Молочный комбинат",limit:20},
+  {name:"Сыр Пармезан",unit:"кг",supplier:"Молочный комбинат",limit:15},
+  {name:"Кефир",unit:"л",supplier:"Молочный комбинат",limit:35},
+  {name:"Яйца",unit:"кг",supplier:"Молочный комбинат",limit:50},
+  {name:"Рис",unit:"кг",supplier:"Оптовая база",limit:40},
+  {name:"Гречка",unit:"кг",supplier:"Оптовая база",limit:35},
+  {name:"Макароны",unit:"кг",supplier:"Оптовая база",limit:50},
+  {name:"Мука",unit:"кг",supplier:"Оптовая база",limit:60},
+  {name:"Сахар",unit:"кг",supplier:"Оптовая база",limit:45},
+  {name:"Соль",unit:"кг",supplier:"Оптовая база",limit:30},
+  {name:"Масло растительное",unit:"л",supplier:"Оптовая база",limit:40},
+  {name:"Соевый соус",unit:"л",supplier:"Оптовая база",limit:15},
+  {name:"Томатная паста",unit:"кг",supplier:"Оптовая база",limit:25},
+  {name:"Лосось филе",unit:"кг",supplier:"Рыбный мир",limit:30},
+  {name:"Треска филе",unit:"кг",supplier:"Рыбный мир",limit:25},
+  {name:"Креветки тигровые",unit:"кг",supplier:"Рыбный мир",limit:20},
+  {name:"Кальмар",unit:"кг",supplier:"Рыбный мир",limit:20},
+  {name:"Мидии",unit:"кг",supplier:"Рыбный мир",limit:15},
+  {name:"Сельдь",unit:"кг",supplier:"Рыбный мир",limit:20},
+  {name:"Тунец консервированный",unit:"кг",supplier:"Рыбный мир",limit:25},
+  {name:"Крабовые палочки",unit:"кг",supplier:"Рыбный мир",limit:20}
+];
 
-function saveData() {
-    localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
-    localStorage.setItem('chef_news', JSON.stringify(NEWS));
-    localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
-    localStorage.setItem('chef_favorites', JSON.stringify(FAVORITES));
-    localStorage.setItem('chef_cart', JSON.stringify(orderCart));
-    window.dispatchEvent(new Event('local-storage-update'));
-}
+window.RECIPES = RECIPES;
+window.CHECKLISTS = CHECKLISTS;
+window.TEAM = TEAM;
+window.LOCATIONS = LOCATIONS;
+window.WRITE_OFF_CATEGORIES = WRITE_OFF_CATEGORIES;
+window.WRITE_OFF_REASONS = WRITE_OFF_REASONS;
+window.WRITE_OFF_PRODUCTS = WRITE_OFF_PRODUCTS;
+window.MATRIX_ITEMS = MATRIX_ITEMS;
 
-// === FIREBASE: Сохранение в облако ===
-async function syncToFirebase(){
-  if(FIREBASE_URL.includes('ВАШ-ПРОЕКТ')){
-    console.warn('Firebase URL не настроен. Данные сохранены только локально.');
-    return;
-  }
-  try{
-    const data = {
-      recipes: RECIPES,
-      news: NEWS,
-      team: TEAM,
-      matrix: MATRIX_DATA,
-      favorites: FAVORITES,
-      updatedAt: Date.now()
-    };
-    const url = `${FIREBASE_URL}${FB_PATH}.json`;
-    console.log('☁️ Отправка в Firebase:', url);
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data)
-    });
-    console.log('☁️ Ответ Firebase:', res.status, res.statusText);
-    if(res.ok){
-      console.log('☁️ Успешно синхронизировано');
-    }else{
-      console.warn('☁️ Firebase вернул ошибку:', res.status, await res.text());
-    }
-  }catch(e){
-    console.warn('☁️ Ошибка синхронизации:', e.message);
-  }
-}
-
-// === FIREBASE: Загрузка из облака ===
-async function loadFromFirebase(){
-  if(FIREBASE_URL.includes('ВАШ-ПРОЕКТ')){
-    console.log('Firebase не настроен — используем локальные данные');
-    return false;
-  }
-  try{
-    const url = `${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`;
-    console.log('☁️ Загрузка из Firebase:', url);
-    const res = await fetch(url);
-    console.log('☁️ Ответ Firebase:', res.status, res.statusText);
-    if(!res.ok){
-      console.warn('☁️ Firebase вернул ошибку:', res.status);
-      return false;
-    }
-    const data = await res.json();
-    console.log('☁️ Данные из Firebase:', data === null ? 'null (база пустая)' : 'получены');
-    if(data && data.recipes){
-      RECIPES = data.recipes;
-      NEWS = data.news || DEFAULT_NEWS;
-      TEAM = data.team || DEFAULT_TEAM;
-      MATRIX_DATA = data.matrix || DEFAULT_MATRIX;
-      FAVORITES = data.favorites || [];
-      localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
-      localStorage.setItem('chef_news', JSON.stringify(NEWS));
-      localStorage.setItem('chef_team', JSON.stringify(TEAM));
-      localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
-      console.log('☁️ Данные загружены из Firebase, рецептов:', RECIPES.length);
-      return true;
-    }else{
-      console.log('☁️ База пустая или нет рецептов');
-    }
-  }catch(e){
-    console.warn('☁️ Не удалось загрузить из Firebase:', e.message);
-  }
-  return false;
-}
-
-// === FIREBASE: Автообновление отключено (только ручное) ===
-function startFirebaseSync(){
-  // Автообновение выключено — данные загружаются только при старте и при ручном обновлении
-  console.log('Firebase sync: ручной режим');
-}
-
-// Слушатель изменений в других вкладках
-window.addEventListener('storage', () => {
-    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
-    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
-    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
-    if (currentView === 'home') renderHome();
-    if (currentView === 'ttk') renderTTK();
-    if (currentView === 'team') renderTeam();
-    if (currentView === 'matrix') renderMatrix();
-});
-// Слушатель для той же вкладки (так как storage не срабатывает внутри одной вкладки)
-window.addEventListener('local-storage-update', () => {
-    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
-    NEWS = JSON.parse(localStorage.getItem('chef_news')) || DEFAULT_NEWS;
-    TEAM = JSON.parse(localStorage.getItem('chef_team')) || DEFAULT_TEAM;
-    MATRIX_DATA = JSON.parse(localStorage.getItem('chef_matrix')) || DEFAULT_MATRIX;
-    if (currentView === 'home') renderHome();
-    if (currentView === 'ttk') renderTTK();
-    if (currentView === 'team') renderTeam();
-    if (currentView === 'matrix') renderMatrix();
-});
-
-/* ============================================================
-   ⚙️ ЛОГИКА
-   ============================================================ */
-const tg = window.Telegram?.WebApp;
-if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
-
-const $ = s => document.querySelector(s);
-
-/* ============================================================
-   🌀 PHYSICS ENGINE
-   ============================================================ */
-const PHYS = {
-  stiffness: 520,
-  damping: 28,
-  mass: 1,
-  decelerationRate: 0.998
-};
-
-function springAnimate({ from, to, velocity = 0, onUpdate, onComplete, stiffness = PHYS.stiffness, damping = PHYS.damping, mass = PHYS.mass }) {
-  let current = from;
-  let vel = velocity;
+// ============================================================
+// PHYSICS ENGINE (Apple Fluid UI Constitution)
+// ============================================================
+function springAnimate({from, to, velocity = 0, stiffness = 380, damping = 32, onUpdate, onComplete}) {
+  let pos = from;
+  let vel = velocity || 0;
+  const k = stiffness / 1000;
+  const d = damping / 100;
   let rafId = null;
   let lastTime = performance.now();
-  let running = true;
 
   function tick(now) {
-    if (!running) return;
-    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    const dt = Math.min((now - lastTime) / 1000, 0.032);
     lastTime = now;
-    const displacement = current - to;
-    const springForce = -stiffness * displacement;
-    const dampingForce = -damping * vel;
-    const acceleration = (springForce + dampingForce) / mass;
-    vel += acceleration * dt;
-    current += vel * dt;
-    onUpdate(current);
-    if (Math.abs(displacement) < 0.5 && Math.abs(vel) < 0.5) {
+    const force = (to - pos) * k;
+    const damp = vel * d;
+    vel += (force - damp) * dt * 60;
+    pos += vel * dt * 60;
+    onUpdate(pos);
+    if (Math.abs(to - pos) < 0.5 && Math.abs(vel) < 0.5) {
       onUpdate(to);
       if (onComplete) onComplete();
       return;
@@ -753,8 +388,7 @@ function springAnimate({ from, to, velocity = 0, onUpdate, onComplete, stiffness
   }
   rafId = requestAnimationFrame(tick);
   return {
-    cancel() { running = false; if (rafId) cancelAnimationFrame(rafId); },
-    getVelocity() { return vel; }
+    cancel: () => { if (rafId) cancelAnimationFrame(rafId); }
   };
 }
 
@@ -762,43 +396,187 @@ function rubberband(overshoot, dimension, constant = 0.55) {
   return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
 }
 
-function project(initialVelocity, decelerationRate = PHYS.decelerationRate) {
+function project(initialVelocity, decelerationRate = 0.998) {
   return (initialVelocity / 1000) * decelerationRate / (1 - decelerationRate);
 }
 
-const app = $('#app');
-let currentScreen = app;
-let viewStack = [{view: 'home', data: null}];
-let screenAnim = null;
+// ============================================================
+// STATE & STORAGE
+// ============================================================
+let currentView = 'home';
+let currentRecipeId = null;
+let viewStack = [{view:'home'}];
+let currentScreen = null;
+let screenIdCounter = 0;
+let orderCart = [];
+let writeOffCart = {}; // { location: [ {name, qty, unit, reason, date} ] }
+let currentWriteOffLocation = null;
+let writeOffPeriod = 'week'; // today, week, month
+let newsData = [];
+let teamData = TEAM;
+let checklistOpen = JSON.parse(JSON.stringify(CHECKLISTS.open));
+let checklistClose = JSON.parse(JSON.stringify(CHECKLISTS.close));
+let favorites = [];
+let searchRafId = null;
 
-/* Cart FAB — глобальная кнопка корзины */
-const cartFab = document.createElement('button');
-cartFab.className = 'cart-fab';
-cartFab.style.display = 'none';
-cartFab.innerHTML = '<span>📋</span>';
-cartFab.onclick = () => { renderCartSheet(); haptic('hard'); };
-document.body.appendChild(cartFab);
+const app = document.getElementById('app');
+const cartFab = document.getElementById('cartFab');
+const cartBadge = document.getElementById('cartBadge');
+const adminFab = document.getElementById('adminFab');
 
-function updateCartFab(){
-  if(orderCart.length > 0){
-    cartFab.style.display = 'flex';
-    let badge = cartFab.querySelector('.cart-badge');
-    if(!badge){
-      badge = document.createElement('span');
-      badge.className = 'cart-badge';
-      cartFab.appendChild(badge);
-    }
-    badge.textContent = orderCart.length;
-  } else {
-    cartFab.style.display = 'none';
+// Load from localStorage
+function loadData() {
+  try {
+    const oc = localStorage.getItem('shefbuk_orderCart');
+    if (oc) orderCart = JSON.parse(oc);
+    const wc = localStorage.getItem('shefbuk_writeOffCart');
+    if (wc) writeOffCart = JSON.parse(wc);
+    const fav = localStorage.getItem('shefbuk_favorites');
+    if (fav) favorites = JSON.parse(fav);
+    const clo = localStorage.getItem('shefbuk_checklistOpen');
+    if (clo) checklistOpen = JSON.parse(clo);
+    const clc = localStorage.getItem('shefbuk_checklistClose');
+    if (clc) checklistClose = JSON.parse(clc);
+  } catch(e) {}
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('shefbuk_orderCart', JSON.stringify(orderCart));
+    localStorage.setItem('shefbuk_writeOffCart', JSON.stringify(writeOffCart));
+    localStorage.setItem('shefbuk_favorites', JSON.stringify(favorites));
+    localStorage.setItem('shefbuk_checklistOpen', JSON.stringify(checklistOpen));
+    localStorage.setItem('shefbuk_checklistClose', JSON.stringify(checklistClose));
+  } catch(e) {}
+}
+
+// Haptic
+function haptic(type = 'light') {
+  if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+    if (type === 'hard') Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+    else if (type === 'medium') Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    else Telegram.WebApp.HapticFeedback.impactOccurred('light');
   }
 }
 
-/* ============================================================
-   ⬅️ GLOBAL SWIPE-BACK (iOS-style interactive pop)
-   ============================================================ */
+// Toast
+function showToast(msg) {
+  let t = document.querySelector('.toast');
+  if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// NAVIGATION (iOS-style push/pop)
+// ============================================================
+function navigate(view, data) {
+  haptic('light');
+  const prevScreen = app.querySelector('.screen.current');
+  const prevState = {view: currentView};
+  if (currentRecipeId !== null) prevState.data = currentRecipeId;
+  viewStack.push(prevState);
+
+  currentView = view;
+  if (data !== undefined) currentRecipeId = data;
+
+  const newScreen = document.createElement('div');
+  newScreen.className = 'screen current';
+  newScreen.id = 'screen-' + (++screenIdCounter);
+  app.appendChild(newScreen);
+  currentScreen = newScreen;
+
+  render();
+
+  if (prevScreen) {
+    prevScreen.classList.remove('current');
+    prevScreen.style.transition = 'none';
+    prevScreen.style.transform = 'translateX(-30%)';
+    prevScreen.style.opacity = '0.6';
+    prevScreen.style.display = 'block';
+
+    newScreen.style.transition = 'none';
+    newScreen.style.transform = 'translateX(100%)';
+
+    requestAnimationFrame(() => {
+      prevScreen.style.transition = 'transform .35s cubic-bezier(.32,.72,.35,1), opacity .35s ease';
+      newScreen.style.transition = 'transform .35s cubic-bezier(.32,.72,.35,1)';
+      prevScreen.style.transform = 'translateX(-30%)';
+      prevScreen.style.opacity = '0.6';
+      newScreen.style.transform = 'translateX(0)';
+
+      setTimeout(() => {
+        if(prevScreen) {
+          prevScreen.style.display = 'none';
+          prevScreen.style.visibility = 'hidden';
+          prevScreen.style.transform = '';
+          prevScreen.style.opacity = '';
+        }
+        newScreen.style.transform = '';
+      }, 380);
+    });
+  }
+
+  updateAdminFab();
+}
+
+function goBack() {
+  if (viewStack.length <= 1) return;
+  haptic('light');
+  viewStack.pop();
+  const prevState = viewStack[viewStack.length - 1];
+  currentView = prevState.view;
+  currentRecipeId = prevState.data !== undefined ? prevState.data : null;
+
+  const curScreen = app.querySelector('.screen.current');
+  const prevScreen = app.querySelector('.screen:not(.current)');
+
+  if (curScreen) {
+    curScreen.style.transition = 'none';
+    curScreen.style.transform = 'translateX(0)';
+    requestAnimationFrame(() => {
+      curScreen.style.transition = 'transform .35s cubic-bezier(.32,.72,.35,1), opacity .35s ease';
+      curScreen.style.transform = 'translateX(100%)';
+      curScreen.style.opacity = '0.6';
+
+      if (prevScreen) {
+        prevScreen.style.display = 'block';
+        prevScreen.style.visibility = '';
+        prevScreen.style.transition = 'none';
+        prevScreen.style.transform = 'translateX(-30%)';
+        prevScreen.style.opacity = '0.6';
+        requestAnimationFrame(() => {
+          prevScreen.style.transition = 'transform .35s cubic-bezier(.32,.72,.35,1), opacity .35s ease';
+          prevScreen.style.transform = 'translateX(0)';
+          prevScreen.style.opacity = '1';
+        });
+      }
+
+      setTimeout(() => {
+        curScreen.remove();
+        if (prevScreen) {
+          prevScreen.classList.add('current');
+          prevScreen.style.transform = '';
+          prevScreen.style.opacity = '';
+          currentScreen = prevScreen;
+        }
+        render();
+        updateAdminFab();
+      }, 380);
+    });
+  }
+}
+
+function updateAdminFab() {
+  adminFab.style.display = currentView === 'home' ? 'flex' : 'none';
+}
+
+// ============================================================
+// SWIPE-BACK (iOS-style interactive pop)
+// ============================================================
 (function initSwipeBack(){
-  let sbStartX = 0, sbStartY = 0, sbStartTime = 0, sbDragging = false, sbAnim = null;
+  let sbStartX = 0, sbStartY = 0, sbStartTime = 0, sbDragging = false;
   let sbCurrentScreen = null, sbPrevScreen = null;
 
   document.body.addEventListener('touchstart', e => {
@@ -813,7 +591,6 @@ function updateCartFab(){
     sbStartTime = e.timeStamp;
     sbCurrentScreen = cur;
     sbPrevScreen = app.querySelector('.screen:not(.current)');
-    if(sbAnim) sbAnim.cancel();
   }, {passive: true});
 
   document.body.addEventListener('touchmove', e => {
@@ -821,16 +598,14 @@ function updateCartFab(){
     const t = e.touches[0];
     const dx = t.clientX - sbStartX;
     const dy = t.clientY - sbStartY;
-    // Cancel swipe-back if vertical scroll dominates
-    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8){ sbDragging = false; return; }
+    if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12){ sbDragging = false; return; }
     if(dx < 0){ sbDragging = false; return; }
-    // Only prevent scroll if we're clearly going horizontal
-    if(dx > 12 && Math.abs(dx) > Math.abs(dy) * 1.5) e.preventDefault();
+    if(dx > 5) e.preventDefault();
     const pct = dx / window.innerWidth;
     sbCurrentScreen.style.transition = 'none';
     sbCurrentScreen.style.transform = `translateX(${dx}px)`;
     if(sbPrevScreen){
-      sbPrevScreen.style.display = '';
+      sbPrevScreen.style.display = 'block';
       sbPrevScreen.style.visibility = '';
       sbPrevScreen.style.transition = 'none';
       sbPrevScreen.style.transform = `translateX(${(pct * 30 - 30)}%)`;
@@ -849,8 +624,7 @@ function updateCartFab(){
     const commit = dx > threshold || (dx > 60 && velocity > 400);
 
     if(commit){
-      if(sbAnim) sbAnim.cancel();
-      sbAnim = springAnimate({
+      springAnimate({
         from: dx, to: window.innerWidth, velocity: velocity * 0.3,
         stiffness: 520, damping: 28,
         onUpdate: x => {
@@ -872,12 +646,13 @@ function updateCartFab(){
             sbPrevScreen.style.transform = ''; sbPrevScreen.style.opacity = '';
             currentScreen = sbPrevScreen;
           }
+          render();
+          updateAdminFab();
           sbCurrentScreen = null; sbPrevScreen = null;
         }
       });
     } else {
-      if(sbAnim) sbAnim.cancel();
-      sbAnim = springAnimate({
+      springAnimate({
         from: dx, to: 0, velocity: 0,
         stiffness: 520, damping: 28,
         onUpdate: x => {
@@ -898,1649 +673,8 @@ function updateCartFab(){
   }, {passive: true});
 })();
 
-
-let currentView = 'home';
-let currentRecipeId = null;
-let currentMult = 1;
-let expandedLocations = new Set();
-let FAVORITES = [];
-let ttkSearchRaf = null;
-let matrixSearchRaf = null;
-let orderCart = JSON.parse(localStorage.getItem('chef_cart')) || [];
-
-function toggleFavorite(id){
-  const idx = FAVORITES.indexOf(id);
-  if(idx >= 0) FAVORITES.splice(idx, 1);
-  else FAVORITES.push(id);
-  saveData();
-  syncToFirebase();
-  haptic();
-  render();
-}
-
-function resetModalLock(){
-  // Устаревшая функция, оставлена для совместимости
-}
-
-// Переменные для навигации по графику
-let currentWeekStart = null;
-let selectedDayIndex = null;
-
-function haptic(kind){ try{ if(tg?.HapticFeedback){ tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light'); } }catch(e){} }
-
-function toast(msg, type='info'){
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = msg;
-  if(type === 'error') t.style.background = 'var(--red)', t.style.color = '#fff';
-  if(type === 'success') t.style.background = 'var(--green)', t.style.color = '#000';
-  document.body.appendChild(t);
-  setTimeout(()=>t.classList.add('show'), 10);
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 300); }, 2500);
-}
-
-function getCurrentScreen() {
-  const screens = app.querySelectorAll('.screen');
-  return screens[screens.length - 1] || app;
-}
-
-function navigate(view, data){
-  haptic();
-  if(data !== undefined) currentRecipeId = data;
-
-  const prevScreen = getCurrentScreen();
-  if (prevScreen && prevScreen !== app) {
-    prevScreen.classList.remove('current');
-  }
-
-  const newScreen = document.createElement('div');
-  newScreen.className = 'screen';
-  newScreen.style.transform = 'translateX(100%)';
-  app.appendChild(newScreen);
-  currentScreen = newScreen;
-
-  currentView = view;
-  render();
-  window.scrollTo(0,0);
-
-  if(prevScreen && prevScreen !== app){
-    if(screenAnim) screenAnim.cancel();
-    screenAnim = springAnimate({
-      from: 100, to: 0, velocity: 0,
-      onUpdate: x => {
-        newScreen.style.transform = `translateX(${x}%)`;
-        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
-        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
-      },
-      onComplete: () => {
-        if(prevScreen){
-          prevScreen.style.display = 'none';
-          prevScreen.style.visibility = 'hidden';
-          prevScreen.style.transform = '';
-          prevScreen.style.opacity = '';
-        }
-        newScreen.style.transform = '';
-      }
-    });
-  } else {
-    newScreen.style.transform = '';
-  }
-  newScreen.classList.add('current');
-  viewStack.push({view, data});
-
-}
-
-function goBack(){
-  if(viewStack.length <= 1) return;
-  haptic();
-  viewStack.pop();
-  const prevState = viewStack[viewStack.length - 1];
-  currentView = prevState.view;
-  if(prevState.data !== undefined) currentRecipeId = prevState.data;
-
-  const screens = app.querySelectorAll('.screen');
-  if (screens.length < 2) {
-    currentScreen = app;
-    render();
-    return;
-  }
-
-  const curScreen = screens[screens.length - 1];
-  const prevScreen = screens[screens.length - 2];
-
-  prevScreen.style.display = '';
-  prevScreen.style.visibility = '';
-  prevScreen.classList.add('current');
-  currentScreen = prevScreen;
-
-  if(screenAnim) screenAnim.cancel();
-  screenAnim = springAnimate({
-    from: 0, to: 100, velocity: 0,
-    onUpdate: x => {
-      curScreen.style.transform = `translateX(${x}%)`;
-      prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
-      prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
-    },
-    onComplete: () => {
-      curScreen.remove();
-      if (prevScreen) {
-        prevScreen.style.transform = '';
-        prevScreen.style.opacity = '';
-      }
-    }
-  });
-}
-
-function render(){
-  if(currentView === 'home') renderHome();
-  else if(currentView === 'ttk') renderTTK();
-  else if(currentView === 'recipe') renderRecipe();
-  else if(currentView === 'schedule') renderSchedule();
-  else if(currentView === 'checklist') renderChecklist();
-  else if(currentView === 'team') renderTeam();
-  else if(currentView === 'matrix') renderMatrix();
-
-}
-
-function renderFavorites(){
-  const favs = RECIPES.filter(r => FAVORITES.includes(r.id));
-  currentScreen.innerHTML = `
-    <div class="header">
-      <h1>⭐ Избранное</h1>
-      <p style="color:var(--muted);font-size:14px">${favs.length} блюд</p>
-    </div>
-    <div class="content" style="padding-bottom:100px">
-      ${favs.length ? favs.map(r => `
-        <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-          <div class="recipe-name">${r.name}</div>
-          <div class="recipe-meta">${r.cat} · ${r.time||'-'} · ${r.yield||'-'}</div>
-        </button>
-      `).join('') : '<p style="color:var(--muted);text-align:center;padding:40px 0">Нет избранных блюд.<br>Нажмите ⭐ в техкарте</p>'}
-    </div>
-  `;
-}
-
-function renderHome(){
-  const user = tg?.initDataUnsafe?.user;
-  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
-  
-  const today = new Date();
-  const currentDay = today.getDate();
-  const dayIndex = currentDay - 1;
-  
-  let todayShifts = [];
-  const source = scheduleData || DEFAULT_LOCAL_DATA;
-  
-  if(source && source.locations) {
-      source.locations.forEach(loc => {
-        loc.staff.forEach(p => {
-          if(p.shifts && p.shifts[dayIndex] && Number(p.shifts[dayIndex]) > 0){
-            todayShifts.push({...p, location: loc.name});
-          }
-        });
-      });
-  }
-
-  currentScreen.innerHTML = `
-    <h1>${greet}</h1>
-    
-    <div class="card">
-      <span class="pulse"></span>Сегодня ${currentDay} августа
-      <div style="margin-top:10px;font-size:13px;color:var(--muted)">
-         На смене: <span style="color:var(--accent);font-weight:700">${todayShifts.length}</span> человек
-      </div>
-    </div>
-    
-    <div class="grid">
-      <button class="tile" onclick="navigate('ttk');haptic()">
-        <div class="tile-emoji">📖</div>
-        <div class="tile-title">ТТК</div>
-        <div class="tile-desc">${RECIPES.length} техкарт</div>
-      </button>
-      <button class="tile" onclick="navigate('schedule');haptic()">
-        <div class="tile-emoji">🗓</div>
-        <div class="tile-title">График</div>
-        <div class="tile-desc">Смены</div>
-      </button>
-      <button class="tile" onclick="navigate('checklist');haptic()">
-        <div class="tile-emoji">✅</div>
-        <div class="tile-title">Чек-лист</div>
-        <div class="tile-desc">Локации</div>
-      </button>
-      <button class="tile" onclick="navigate('matrix');haptic()">
-        <div class="tile-emoji">📦</div>
-        <div class="tile-title">Матрица</div>
-        <div class="tile-desc">Заявки</div>
-      </button>
-      <button class="tile" onclick="navigate('team');haptic()">
-        <div class="tile-emoji">👥</div>
-        <div class="tile-title">Команда</div>
-        <div class="tile-desc">${TEAM.length} чел</div>
-      </button>
-    </div>
-
-    <h2>Объявления</h2>
-    ${NEWS.map(n => `
-      <div class="news">
-        <div class="news-title">${n.tag}: ${n.title}</div>
-        <div class="news-text">${n.text}</div>
-        <div class="news-date">${n.date}</div>
-      </div>
-    `).join('')}
-  `;
-}
-
-// Обновленная функция renderTTK с кнопкой "Обновить" и исправленным фокусом input
-function renderTTK(){
-  const cats = ['Все', ...new Set(RECIPES.map(r=>r.cat))];
-  window._ttkCat = window._ttkCat || 'Все';
-  window._ttkQ = window._ttkQ || '';
-  const q = window._ttkQ.toLowerCase();
-  const items = RECIPES.filter(r => 
-    (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
-    (!q || r.name.toLowerCase().includes(q))
-  );
-
-  // Рендерим структуру один раз, но input оставляем статичным при вводе
-  // Если контейнер уже существует, обновляем только список, чтобы не терять фокус
-  const existingContainer = document.getElementById('ttk-list-container');
-  const existingInput = document.getElementById('ttk-search-input');
-
-  if (existingContainer && existingInput) {
-      // Обновляем только список и кнопки категорий, не трогая input
-      const catsHtml = cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('');
-      document.getElementById('ttk-cats-container').innerHTML = catsHtml;
-      
-      const listHtml = items.length ? items.map(r => `
-        <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-          <div class="recipe-name">${r.name}</div>
-          <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
-        </button>
-      `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
-      
-      existingContainer.innerHTML = listHtml;
-      return;
-  }
-
-  // Первый рендер
-  currentScreen.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <button class="back" onclick="goBack();haptic()" style="margin-bottom:0" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-        <button class="refresh-btn" onclick="refreshTTKData();haptic('hard')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        </button>
-    </div>
-    <h1>Техкарты</h1>
-    <input type="search" id="ttk-search-input" placeholder="🔍 Поиск блюда..." 
-           value="${window._ttkQ}" 
-           oninput="window._ttkQ=this.value;renderTTK()"
-           style="width:100%;padding:12px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none;backdrop-filter:blur(4px)">
-    <div id="ttk-cats-container" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
-      ${cats.map(c => `<button class="mult ${c===window._ttkCat?'on':''}" onclick="window._ttkCat='${c}';haptic();renderTTK()">${c}</button>`).join('')}
-    </div>
-    <div id="ttk-list-container">
-    ${items.length ? items.map(r => `
-      <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-        <div class="recipe-name">${r.name}</div>
-        <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
-      </button>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
-    </div>
-  `;
-
-  const input = document.getElementById('ttk-search-input');
-  input.addEventListener('input', (e) => {
-      window._ttkQ = e.target.value;
-      if (ttkSearchRaf) cancelAnimationFrame(ttkSearchRaf);
-      ttkSearchRaf = requestAnimationFrame(() => renderTTK());
-  });
-}
-
-// Функция для кнопки "Обновить" в ТТК
-window.refreshTTKData = function() {
-    // Перечитываем данные из localStorage на случай изменений в другой вкладке
-    RECIPES = JSON.parse(localStorage.getItem('chef_recipes')) || DEFAULT_RECIPES;
-    window._ttkQ = '';
-    window._ttkCat = 'Все';
-    const input = document.getElementById('ttk-search-input');
-    if(input) input.value = '';
-    renderTTK();
-    toast('Данные обновлены', 'success');
-};
-
-function renderRecipe(){
-  const r = RECIPES.find(x => x.id === currentRecipeId);
-  if(!r){ navigate('ttk'); return; }
-
-  currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="display:flex;align-items:center;gap:12px">
-        <h1 style="flex:1">${r.name}</h1>
-        <button onclick="event.stopPropagation();toggleFavorite(${r.id})" style="background:none;border:none;font-size:28px;cursor:pointer;padding:4px;color:${FAVORITES.includes(r.id)?'var(--accent)':'var(--muted)'};transition:transform .15s">
-          ${FAVORITES.includes(r.id)?'⭐':'☆'}
-        </button>
-      </div>
-    
-    <div class="recipe-detail-container">
-        <div class="kpi">
-          <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${r.time}</div></div>
-          <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${r.yield}</div></div>
-          <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
-        </div>
-
-        <h2>Ингредиенты</h2>
-        <div class="mults">
-          ${[1,2,5,10].map(m => `<button class="mult ${m===currentMult?'on':''}" onclick="currentMult=${m};haptic();renderRecipe()">×${m}</button>`).join('')}
-        </div>
-        <div class="card">
-          ${(r.ingr || []).map(i => `
-            <div class="ingredient">
-              <span>${i[0]}</span>
-              <b>${Math.round(i[2]*currentMult)} г</b>
-            </div>
-          `).join('')}
-        </div>
-
-        <h2>Приготовление</h2>
-        ${(r.steps || []).map((s,i) => `
-          <div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>
-        `).join('')}
-
-        ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
-    </div>
-  `;
-}
-
-async function fetchScheduleData(force = false, silent = false) {
-    if (isLoading) return;
-    isLoading = true;
-    if (!force && scheduleData) {
-        isLoading = false;
-        return;
-    }
-    try {
-        const response = await fetch(SHEET_URL + '&t=' + Date.now());
-        if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
-        const text = await response.text();
-        const parsed = parseComplexCSV(text);
-        if (parsed && parsed.locations && parsed.locations.length > 0) {
-            scheduleData = parsed;
-            useLocalSchedule = false;
-            if (!silent) toast('Данные обновлены', 'success');
-        } else {
-            throw new Error('Неверный формат данных');
-        }
-    } catch (e) {
-        console.warn('Онлайн загрузка не удалась:', e);
-        if (!scheduleData) {
-            scheduleData = DEFAULT_LOCAL_DATA;
-            useLocalSchedule = true;
-        }
-        if (!silent) toast('Нет связи с сервером. Показаны локальные данные.', 'error');
-    } finally {
-        isLoading = false;
-    }
-}
-
-function parseComplexCSV(csvText) {
-    const rows = csvText.split('\n').map(row => {
-        const result = [];
-        let cell = '';
-        let inQuotes = false;
-        for (let i = 0; i < row.length; i++) {
-            const char = row[i];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                result.push(cell.trim());
-                cell = '';
-            } else {
-                cell += char;
-            }
-        }
-        result.push(cell.trim());
-        return result;
-    }).filter(r => r.length > 2);
-
-    if (rows.length < 5) return null;
-    const locations = [];
-    let currentLoc = null;
-    
-    for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const firstCell = (row[0] || '').trim().toLowerCase();
-        
-        if (firstCell.includes('итого') || firstCell.includes('дата') || 
-            firstCell.includes('локация') || firstCell === '' || 
-            !isNaN(firstCell) || firstCell.includes('вск') || firstCell.includes('пн')) {
-            continue;
-        }
-
-        const secondCell = (row[1] || '').trim();
-        if (secondCell === 'Должность' || secondCell === '') {
-             if (row[0] && row[0].trim() !== '' && !row[0].includes('итого')) {
-                 currentLoc = { name: row[0].trim(), staff: [] };
-                 locations.push(currentLoc);
-             }
-        } else if (currentLoc) {
-            const name = row[0].trim();
-            const role = secondCell;
-            const shifts = [];
-            for (let d = 2; d < Math.min(row.length - 2, 33); d++) {
-                let val = row[d];
-                if (val && val.includes(',')) val = val.replace(',', '.');
-                let num = parseFloat(val);
-                if (isNaN(num)) num = 0;
-                shifts.push(num);
-            }
-            const total = shifts.reduce((a, b) => a + b, 0);
-            currentLoc.staff.push({ name, role, shifts, total });
-        }
-    }
-    if (locations.length === 0) return null;
-    return { month: 'Август 2026', locations: locations };
-}
-
-async function showDayStaff(locName, dayIndex){
-  if(!scheduleData) return;
-  const loc = scheduleData.locations.find(l => l.name === locName);
-  if(!loc || !loc.staff) return;
-  const staffOnShift = loc.staff.filter(p => p.shifts && p.shifts[dayIndex] === 1);
-  if(!staffOnShift.length){
-    toast('На смене никого нет', 'success');
-    return;
-  }
-  const dayNum = dayIndex + 1;
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.style.zIndex = '250';
-  modal.innerHTML = `
-    <div class="modal" style="max-height:70vh">
-      <div class="modal-header">
-        <div class="modal-title">${locName} · ${dayNum} августа</div>
-        <button class="modal-close" onclick="event.stopPropagation();this.closest('.modal-bg').remove();">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="color:var(--muted);margin-bottom:12px">На смене: ${staffOnShift.length} чел.</p>
-        ${staffOnShift.map(p => `
-          <div class="team-card" style="margin-bottom:8px">
-            <div class="team-avatar">${p.name.split(' ').map(n=>n[0]).join('').toUpperCase()}</div>
-            <div>
-              <div style="font-weight:700">${p.name}</div>
-              <div style="font-size:13px;color:var(--muted)">${p.role}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-function renderSchedule(){
-    if (!currentWeekStart) {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        currentWeekStart = new Date(today);
-        currentWeekStart.setDate(today.getDate() + mondayOffset);
-        selectedDayIndex = today.getDate() - 1;
-    }
-    
-    currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">График</h1>
-        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        </button>
-    </div>
-    <div class="card" style="text-align:center;padding:30px">
-      <div class="loader-inline"></div>
-      <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
-    </div>
-  `;
-    fetchScheduleData(true).then(() => renderScheduleContent());
-}
-
-function handleRefresh() { 
-    currentWeekStart = null; 
-    selectedDayIndex = null;
-    renderSchedule(); 
-}
-
-function renderScheduleContent() {
-    const today = new Date();
-    const currentDay = today.getDate();
-    
-    if (!currentWeekStart) {
-        const dayOfWeek = today.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        currentWeekStart = new Date(today);
-        currentWeekStart.setDate(today.getDate() + mondayOffset);
-        if (selectedDayIndex === null) selectedDayIndex = currentDay - 1;
-    }
-
-    const weekDays = [];
-    for(let i=0; i<7; i++){
-        const d = new Date(currentWeekStart);
-        d.setDate(currentWeekStart.getDate() + i);
-        const dayNum = d.getDate();
-        const isToday = dayNum === currentDay && d.getMonth() === today.getMonth();
-        const dayIdx = dayNum - 1;
-        
-        let count = 0;
-        const source = scheduleData || DEFAULT_LOCAL_DATA;
-        if(source && source.locations) {
-            source.locations.forEach(loc => {
-                loc.staff.forEach(p => {
-                    if(p.shifts && p.shifts[dayIdx] && Number(p.shifts[dayIdx]) > 0) count++;
-                });
-            });
-        }
-        
-        weekDays.push({ 
-            dayNum, 
-            isToday, 
-            count, 
-            isSelected: selectedDayIndex === dayIdx,
-            dowName: ['пн','вт','ср','чт','пт','сб','вск'][i] 
-        });
-    }
-
-    const lastDay = new Date(currentWeekStart);
-    lastDay.setDate(currentWeekStart.getDate() + 6);
-    const rangeStr = `${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru', {month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru', {month:'long'})}`;
-
-    const activeDayIndex = selectedDayIndex !== null ? selectedDayIndex : currentDay - 1;
-    const source = scheduleData || DEFAULT_LOCAL_DATA;
-    
-    let html = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
-        <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        </button>
-    </div>
-    
-    <div class="week-nav">
-        <button class="week-nav-btn" onclick="changeWeek(-1);haptic()">←</button>
-        <div class="week-title">${rangeStr}</div>
-        <button class="week-nav-btn" onclick="changeWeek(1);haptic()">→</button>
-    </div>
-    <div style="text-align:center;margin-bottom:16px">
-        <button class="today-btn" onclick="goToToday();haptic()">Сегодня</button>
-    </div>
-
-    <div style="display:flex;gap:6px;margin-bottom:16px">
-      ${weekDays.map(d => `
-        <div class="day-card ${d.isSelected ? 'selected' : ''} ${d.isToday ? 'today' : ''}" 
-             onclick="selectDay(${d.dayNum - 1});haptic()">
-          <div class="dow-name">${d.dowName}</div>
-          <div class="day-num">${d.dayNum}</div>
-          <div class="count">${d.count} чел</div>
-        </div>
-      `).join('')}
-    </div>
-    
-    <h2>Сотрудники (${new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), activeDayIndex + 1).getDate()} августа)</h2>
-    ${source && source.locations ? source.locations.map(loc => {
-      if(!loc.staff || loc.staff.length === 0) return '';
-      const isOpen = expandedLocations.has(loc.name);
-      
-      const workingToday = loc.staff.filter(p => p.shifts && p.shifts[activeDayIndex] && Number(p.shifts[activeDayIndex]) > 0);
-      const staffStats = [...loc.staff].sort((a,b) => b.total - a.total);
-      
-      return `
-        <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
-          <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
-              <div style="font-size:12px;color:var(--muted)">
-                👥 На смене: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
-              </div>
-            </div>
-            <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;transition:transform .3s;transform:rotate(${isOpen?180:0}deg);flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-          </button>
-          <div style="max-height:${isOpen?'2000px':'0px'};transition:max-height .35s cubic-bezier(.32,.72,0,1),opacity .25s ease;overflow:hidden;opacity:${isOpen?'1':'0'}">
-            <div style="min-height:0;overflow:hidden;padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
-              <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">На смене (${workingToday.length})</div>
-              ${workingToday.length > 0 ? workingToday.map(p => `
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[activeDayIndex]} см</div>
-                  </div>
-                </div>
-              `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
-              
-              <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Статистика за месяц</div>
-              ${staffStats.map(s => {
-                let workDays = 0;
-                if(s.shifts) s.shifts.forEach(v => { if(v && v > 0) workDays++; });
-                return `
-                  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div style="flex:1;min-width:0">
-                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
-                    </div>
-                    <div style="text-align:right;margin-left:10px">
-                      <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('') : '<div class="card">Нет данных о локациях</div>'}
-    
-    <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">
-      📝 Открыть таблицу
-    </a>
-  `;
-  
-  currentScreen.innerHTML = html;
-}
-
-window.changeWeek = function(offset) {
-    if (!currentWeekStart) return;
-    const newDate = new Date(currentWeekStart);
-    newDate.setDate(currentWeekStart.getDate() + (offset * 7));
-    if (newDate.getMonth() !== 7 && newDate.getMonth() !== 6 && newDate.getMonth() !== 8) {}
-    currentWeekStart = newDate;
-    selectedDayIndex = null;
-    renderScheduleContent();
-};
-
-window.selectDay = function(dayIndex) {
-    selectedDayIndex = dayIndex;
-    renderScheduleContent();
-};
-
-window.goToToday = function() {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() + mondayOffset);
-    selectedDayIndex = today.getDate() - 1;
-    renderScheduleContent();
-};
-
-function toggleLoc(name) {
-  if (expandedLocations.has(name)) expandedLocations.delete(name);
-  else expandedLocations.add(name);
-  renderScheduleContent();
-}
-
-function renderChecklist(){
-  if (!window._clLoc) {
-    currentScreen.innerHTML = `
-      <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <h1>Чек-листы</h1>
-      <div style="display:grid;gap:10px">
-        ${DEFAULT_LOCAL_DATA.locations.map(loc => `
-          <button class="tile" onclick="window._clLoc='${loc.name}';renderChecklist();haptic()">
-            <div class="tile-title">${loc.name}</div>
-            <div class="tile-desc">Открыть чек-лист локации</div>
-          </button>
-        `).join('')}
-      </div>
-    `;
-    return;
-  }
-
-  const locName = window._clLoc;
-  const today = new Date().toISOString().slice(0,10);
-  const saved = JSON.parse(localStorage.getItem('cl_'+today+'_'+locName) || '{}');
-  const manager = saved.manager || '';
-  const doneOpen = (saved.open || []).length;
-  const doneClose = (saved.close || []).length;
-  const totalOpen = CHECKLISTS.open.length;
-  const totalClose = CHECKLISTS.close.length;
-
-  // Задача 1: Берем ВСЕХ сотрудников локации (не только сегодняшних) и фильтруем по ролям
-  const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let allLocStaff = [];
-  
-  if(source && source.locations) {
-    const locData = source.locations.find(l => l.name === locName);
-    if(locData && locData.staff) {
-      allLocStaff = locData.staff;
-    }
-  }
-  
-  // Фильтруем только Су-шефов, ИО и Верховных из всего списка сотрудников локации
-  const managers = allLocStaff.filter(p => p.role.includes('Су-шеф') || p.role.includes('ИО') || p.role.includes('Верховный'));
-
-  currentScreen.innerHTML = `
-    <button class="back" onclick="window._clLoc=null;renderChecklist();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h1>${locName}</h1>
-    
-    <div class="card" style="margin-bottom:16px">
-      <div class="form-label">Ответственный сегодня</div>
-      <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
-        <option value="">-- Не выбран --</option>
-        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
-      </select>
-      ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
-    </div>
-
-    <div class="mults">
-      <button class="mult ${(!window._clTab || window._clTab==='open')?'on':''}" onclick="window._clTab='open';renderChecklist()">Открытие (${doneOpen}/${totalOpen})</button>
-      <button class="mult ${window._clTab==='close'?'on':''}" onclick="window._clTab='close';renderChecklist()">Закрытие (${doneClose}/${totalClose})</button>
-    </div>
-    
-    <div class="card">
-      ${(window._clTab === 'close' ? CHECKLISTS.close : CHECKLISTS.open).map((item,i) => {
-        const key = window._clTab === 'close' ? 'close' : 'open';
-        const isDone = (saved[key] || []).includes(i);
-        return `
-        <div class="check-item ${isDone?'done':''}" onclick="toggleCheckItem('${locName}', '${key}', ${i});haptic()">
-          <div class="check-box">✓</div>
-          <span>${item}</span>
-        </div>
-      `}).join('')}
-    </div>
-  `;
-}
-
-window.saveManager = function(loc, name){
-  const today = new Date().toISOString().slice(0,10);
-  const key = 'cl_'+today+'_'+loc;
-  const saved = JSON.parse(localStorage.getItem(key) || '{}');
-  saved.manager = name;
-  localStorage.setItem(key, JSON.stringify(saved));
-  haptic();
-  renderChecklist();
-};
-
-window.toggleCheckItem = function(loc, type, i){
-  const today = new Date().toISOString().slice(0,10);
-  const key = 'cl_'+today+'_'+loc;
-  const saved = JSON.parse(localStorage.getItem(key) || '{}');
-  if(!saved[type]) saved[type] = [];
-  
-  const idx = saved[type].indexOf(i);
-  if(idx>=0) saved[type].splice(idx,1); else saved[type].push(i);
-  
-  localStorage.setItem(key, JSON.stringify(saved));
-  haptic();
-  renderChecklist();
-};
-
-function renderTeam(){
-  const user = tg?.initDataUnsafe?.user;
-  
-  const source = scheduleData || DEFAULT_LOCAL_DATA;
-  let locationsWithStaff = [];
-  
-  if (source && source.locations) {
-      source.locations.forEach(loc => {
-          if (loc.staff && loc.staff.length > 0) {
-              locationsWithStaff.push({
-                  name: loc.name,
-                  staff: loc.staff
-              });
-          }
-      });
-  }
-  
-  if (locationsWithStaff.length === 0) {
-      locationsWithStaff.push({
-          name: 'Команда',
-          staff: TEAM.map(t => ({...t, shifts: [], total: 0}))
-      });
-  }
-
-  let html = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h1>Команда</h1>
-    ${user ? `
-      <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
-        <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
-      </div>
-    ` : ''}
-  `;
-
-  locationsWithStaff.forEach(locGroup => {
-      html += `<h3>${locGroup.name}</h3>`;
-      locGroup.staff.forEach(u => {
-          html += `
-          <div class="user">
-            <div class="avatar">${u.init || u.name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
-            <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
-          </div>`;
-      });
-  });
-
-  currentScreen.innerHTML = html;
-}
-
-function getCartItem(supplier, name){
-  return orderCart.find(c => c.supplier === supplier && c.name === name);
-}
-
-function addToCart(supplier, item){
-  const existing = getCartItem(supplier, item.name);
-  if(existing){
-    existing.qty = item.limit !== null ? item.limit : 1;
-  } else {
-    orderCart.push({
-      supplier: supplier,
-      name: item.name,
-      unit: item.unit,
-      qty: item.limit !== null ? item.limit : 1
-    });
-  }
-  saveData();
-  updateCartFab();
-  haptic('hard');
-  renderMatrix();
-  toast('Добавлено в заявку', 'success');
-}
-
-function removeFromCart(supplier, name){
-  orderCart = orderCart.filter(c => !(c.supplier === supplier && c.name === name));
-  saveData();
-  updateCartFab();
-  haptic();
-  renderMatrix();
-}
-
-function updateCartQty(idx, delta){
-  orderCart[idx].qty = Math.max(0.01, parseFloat((orderCart[idx].qty + delta).toFixed(3)));
-  if(orderCart[idx].qty <= 0) orderCart.splice(idx, 1);
-  saveData();
-  renderCartSheet();
-}
-
-function setCartQty(idx, rawVal){
-  const val = rawVal.replace(',', '.').replace(/[^0-9.]/g, '');
-  const num = parseFloat(val);
-  if(isNaN(num) || num <= 0){
-    orderCart.splice(idx, 1);
-  } else {
-    orderCart[idx].qty = Math.round(num * 1000) / 1000;
-  }
-  saveData();
-  updateCartFab();
-  renderCartSheet();
-  if(orderCart.length === 0) closeCartSheet();
-}
-
-function deleteCartItem(idx){
-  orderCart.splice(idx, 1);
-  saveData();
-  updateCartFab();
-  renderCartSheet();
-  if(orderCart.length === 0) closeCartSheet();
-}
-
-function closeCartSheet(){
-  const bg = document.getElementById('cart-sheet-bg');
-  if(bg) bg.remove();
-}
-
-function copyOrder(){
-  if(!orderCart.length){ toast('Корзина пуста', 'error'); return; }
-  const date = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
-  // Group by supplier
-  const grouped = {};
-  orderCart.forEach(c => {
-    if(!grouped[c.supplier]) grouped[c.supplier] = [];
-    grouped[c.supplier].push(c);
-  });
-  let text = `📋 ЗАЯВКА НА ПОСТАВКУ\n${date}\n\n`;
-  for(const [sup, items] of Object.entries(grouped)){
-    text += `📦 ${sup}\n`;
-    items.forEach(it => {
-      text += `• ${it.name} — ${it.qty} ${it.unit}\n`;
-    });
-    text += `\n`;
-  }
-  text += `—\nОтправлено из ШефБук`;
-
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(() => {
-      toast('Скопировано! Вставьте в заметки', 'success');
-      haptic('hard');
-    }).catch(() => {
-      fallbackCopy(text);
-    });
-  } else {
-    fallbackCopy(text);
-  }
-}
-
-function fallbackCopy(text){
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
-  document.body.appendChild(ta);
-  ta.select();
-  try{ document.execCommand('copy'); toast('Скопировано! Вставьте в заметки', 'success'); haptic('hard'); }
-  catch{ toast('Не удалось скопировать', 'error'); }
-  ta.remove();
-}
-
-function renderCartSheet(){
-  const old = document.getElementById('cart-sheet-bg');
-  const scroller = app.querySelector('.screen.current');
-  const savedScroll = scroller ? scroller.scrollTop : 0;
-  if(old) old.remove();
-
-  const bg = document.createElement('div');
-  bg.className = 'sheet-bg open';
-  bg.id = 'cart-sheet-bg';
-  bg.style.zIndex = '250';
-
-  const grouped = {};
-  orderCart.forEach((c, i) => {
-    if(!grouped[c.supplier]) grouped[c.supplier] = [];
-    grouped[c.supplier].push({...c, idx: i});
-  });
-
-  const itemsHtml = Object.entries(grouped).map(([sup, items]) => `
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">${sup}</div>
-      ${items.map(it => `
-        <div class="cart-item">
-          <div class="cart-name">
-            <div>${it.name}</div>
-            <span class="cart-supplier">${it.unit}</span>
-          </div>
-          <div class="cart-qty-wrap">
-            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
-            <input class="cart-qty-input" type="text" inputmode="decimal" value="${it.qty}" 
-                   onchange="setCartQty(${it.idx}, this.value)" 
-                   onclick="this.select()">
-            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, 1)">+</button>
-          </div>
-          <button class="icon-btn danger" style="width:28px;height:28px" onclick="deleteCartItem(${it.idx})">✕</button>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
-
-  bg.innerHTML = `
-    <div class="sheet open" style="max-width:500px">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <div class="sheet-title">📋 Заявка (${orderCart.length})</div>
-        <button class="sheet-close" onclick="closeCartSheet()">✕</button>
-      </div>
-      <div class="sheet-body" style="padding-bottom:30px">
-        ${itemsHtml}
-        <button class="btn" onclick="copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
-        <button class="btn btn-sec" onclick="orderCart=[];saveData();updateCartFab();closeCartSheet();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
-      </div>
-    </div>
-  `;
-
-  bg.addEventListener('click', e => { if(e.target === bg) closeCartSheet(); });
-  document.body.appendChild(bg);
-  if(scroller) requestAnimationFrame(() => { scroller.scrollTop = savedScroll; });
-}
-
-function renderMatrix(){
-  window._matrixQ = window._matrixQ || '';
-  const q = window._matrixQ.toLowerCase();
-  
-  const searchInputId = 'matrix-search-input';
-  
-  const filteredSuppliers = MATRIX_DATA.map(sup => {
-    const items = sup.items.filter(it => it.name.toLowerCase().includes(q));
-    if(items.length > 0 || sup.supplier.toLowerCase().includes(q)) {
-      if(q && !sup.supplier.toLowerCase().includes(q)) {
-         return {...sup, items: items};
-      }
-      return sup;
-    }
-    return null;
-  }).filter(s => s !== null);
-
-  const listHtml = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
-      <div class="supplier-block">
-        <div class="supplier-header">
-          <div class="supplier-name">${sup.supplier}</div>
-          <div class="supplier-schedule">🕒 ${sup.schedule}</div>
-        </div>
-        <div class="card" style="padding:10px 14px">
-          ${sup.items.map(it => `
-            <div class="matrix-item">
-              <div class="matrix-name">${it.name}</div>
-              <div class="matrix-meta" style="display:flex;align-items:center;gap:10px">
-                <span class="matrix-unit">${it.unit}</span>
-                ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
-                <button class="order-btn ${getCartItem(sup.supplier, it.name) ? 'on' : ''}" 
-                        onclick="event.stopPropagation();${getCartItem(sup.supplier, it.name) ? `removeFromCart('${sup.supplier.replace(/'/g, "\'")}','${it.name.replace(/'/g, "\'")}')` : `addToCart('${sup.supplier.replace(/'/g, "\'")}', {name:'${it.name.replace(/'/g, "\'")}', unit:'${it.unit}', limit:${it.limit !== null ? it.limit : 'null'}})`}">
-                  ${getCartItem(sup.supplier, it.name) ? '✓' : '+'}
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
-
-  const existingInput = document.getElementById(searchInputId);
-  
-  if (existingInput) {
-      const listContainer = document.getElementById('matrix-list-container');
-      if (listContainer) listContainer.innerHTML = listHtml;
-      return;
-  }
-
-  currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h1>Матрица заявок</h1>
-    <input type="search" id="${searchInputId}" placeholder="🔍 Поиск продукта или поставщика..." 
-           value="${window._matrixQ}" 
-           style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
-    
-    <div id="matrix-list-container">
-        ${listHtml}
-    </div>
-  `;
-
-  const input = document.getElementById(searchInputId);
-  if (input) {
-      input.addEventListener('input', (e) => {
-          window._matrixQ = e.target.value;
-          if (matrixSearchRaf) cancelAnimationFrame(matrixSearchRaf);
-          matrixSearchRaf = requestAnimationFrame(() => renderMatrix());
-      });
-  }
-}
-
-/* ============================================================
-   🔐 АДМИНКА
-   ============================================================ */
-let adminTab = 'recipes';
-
-function openAdmin(){ showAdminModal(); }
-
-function showAdminModal(){
-  // Удаляем старую sheet, если есть
-  const old = document.getElementById('admin-modal');
-  if(old) old.remove();
-  // Удаляем все старые модалки редактирования
-  const oldEditModal = document.getElementById('edit-modal');
-  if(oldEditModal) oldEditModal.remove();
-  const oldSupplierModal = document.getElementById('edit-supplier-modal');
-  if(oldSupplierModal) oldSupplierModal.remove();
-
-  adminTab = localStorage.getItem('chef_admin_tab') || adminTab || 'recipes';
-
-  // Создаём фон
-  const bg = document.createElement('div');
-  bg.className = 'sheet-bg';
-  bg.id = 'admin-modal';
-
-  // Создаём саму панель
-  const sheet = document.createElement('div');
-  sheet.className = 'sheet';
-  sheet.id = 'admin-sheet';
-
-  // Drag-область (невидимая, но ловит тап)
-  const dragArea = document.createElement('div');
-  dragArea.className = 'sheet-drag-area';
-
-  // Содержимое
-  sheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">⚙️ Редактор</div>
-      <button class="sheet-close" onclick="event.stopPropagation();closeSheet()">✕</button>
-    </div>
-    <div style="display:flex;gap:4px;padding:0 20px 12px;flex-shrink:0">
-      <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';localStorage.setItem('chef_admin_tab','recipes');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">ТТК</button>
-      <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';localStorage.setItem('chef_admin_tab','news');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Новости</button>
-      <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';localStorage.setItem('chef_admin_tab','team');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Команда</button>
-      <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';localStorage.setItem('chef_admin_tab','matrix');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Матрица</button>
-    </div>
-    <div id="admin-content" class="sheet-body"></div>
-  `;
-
-  sheet.insertBefore(dragArea, sheet.firstChild);
-  bg.appendChild(sheet);
-  document.body.appendChild(bg);
-
-  // Показываем с анимацией (следующий кадр)
-  requestAnimationFrame(() => {
-    bg.classList.add('open');
-    sheet.classList.add('open');
-  });
-
-  // === DRAG ЛОГИКА (Spring Physics) ===
-  let sheetAnim = null;
-  let sheetY = 0;
-  let isDraggingSheet = false;
-  let dragStartY = 0;
-  let dragStartSheetY = 0;
-  let dragHistory = [];
-
-  function setSheetY(y) {
-    sheetY = y;
-    sheet.style.transform = `translateY(${y}px)`;
-  }
-
-  function snapSheet(target, velocity = 0) {
-    if (sheetAnim) sheetAnim.cancel();
-    sheetAnim = springAnimate({
-      from: sheetY,
-      to: target,
-      velocity: velocity,
-      stiffness: 380,
-      damping: 32,
-      onUpdate: y => setSheetY(y),
-      onComplete: () => {
-        if (target > 0) closeSheet();
-      }
-    });
-  }
-
-  function onPointerDown(e) {
-    if (e.target.closest('button, input, textarea, select, .sheet-body')) return;
-    isDraggingSheet = true;
-    dragStartY = e.clientY;
-    dragStartSheetY = sheetY;
-    dragHistory = [];
-    if (sheetAnim) sheetAnim.cancel();
-    sheet.style.transition = 'none';
-    if (e.pointerId) sheet.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  }
-
-  function onPointerMove(e) {
-    if (!isDraggingSheet) return;
-    const y = e.clientY;
-    const delta = y - dragStartY;
-    let targetY = dragStartSheetY + delta;
-
-    // Rubber-banding: can't pull above 0
-    if (targetY < 0) {
-      targetY = -rubberband(-targetY, sheet.offsetHeight * 0.5);
-    }
-
-    // Track velocity history
-    dragHistory.push({ y, t: performance.now() });
-    if (dragHistory.length > 6) dragHistory.shift();
-
-    setSheetY(targetY);
-  }
-
-  function onPointerUp(e) {
-    if (!isDraggingSheet) return;
-    isDraggingSheet = false;
-
-    // Calculate release velocity from recent history
-    const now = performance.now();
-    const recent = dragHistory.filter(h => now - h.t < 80);
-    let releaseVelocity = 0;
-    if (recent.length >= 2) {
-      const first = recent[0];
-      const last = recent[recent.length - 1];
-      const dt = last.t - first.t;
-      if (dt > 0) releaseVelocity = (last.y - first.y) / dt * 1000;
-    }
-
-    // Momentum projection
-    const projected = sheetY + project(releaseVelocity);
-    const threshold = sheet.offsetHeight * 0.35;
-
-    if (projected > threshold || (sheetY > threshold && releaseVelocity > 0)) {
-      snapSheet(sheet.offsetHeight, releaseVelocity);
-    } else {
-      snapSheet(0, releaseVelocity);
-    }
-  }
-
-  dragArea.addEventListener('pointerdown', onPointerDown);
-  sheet.addEventListener('pointermove', onPointerMove);
-  sheet.addEventListener('pointerup', onPointerUp);
-  sheet.addEventListener('pointercancel', onPointerUp);
-
-  // Клик по фону = закрыть
-  bg.addEventListener('click', (e) => {
-    if (e.target === bg) closeSheet();
-  });
-
-  renderAdminContent();}
-
-// Функция закрытия
-function closeSheet(){
-  const bg = document.getElementById('admin-modal');
-  const sheet = document.getElementById('admin-sheet');
-  if(!bg) return;
-  
-  bg.classList.remove('open');
-  if(sheet) sheet.classList.remove('open');
-  
-  // Ждём конца анимации и убираем из DOM
-  setTimeout(() => {
-    if(bg && bg.parentNode) bg.remove();
-  }, 350);
-}
-
-function renderAdminContent(){
-  const c = document.getElementById('admin-content');
-  if(!c) return;
-  if(adminTab === 'recipes'){
-    c.innerHTML = `
-      <button class="btn" onclick="editRecipe()">+ Добавить техкарту</button>
-      ${RECIPES.map(r => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div>
-              <div class="item-card-title">${r.name}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.cat} · ${r.time}</div>
-            </div>
-            <div>
-              <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteRecipe(${r.id})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    `;
-  } else if(adminTab === 'news'){
-    c.innerHTML = `
-      <button class="btn" onclick="editNews()">+ Добавить новость</button>
-      ${NEWS.map((n,i) => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div>
-              <div class="item-card-title">${n.tag}: ${n.title}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${n.date}</div>
-            </div>
-            <div>
-              <button class="icon-btn" onclick="editNews(${i})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteNews(${i})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    `;
-  } else if(adminTab === 'team'){
-    c.innerHTML = `
-      <button class="btn" onclick="editTeamMember()">+ Добавить сотрудника</button>
-      ${TEAM.map((u,i) => `
-        <div class="item-card">
-          <div class="item-card-head">
-            <div>
-              <div class="item-card-title">${u.name}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${u.role}</div>
-            </div>
-            <div>
-              <button class="icon-btn" onclick="editTeamMember(${i})">✏️</button>
-              <button class="icon-btn danger" onclick="deleteTeamMember(${i})">🗑</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    `;
-  } else if(adminTab === 'matrix'){
-      c.innerHTML = `
-        <button class="btn" onclick="editSupplier()">+ Добавить поставщика</button>
-        ${MATRIX_DATA.map((s, i) => `
-            <div class="item-card">
-                <div class="item-card-head">
-                    <div>
-                        <div class="item-card-title">${s.supplier}</div>
-                        <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.items.length} товаров</div>
-                    </div>
-                    <div>
-                        <button class="icon-btn" onclick="editSupplier(${i})">✏️</button>
-                        <button class="icon-btn danger" onclick="deleteSupplier(${i})">🗑</button>
-                    </div>
-                </div>
-            </div>
-        `).join('')}
-      `;
-  }
-}
-
-window.editSupplier = function(index) {
-    const isEdit = index !== undefined;
-    const s = isEdit ? MATRIX_DATA[index] : {supplier: '', schedule: '', items: []};
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-bg';
-    modal.id = 'edit-supplier-modal';
-    
-    let itemsHtml = s.items.map((it, idx) => `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
-                <input class="form-input" placeholder="Продукт" value="${it.name}" data-midx="${idx}" data-f="name">
-                <input class="form-input" placeholder="Ед." value="${it.unit}" data-midx="${idx}" data-f="unit">
-                <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" data-midx="${idx}" data-f="limit">
-                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-            </div>
-        </div>
-    `).join('');
-
-    modal.innerHTML = `
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title">${isEdit ? '✏️ Редактировать' : '✨ Новый'} поставщик</div>
-                <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove();"></button>
-            </div>
-            <div class="modal-body" style="padding:0 20px">
-                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${s.supplier}"></div>
-                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="m-schedule" value="${s.schedule}"></div>
-                
-                <div class="form-field">
-                    <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Добавить</button></label>
-                    <div id="matrix-items-list">${itemsHtml}</div>
-                </div>
-                
-                <button class="btn" onclick="saveSupplier(${isEdit ? index : 'null'})">💾 Сохранить</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-};
-
-window.addMatrixItem = function() {
-    const list = document.getElementById('matrix-items-list');
-    const idx = list.querySelectorAll('.ing-editor').length;
-    const html = `
-        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
-                <input class="form-input" placeholder="Продукт" data-midx="${idx}" data-f="name" value="">
-                <input class="form-input" placeholder="Ед." data-midx="${idx}" data-f="unit" value="">
-                <input class="form-input" placeholder="Лимит" type="number" data-midx="${idx}" data-f="limit" value="">
-                <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-            </div>
-        </div>`;
-    list.insertAdjacentHTML('beforeend', html);
-};
-
-window.saveSupplier = function(index) {
-    const supplierName = $('#m-supplier').value;
-    const schedule = $('#m-schedule').value;
-    
-    if(!supplierName) { toast('Введите название поставщика', 'error'); return; }
-    
-    const items = Array.from(document.querySelectorAll('[data-midx]')).reduce((acc, el) => {
-        const idx = el.dataset.midx;
-        const f = el.dataset.f;
-        acc[idx] = acc[idx] || {};
-        let val = el.value;
-        if (f === 'limit') val = val === '' ? null : parseFloat(val);
-        acc[idx][f] = val;
-        return acc;
-    }, []).filter(x => x.name && x.name.trim() !== '');
-    
-    const newSupplier = { supplier: supplierName, schedule: schedule, items: items };
-    
-    if (index !== null) {
-        MATRIX_DATA[index] = newSupplier;
-    } else {
-        MATRIX_DATA.push(newSupplier);
-    }
-    
-    saveData();
-    syncToFirebase();
-    document.getElementById('edit-supplier-modal').remove();
-    toast('Сохранено', 'success');
-    renderAdminContent();
-};
-
-window.deleteSupplier = function(index) {
-    if(!confirm('Удалить поставщика и все его товары?')) return;
-    MATRIX_DATA.splice(index, 1);
-    saveData();
-    renderAdminContent();
-    toast('Удалено', 'success');
-};
-
-function editRecipe(id){
-  // Удаляем старую модалку, если есть
-  const oldModal = document.getElementById('edit-modal');
-  if(oldModal) oldModal.remove();
-  const oldSupplierModal = document.getElementById('edit-supplier-modal');
-  if(oldSupplierModal) oldSupplierModal.remove();
-
-  const r = id ? RECIPES.find(x=>x.id===id) : {id:Date.now(), name:'', cat:'Горячее', time:'', yield:'', kcal:0, note:'', ingr:[['',0,0]], steps:['']};
-  const isEdit = !!id;
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'✏️ Редактировать':'✨ Новая'} техкарта</div>
-        <button class="modal-close" onclick="document.getElementById('edit-modal').remove();"></button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
-        <div class="form-field"><label class="form-label">Категория</label>
-          <select class="form-select" id="r-cat">
-            ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div class="form-field"><label class="form-label">Время</label><input class="form-input" id="r-time" value="${r.time}"></div>
-          <div class="form-field"><label class="form-label">Выход</label><input class="form-input" id="r-yield" value="${r.yield}"></div>
-          <div class="form-field"><label class="form-label">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addIngr()">+ Добавить</button></label>
-          <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
-          <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
-        </div>
-        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
-        <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-function ingrRow(i, idx){
-  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
-    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
-    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
-    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-  </div></div>`;
-}
-
-function stepRow(s, idx){
-  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
-    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
-  </div>`;
-}
-
-window.addIngr = function(){
-  const list = document.getElementById('ingr-list');
-  const idx = list.querySelectorAll('.ing-editor').length;
-  list.insertAdjacentHTML('beforeend', ingrRow(['',0,0], idx));
-};
-window.addStep = function(){
-  const list = document.getElementById('steps-list');
-  const idx = list.querySelectorAll('[data-step]').length;
-  list.insertAdjacentHTML('beforeend', stepRow('', idx));
-};
-
-window.saveRecipe = function(editId){
-  const r = {
-    id: editId || Date.now(),
-    name: $('#r-name').value,
-    cat: $('#r-cat').value,
-    time: $('#r-time').value,
-    yield: $('#r-yield').value,
-    kcal: parseInt($('#r-kcal').value) || 0,
-    note: $('#r-note').value,
-    ingr: Array.from(document.querySelectorAll('[data-ing]')).reduce((acc, el)=>{
-      const idx = el.dataset.ing;
-      const f = el.dataset.f;
-      acc[idx] = acc[idx] || [];
-      const val = f==='name' ? el.value : parseFloat(el.value)||0;
-      const pos = f==='name'?0:f==='brutto'?1:2;
-      acc[idx][pos] = val;
-      return acc;
-    }, []).filter(x=>x && x[0]),
-    steps: Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
-  };
-  if(!r.name){ toast('Введите название', 'error'); return; }
-  if(editId){
-    const idx = RECIPES.findIndex(x=>x.id===editId);
-    RECIPES[idx] = r;
-  } else {
-    RECIPES.push(r);
-  }
-  saveData();
-  syncToFirebase();
-  document.getElementById('edit-modal').remove();
-  haptic('hard');
-  toast('Сохранено ✓', 'success');
-  renderAdminContent();
-};
-
-window.deleteRecipe = function(id){
-  if(!confirm('Удалить техкарту?')) return;
-  const idx = RECIPES.findIndex(r=>r.id===id);
-  if(idx>=0) RECIPES.splice(idx,1);
-  saveData();
-  syncToFirebase();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-function editNews(i){
-  // Удаляем старую модалку, если есть
-  const oldModal = document.getElementById('edit-modal');
-  if(oldModal) oldModal.remove();
-  const oldSupplierModal = document.getElementById('edit-supplier-modal');
-  if(oldSupplierModal) oldSupplierModal.remove();
-
-  const isEdit = i !== undefined;
-  const n = isEdit ? NEWS[i] : {tag:'', title:'', text:'', date:'Сегодня'};
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новая'} новость</div>
-        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
-        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
-        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
-        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
-        <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveNews = function(i){
-  const n = {tag: $('#n-tag').value, title: $('#n-title').value, text: $('#n-text').value, date: $('#n-date').value};
-  if(!n.title){ toast('Введите заголовок', 'error'); return; }
-  if(i !== null) NEWS[i] = n; else NEWS.unshift(n);
-  saveData();
-  syncToFirebase();
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
-window.deleteNews = function(i){
-  if(!confirm('Удалить новость?')) return;
-  NEWS.splice(i,1);
-  saveData();
-  syncToFirebase();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-function editTeamMember(i){
-  // Удаляем старую модалку, если есть
-  const oldModal = document.getElementById('edit-modal');
-  if(oldModal) oldModal.remove();
-  const oldSupplierModal = document.getElementById('edit-supplier-modal');
-  if(oldSupplierModal) oldSupplierModal.remove();
-
-  const isEdit = i !== undefined;
-  const u = isEdit ? TEAM[i] : {name:'', role:'', init:'??'};
-  const modal = document.createElement('div');
-  modal.className = 'modal-bg';
-  modal.id = 'edit-modal';
-  modal.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">${isEdit?'Редактировать':'Новый'} сотрудник</div>
-        <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
-        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
-        <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
-        <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-window.saveTeamMember = function(i){
-  const u = {name: $('#u-name').value, role: $('#u-role').value, init: $('#u-init').value.toUpperCase()};
-  if(!u.name){ toast('Введите имя', 'error'); return; }
-  if(i !== null) TEAM[i] = u; else TEAM.push(u);
-  saveData();
-  syncToFirebase();
-  document.getElementById('edit-modal').remove();
-  renderAdminContent();
-  toast('Сохранено', 'success');
-};
-
-window.deleteTeamMember = function(i){
-  if(!confirm('Удалить сотрудника?')) return;
-  TEAM.splice(i,1);
-  saveData();
-  syncToFirebase();
-  renderAdminContent();
-  toast('Удалено', 'success');
-};
-
-/* ============================================================
-   🚀 СТАРТ
-   ============================================================ */
-// Сначала пробуем загрузить из Firebase, потом рендерим
-// Fix iOS keyboard scroll jump when editing cart qty
-document.addEventListener('focusout', e => {
-  if(e.target.classList.contains('cart-qty-input')){
-    const scroller = app.querySelector('.screen.current');
-    if(!scroller) return;
-    const st = scroller.scrollTop;
-    requestAnimationFrame(() => {
-      scroller.scrollTop = st;
-      requestAnimationFrame(() => scroller.scrollTop = st);
-    });
-  }
-});
-
-// Tap in top zone to scroll to top (like iOS status bar tap)
-document.addEventListener('touchend', e => {
+// Tap-to-top (top 80px zone)
+document.body.addEventListener('touchend', e => {
   const t = e.changedTouches[0];
   if(t.clientY < 80 && viewStack.length > 1){
     const scroller = app.querySelector('.screen.current');
@@ -2551,17 +685,1055 @@ document.addEventListener('touchend', e => {
   }
 }, {passive: true});
 
-updateCartFab();
-
-(async function init(){
-  const loaded = await loadFromFirebase();
-  if(!loaded){
-    // Если Firebase не настроен — используем локальные данные (уже загружены выше)
-    console.log('📱 Работаем в offline-режиме');
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function render() {
+  if (!currentScreen) return;
+  switch(currentView) {
+    case 'home': renderHome(); break;
+    case 'recipes': renderRecipes(); break;
+    case 'recipe': renderRecipe(); break;
+    case 'schedule': renderSchedule(); break;
+    case 'checklist': renderChecklist(); break;
+    case 'team': renderTeam(); break;
+    case 'matrix': renderMatrix(); break;
+    case 'writeoff': renderWriteOff(); break;
+    case 'writeoffLocation': renderWriteOffLocation(); break;
+    case 'favorites': renderFavorites(); break;
+    case 'news': renderNews(); break;
   }
+}
+
+function backBtn() {
+  return `<button class="back-btn" onclick="goBack();haptic('light')">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>`;
+}
+
+function renderHome() {
+  currentScreen.innerHTML = `
+    <h1 style="margin-top:8px">👨‍🍳 ШефБук</h1>
+    <div class="grid">
+      <button class="tile" onclick="navigate('recipes');haptic('light')">
+        <div class="tile-emoji">📖</div>
+        <div class="tile-title">ТТК</div>
+        <div class="tile-desc">Техкарты</div>
+      </button>
+      <button class="tile" onclick="navigate('schedule');haptic('light')">
+        <div class="tile-emoji">📅</div>
+        <div class="tile-title">График</div>
+        <div class="tile-desc">Смены</div>
+      </button>
+      <button class="tile" onclick="navigate('checklist');haptic('light')">
+        <div class="tile-emoji">✅</div>
+        <div class="tile-title">Чек-листы</div>
+        <div class="tile-desc">Открытие/закрытие</div>
+      </button>
+      <button class="tile" onclick="navigate('team');haptic('light')">
+        <div class="tile-emoji">👥</div>
+        <div class="tile-title">Команда</div>
+        <div class="tile-desc">Сотрудники</div>
+      </button>
+      <button class="tile" onclick="navigate('matrix');haptic('light')">
+        <div class="tile-emoji">📊</div>
+        <div class="tile-title">Матрица</div>
+        <div class="tile-desc">Заявки</div>
+      </button>
+      <button class="tile" onclick="navigate('writeoff');haptic('light')">
+        <div class="tile-emoji">🗑</div>
+        <div class="tile-title">Списание</div>
+        <div class="tile-desc">Порча / Питание</div>
+      </button>
+      <button class="tile" onclick="navigate('news');haptic('light')">
+        <div class="tile-emoji">📰</div>
+        <div class="tile-title">Новости</div>
+        <div class="tile-desc">Объявления</div>
+      </button>
+      <button class="tile" onclick="navigate('favorites');haptic('light')">
+        <div class="tile-emoji">⭐</div>
+        <div class="tile-title">Избранное</div>
+        <div class="tile-desc">${favorites.length} рецептов</div>
+      </button>
+    </div>
+    <div class="card">
+      <h3>📌 Быстрый доступ</h3>
+      <button class="btn btn-sec" onclick="navigate('recipes');haptic('light')">Открыть ТТК</button>
+      <button class="btn btn-sec" onclick="navigate('schedule');haptic('light')">Посмотреть график</button>
+    </div>
+  `;
+}
+
+function renderRecipes() {
+  let html = backBtn() + '<h1>📖 Техкарты</h1>';
+  html += '<div class="search-wrap"><input type="text" id="recipeSearch" placeholder="Поиск по названию или ингредиенту..." oninput="debounceSearch(searchRecipes)"></div>';
+  html += '<div id="recipe-list">';
+  RECIPES.forEach(r => {
+    const isFav = favorites.includes(r.id);
+    html += `<button class="recipe" onclick="navigate('recipe',${r.id});haptic('light')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="recipe-name">${r.img} ${r.name}</div>
+          <div class="recipe-meta">${r.cat} · ${r.time} · ${r.diff}</div>
+        </div>
+        <span style="font-size:20px;opacity:${isFav?1:0.3}">${isFav?'⭐':'☆'}</span>
+      </div>
+    </button>`;
+  });
+  html += '</div>';
+  currentScreen.innerHTML = html;
+}
+
+function searchRecipes() {
+  const q = document.getElementById('recipeSearch').value.toLowerCase();
+  const list = document.getElementById('recipe-list');
+  if(!list) return;
+  let html = '';
+  RECIPES.filter(r => r.name.toLowerCase().includes(q) || r.ingredients.some(i => i.toLowerCase().includes(q))).forEach(r => {
+    const isFav = favorites.includes(r.id);
+    html += `<button class="recipe" onclick="navigate('recipe',${r.id});haptic('light')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="recipe-name">${r.img} ${r.name}</div>
+          <div class="recipe-meta">${r.cat} · ${r.time} · ${r.diff}</div>
+        </div>
+        <span style="font-size:20px;opacity:${isFav?1:0.3}">${isFav?'⭐':'☆'}</span>
+      </div>
+    </button>`;
+  });
+  list.innerHTML = html || '<p style="color:var(--muted);text-align:center;padding:40px">Ничего не найдено</p>';
+}
+
+function renderRecipe() {
+  const r = RECIPES.find(x => x.id === currentRecipeId);
+  if(!r) { goBack(); return; }
+  const isFav = favorites.includes(r.id);
+  let html = backBtn() + `<h1>${r.img} ${r.name}</h1>`;
+  html += `<div class="card">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <span style="background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700">${r.cat}</span>
+      <span style="background:rgba(255,255,255,.06);padding:4px 10px;border-radius:8px;font-size:12px">⏱ ${r.time}</span>
+      <span style="background:rgba(255,255,255,.06);padding:4px 10px;border-radius:8px;font-size:12px">📊 ${r.diff}</span>
+    </div>
+    <button class="btn ${isFav?'btn-sec':''}" onclick="toggleFav(${r.id});haptic('medium')">${isFav?'⭐ В избранном':'☆ Добавить в избранное'}</button>
+  </div>`;
+  html += '<h2>🥘 Ингредиенты</h2><div class="card">';
+  r.ingredients.forEach(i => {
+    const parts = i.split(' — ');
+    html += `<div class="ingredient"><span>${parts[0]}</span><b>${parts[1]||''}</b></div>`;
+  });
+  html += '</div>';
+  html += '<h2>👨‍🍳 Приготовление</h2>';
+  r.steps.forEach((s, i) => {
+    html += `<div class="step"><span class="step-num">${i+1}</span>${s}</div>`;
+  });
+  currentScreen.innerHTML = html;
+}
+
+function toggleFav(id) {
+  const idx = favorites.indexOf(id);
+  if(idx >= 0) favorites.splice(idx, 1);
+  else favorites.push(id);
+  saveData();
   render();
-  startFirebaseSync();
-})();
+}
+
+function renderSchedule() {
+  let html = backBtn() + '<h1>📅 График смен</h1>';
+  html += '<div class="card"><p style="font-size:14px;color:var(--muted);line-height:1.5">График подгружается из Google Sheets. Убедитесь, что у вас есть доступ к таблице.</p>';
+  html += '<a href="https://docs.google.com/spreadsheets/d/1ABC123/edit" target="_blank" style="color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;display:inline-block;margin-top:8px">🔗 Открыть таблицу</a></div>';
+  html += '<h2>📍 Локации</h2>';
+  ['Галактика','Сибирь','Пионер','Европа','Лазурная'].forEach(loc => {
+    html += `<div class="card" style="cursor:pointer" onclick="haptic('light')">
+      <div style="font-weight:700;font-size:15px;margin-bottom:4px">📍 ${loc}</div>
+      <div style="font-size:13px;color:var(--muted)">Нажмите для просмотра смен</div>
+    </div>`;
+  });
+  currentScreen.innerHTML = html;
+}
+
+function renderChecklist() {
+  let html = backBtn() + '<h1>✅ Чек-листы</h1>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px">';
+  html += '<button class="btn btn-sm" style="flex:1" onclick="renderChecklistOpen()">🌅 Открытие</button>';
+  html += '<button class="btn btn-sm btn-sec" style="flex:1" onclick="renderChecklistClose()">🌙 Закрытие</button>';
+  html += '</div>';
+  html += '<div id="checklist-content"></div>';
+  currentScreen.innerHTML = html;
+  renderChecklistOpen();
+}
+
+function renderChecklistOpen() {
+  const container = document.getElementById('checklist-content');
+  if(!container) return;
+  let html = '<h2>🌅 Открытие</h2>';
+  let done = 0;
+  checklistOpen.forEach((item, i) => { if(item.done) done++; });
+  html += `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Выполнено: ${done}/${checklistOpen.length}</div>`;
+  checklistOpen.forEach((item, i) => {
+    html += `<div class="check-item ${item.done?'done':''}" onclick="toggleCheck('open',${i});haptic('light')">
+      <div class="check-box">${item.done?'✓':''}</div>
+      <div class="check-text" style="font-size:14px">${item.text}</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderChecklistClose() {
+  const container = document.getElementById('checklist-content');
+  if(!container) return;
+  let html = '<h2>🌙 Закрытие</h2>';
+  let done = 0;
+  checklistClose.forEach((item, i) => { if(item.done) done++; });
+  html += `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Выполнено: ${done}/${checklistClose.length}</div>`;
+  checklistClose.forEach((item, i) => {
+    html += `<div class="check-item ${item.done?'done':''}" onclick="toggleCheck('close',${i});haptic('light')">
+      <div class="check-box">${item.done?'✓':''}</div>
+      <div class="check-text" style="font-size:14px">${item.text}</div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function toggleCheck(type, idx) {
+  const list = type === 'open' ? checklistOpen : checklistClose;
+  list[idx].done = !list[idx].done;
+  saveData();
+  if(type === 'open') renderChecklistOpen(); else renderChecklistClose();
+}
+
+function renderTeam() {
+  let html = backBtn() + '<h1>👥 Команда</h1>';
+  teamData.forEach(p => {
+    const statusColor = p.status === 'online' ? 'var(--green)' : 'var(--muted)';
+    html += `<div class="card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--accent)">${p.name[0]}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px">${p.name}</div>
+          <div style="font-size:13px;color:var(--muted)">${p.role}</div>
+        </div>
+        <div style="width:8px;height:8px;border-radius:50%;background:${statusColor}"></div>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:var(--muted)">📞 ${p.phone}</div>
+    </div>`;
+  });
+  currentScreen.innerHTML = html;
+}
+
+function renderNews() {
+  let html = backBtn() + '<h1>📰 Новости</h1>';
+  if(newsData.length === 0) {
+    html += '<div class="card"><p style="color:var(--muted);font-size:14px">Новостей пока нет. Они появятся здесь автоматически.</p></div>';
+  } else {
+    newsData.forEach(n => {
+      html += `<div class="news">
+        <div class="news-title">${n.title}</div>
+        <div class="news-text">${n.text}</div>
+        <div class="news-date">${n.date}</div>
+      </div>`;
+    });
+  }
+  currentScreen.innerHTML = html;
+}
+
+function renderFavorites() {
+  let html = backBtn() + '<h1>⭐ Избранное</h1>';
+  if(favorites.length === 0) {
+    html += '<div class="card"><p style="color:var(--muted);font-size:14px;text-align:center">Нет избранных рецептов. Добавьте их из раздела ТТК.</p></div>';
+  } else {
+    favorites.forEach(id => {
+      const r = RECIPES.find(x => x.id === id);
+      if(r) {
+        html += `<button class="recipe" onclick="navigate('recipe',${r.id});haptic('light')">
+          <div class="recipe-name">${r.img} ${r.name}</div>
+          <div class="recipe-meta">${r.cat} · ${r.time}</div>
+        </button>`;
+      }
+    });
+  }
+  currentScreen.innerHTML = html;
+}
+
+// Debounce search
+function debounceSearch(fn) {
+  if(searchRafId) cancelAnimationFrame(searchRafId);
+  searchRafId = requestAnimationFrame(() => {
+    searchRafId = requestAnimationFrame(fn);
+  });
+}
+
+// ============================================================
+// MATRIX (ЗАЯВКИ)
+// ============================================================
+function renderMatrix() {
+  let html = backBtn() + '<h1>📊 Матрица заявок</h1>';
+  html += '<div class="search-wrap"><input type="text" id="matrixSearch" placeholder="Поиск по товару или поставщику..." oninput="debounceSearch(searchMatrix)"></div>';
+  html += '<div id="matrix-list-container"></div>';
+  currentScreen.innerHTML = html;
+  searchMatrix();
+}
+
+function searchMatrix() {
+  const q = (document.getElementById('matrixSearch')?.value || '').toLowerCase();
+  const container = document.getElementById('matrix-list-container');
+  if(!container) return;
+  const filtered = MATRIX_ITEMS.filter(i => i.name.toLowerCase().includes(q) || i.supplier.toLowerCase().includes(q));
+
+  // Group by supplier
+  const bySupplier = {};
+  filtered.forEach(i => {
+    if(!bySupplier[i.supplier]) bySupplier[i.supplier] = [];
+    bySupplier[i.supplier].push(i);
+  });
+
+  let html = '';
+  for(const [supplier, items] of Object.entries(bySupplier)) {
+    html += `<h3>${supplier}</h3>`;
+    items.forEach(item => {
+      const inCart = orderCart.find(c => c.name === item.name);
+      html += `<div class="m-item">
+        <div class="m-item-info">
+          <div class="m-item-name">${item.name}</div>
+          <div class="m-item-meta">${item.unit} · Лимит: ${item.limit}</div>
+        </div>
+        <div class="m-item-actions">
+          ${inCart ? `<span style="font-size:12px;color:var(--green);font-weight:700">${inCart.qty}</span>` : ''}
+          <button class="m-add-btn ${inCart?'added':''}" onclick="toggleMatrixItem('${item.name.replace(/'/g,"\'")}','${item.unit}',${item.limit});event.stopPropagation()">
+            ${inCart?'✓':'+'}
+          </button>
+        </div>
+      </div>`;
+    });
+  }
+  container.innerHTML = html || '<p style="color:var(--muted);text-align:center;padding:40px">Ничего не найдено</p>';
+}
+
+function toggleMatrixItem(name, unit, limit) {
+  const idx = orderCart.findIndex(c => c.name === name);
+  if(idx >= 0) {
+    orderCart.splice(idx, 1);
+    haptic('light');
+  } else {
+    orderCart.push({name, unit, qty: limit || 1, supplier: MATRIX_ITEMS.find(i => i.name === name)?.supplier || ''});
+    haptic('medium');
+  }
+  saveData();
+  updateCartFab();
+  searchMatrix();
+}
+
+function updateCartFab() {
+  if(orderCart.length > 0) {
+    cartFab.style.display = 'flex';
+    cartBadge.style.display = 'flex';
+    cartBadge.textContent = orderCart.length;
+  } else {
+    cartFab.style.display = 'none';
+    cartBadge.style.display = 'none';
+  }
+}
+
+// ============================================================
+// CART SHEET (Bottom sheet for orders)
+// ============================================================
+let cartSheetOverlay = null;
+let cartSheet = null;
+
+function renderCartSheet() {
+  haptic('hard');
+  if(cartSheetOverlay) { closeCartSheet(); return; }
+
+  cartSheetOverlay = document.createElement('div');
+  cartSheetOverlay.className = 'sheet-overlay show';
+  cartSheetOverlay.onclick = e => { if(e.target === cartSheetOverlay) closeCartSheet(); };
+
+  cartSheet = document.createElement('div');
+  cartSheet.className = 'sheet open';
+
+  // Group by supplier
+  const bySupplier = {};
+  orderCart.forEach(c => {
+    if(!bySupplier[c.supplier]) bySupplier[c.supplier] = [];
+    bySupplier[c.supplier].push(c);
+  });
+
+  let bodyHtml = '';
+  if(orderCart.length === 0) {
+    bodyHtml = '<p style="color:var(--muted);text-align:center;padding:40px">Корзина пуста</p>';
+  } else {
+    for(const [supplier, items] of Object.entries(bySupplier)) {
+      bodyHtml += `<div style="font-weight:700;font-size:14px;color:var(--accent);margin:12px 0 8px">${supplier}</div>`;
+      items.forEach((item, idx) => {
+        const globalIdx = orderCart.findIndex(c => c.name === item.name);
+        bodyHtml += `<div class="cart-item">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-meta">${item.unit}</div>
+          </div>
+          <div class="cart-qty">
+            <button onclick="changeCartQty(${globalIdx},-1)">−</button>
+            <input type="text" inputmode="decimal" value="${item.qty}" onchange="setCartQty(${globalIdx},this.value)" onfocus="saveScroll()" onblur="restoreScroll()">
+            <button onclick="changeCartQty(${globalIdx},1)">+</button>
+          </div>
+          <button class="cart-remove" onclick="removeCartItem(${globalIdx})">✕</button>
+        </div>`;
+      });
+    }
+  }
+
+  cartSheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <span>📋 Корзина заявки</span>
+      <button onclick="closeCartSheet();haptic('light')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div class="sheet-body">${bodyHtml}</div>
+    <div style="padding:0 20px 10px;display:flex;gap:8px">
+      <button class="btn btn-sec" style="flex:1" onclick="clearCart();haptic('hard')">🗑 Очистить</button>
+      <button class="btn" style="flex:2" onclick="copyOrder();haptic('hard')">📋 Скопировать заявку</button>
+    </div>
+  `;
+
+  document.body.appendChild(cartSheetOverlay);
+  document.body.appendChild(cartSheet);
+}
+
+let savedScrollTop = 0;
+function saveScroll() {
+  const scroller = app.querySelector('.screen.current');
+  if(scroller) savedScrollTop = scroller.scrollTop;
+}
+function restoreScroll() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const scroller = app.querySelector('.screen.current');
+      if(scroller) scroller.scrollTop = savedScrollTop;
+    });
+  });
+}
+
+function closeCartSheet() {
+  if(cartSheet) {
+    cartSheet.classList.remove('open');
+    cartSheet.style.transform = '';
+  }
+  if(cartSheetOverlay) cartSheetOverlay.classList.remove('show');
+  setTimeout(() => {
+    if(cartSheet) { cartSheet.remove(); cartSheet = null; }
+    if(cartSheetOverlay) { cartSheetOverlay.remove(); cartSheetOverlay = null; }
+  }, 300);
+}
+
+function changeCartQty(idx, delta) {
+  if(!orderCart[idx]) return;
+  orderCart[idx].qty = Math.max(0.01, +(orderCart[idx].qty + delta).toFixed(3));
+  saveData();
+  renderCartSheet();
+}
+
+function setCartQty(idx, val) {
+  if(!orderCart[idx]) return;
+  const num = parseFloat(val.toString().replace(',', '.'));
+  if(isNaN(num) || num <= 0) {
+    removeCartItem(idx);
+    return;
+  }
+  orderCart[idx].qty = Math.round(num * 1000) / 1000;
+  saveData();
+  renderCartSheet();
+  updateCartFab();
+}
+
+function removeCartItem(idx) {
+  orderCart.splice(idx, 1);
+  saveData();
+  updateCartFab();
+  renderCartSheet();
+}
+
+function clearCart() {
+  orderCart = [];
+  saveData();
+  updateCartFab();
+  closeCartSheet();
+  showToast('Корзина очищена');
+}
+
+function copyOrder() {
+  if(orderCart.length === 0) return;
+  const bySupplier = {};
+  orderCart.forEach(c => {
+    if(!bySupplier[c.supplier]) bySupplier[c.supplier] = [];
+    bySupplier[c.supplier].push(c);
+  });
+  const dateStr = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+  let text = `📋 ЗАЯВКА НА ПОСТАВКU\n${dateStr}\n\n`;
+  for(const [supplier, items] of Object.entries(bySupplier)) {
+    text += `📦 ${supplier}\n`;
+    items.forEach(i => {
+      text += `• ${i.name} — ${i.qty} ${i.unit}\n`;
+    });
+    text += `\n`;
+  }
+  text += `—\nОтправлено из ШефБук`;
+  navigator.clipboard.writeText(text).then(() => showToast('Скопировано! Вставьте в заметки'));
+}
+
+// ============================================================
+// WRITE-OFF (СПИСАНИЕ)
+// ============================================================
+function renderWriteOff() {
+  let html = backBtn() + '<h1>🗑 Списание</h1>';
+  html += '<p style="color:var(--muted);font-size:14px;margin-bottom:16px">Выберите локацию для списания</p>';
+  LOCATIONS.forEach(loc => {
+    const count = (writeOffCart[loc] || []).length;
+    html += `<div class="loc-card" onclick="openWriteOffLocation('${loc}');haptic('light')">
+      <div class="loc-card-title">📍 ${loc}</div>
+      <div class="loc-card-desc">${count > 0 ? count + ' позиций в корзине' : 'Нет позиций'}</div>
+    </div>`;
+  });
+  currentScreen.innerHTML = html;
+}
+
+function openWriteOffLocation(loc) {
+  currentWriteOffLocation = loc;
+  navigate('writeoffLocation');
+}
+
+function renderWriteOffLocation() {
+  const loc = currentWriteOffLocation;
+  if(!loc) { goBack(); return; }
+
+  let html = backBtn() + `<h1>🗑 ${loc}</h1>`;
+
+  // Period tabs
+  html += `<div class="period-tabs">
+    <button class="period-tab ${writeOffPeriod==='today'?'active':''}" onclick="setWriteOffPeriod('today')">Сегодня</button>
+    <button class="period-tab ${writeOffPeriod==='week'?'active':''}" onclick="setWriteOffPeriod('week')">Неделя</button>
+    <button class="period-tab ${writeOffPeriod==='month'?'active':''}" onclick="setWriteOffPeriod('month')">Месяц</button>
+  </div>`;
+
+  // Cart FAB for write-off
+  const locCart = writeOffCart[loc] || [];
+  const periodCart = filterWriteOffByPeriod(locCart);
+
+  html += '<div id="wo-list">';
+  WRITE_OFF_CATEGORIES.forEach(cat => {
+    const products = WRITE_OFF_PRODUCTS[cat] || [];
+    if(products.length === 0) return;
+    html += `<h3>${cat}</h3>`;
+    products.forEach(([name, unit]) => {
+      const inCart = periodCart.find(c => c.name === name);
+      html += `<div class="m-item">
+        <div class="m-item-info">
+          <div class="m-item-name">${name}</div>
+          <div class="m-item-meta">${unit}</div>
+        </div>
+        <div class="m-item-actions" style="gap:8px">
+          ${inCart ? `<span style="font-size:12px;color:var(--green);font-weight:700">${inCart.qty}</span>` : ''}
+          <select class="reason-select" onchange="setWriteOffReason('${name.replace(/'/g,"\'")}',this.value)">
+            ${WRITE_OFF_REASONS.map(r => `<option value="${r}" ${(inCart?.reason||'Порча')===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+          <button class="m-add-btn ${inCart?'added':''}" onclick="toggleWriteOffItem('${name.replace(/'/g,"\'")}','${unit}');event.stopPropagation()">
+            ${inCart?'✓':'+'}
+          </button>
+        </div>
+      </div>`;
+    });
+  });
+  html += '</div>';
+
+  currentScreen.innerHTML = html;
+
+  // Add write-off cart FAB if items exist
+  updateWriteOffFab(loc, periodCart);
+}
+
+let writeOffReasons = {}; // { name: reason }
+
+function setWriteOffReason(name, reason) {
+  writeOffReasons[name] = reason;
+}
+
+function toggleWriteOffItem(name, unit) {
+  const loc = currentWriteOffLocation;
+  if(!loc) return;
+  if(!writeOffCart[loc]) writeOffCart[loc] = [];
+  const idx = writeOffCart[loc].findIndex(c => c.name === name && c.location === loc);
+
+  if(idx >= 0) {
+    writeOffCart[loc].splice(idx, 1);
+    haptic('light');
+  } else {
+    writeOffCart[loc].push({
+      name, unit, qty: 1, 
+      reason: writeOffReasons[name] || 'Порча',
+      location: loc,
+      date: Date.now()
+    });
+    haptic('medium');
+  }
+  saveData();
+  renderWriteOffLocation();
+}
+
+function setWriteOffPeriod(p) {
+  writeOffPeriod = p;
+  renderWriteOffLocation();
+}
+
+function filterWriteOffByPeriod(items) {
+  if(!items) return [];
+  const now = Date.now();
+  const day = 86400000;
+  return items.filter(i => {
+    if(writeOffPeriod === 'today') return now - i.date < day;
+    if(writeOffPeriod === 'week') return now - i.date < day * 7;
+    if(writeOffPeriod === 'month') return now - i.date < day * 30;
+    return true;
+  });
+}
+
+function updateWriteOffFab(loc, items) {
+  // Remove old fab
+  const oldFab = document.getElementById('writeOffFab');
+  if(oldFab) oldFab.remove();
+
+  if(items.length === 0) return;
+
+  const fab = document.createElement('button');
+  fab.id = 'writeOffFab';
+  fab.className = 'cart-fab';
+  fab.style.cssText = 'bottom:24px;right:20px;width:56px;height:56px;';
+  fab.innerHTML = `<span>🗑</span><span class="cart-badge">${items.length}</span>`;
+  fab.onclick = () => { renderWriteOffCartSheet(); haptic('hard'); };
+  document.body.appendChild(fab);
+}
+
+// ============================================================
+// WRITE-OFF CART SHEET
+// ============================================================
+let woSheetOverlay = null;
+let woSheet = null;
+
+function renderWriteOffCartSheet() {
+  haptic('hard');
+  if(woSheetOverlay) { closeWriteOffCartSheet(); return; }
+
+  const loc = currentWriteOffLocation;
+  const allItems = writeOffCart[loc] || [];
+  const items = filterWriteOffByPeriod(allItems);
+
+  woSheetOverlay = document.createElement('div');
+  woSheetOverlay.className = 'sheet-overlay show';
+  woSheetOverlay.onclick = e => { if(e.target === woSheetOverlay) closeWriteOffCartSheet(); };
+
+  woSheet = document.createElement('div');
+  woSheet.className = 'sheet open';
+
+  // Aggregate same items
+  const aggregated = {};
+  items.forEach(i => {
+    const key = i.name + '|' + i.reason;
+    if(!aggregated[key]) aggregated[key] = {name: i.name, unit: i.unit, qty: 0, reason: i.reason, category: ''};
+    aggregated[key].qty += i.qty;
+    // Find category
+    for(const [cat, prods] of Object.entries(WRITE_OFF_PRODUCTS)) {
+      if(prods.some(p => p[0] === i.name)) { aggregated[key].category = cat; break; }
+    }
+  });
+
+  // Group by category
+  const byCat = {};
+  Object.values(aggregated).forEach(i => {
+    if(!byCat[i.category]) byCat[i.category] = [];
+    byCat[i.category].push(i);
+  });
+
+  let bodyHtml = '';
+  if(items.length === 0) {
+    bodyHtml = '<p style="color:var(--muted);text-align:center;padding:40px">Корзина пуста</p>';
+  } else {
+    for(const [cat, catItems] of Object.entries(byCat)) {
+      bodyHtml += `<div style="font-weight:700;font-size:14px;color:var(--accent);margin:12px 0 8px">${cat}</div>`;
+      catItems.forEach(item => {
+        const idx = allItems.findIndex(c => c.name === item.name && c.reason === item.reason);
+        bodyHtml += `<div class="cart-item">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-meta">${item.reason} · ${item.unit}</div>
+          </div>
+          <div class="cart-qty">
+            <button onclick="changeWriteOffQty('${item.name.replace(/'/g,"\'")}','${item.reason}',-1)">−</button>
+            <input type="text" inputmode="decimal" value="${item.qty.toFixed(3).replace(/\.0+$/,'').replace(/(\.\d+?)0+$/,'$1')}" onchange="setWriteOffQty('${item.name.replace(/'/g,"\'")}','${item.reason}',this.value)" onfocus="saveScroll()" onblur="restoreScroll()">
+            <button onclick="changeWriteOffQty('${item.name.replace(/'/g,"\'")}','${item.reason}',1)">+</button>
+          </div>
+          <button class="cart-remove" onclick="removeWriteOffItem('${item.name.replace(/'/g,"\'")}','${item.reason}')">✕</button>
+        </div>`;
+      });
+    }
+  }
+
+  const periodLabel = writeOffPeriod === 'today' ? 'за сегодня' : writeOffPeriod === 'week' ? 'за неделю' : 'за месяц';
+
+  woSheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <span>🗑 Корзина списания · ${loc} · ${periodLabel}</span>
+      <button onclick="closeWriteOffCartSheet();haptic('light')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div class="sheet-body">${bodyHtml}</div>
+    <div style="padding:0 20px 10px;display:flex;gap:8px">
+      <button class="btn btn-sec" style="flex:1" onclick="clearWriteOffCart();haptic('hard')">🗑 Очистить</button>
+      <button class="btn" style="flex:2" onclick="copyWriteOff();haptic('hard')">📋 Скопировать списание</button>
+    </div>
+  `;
+
+  document.body.appendChild(woSheetOverlay);
+  document.body.appendChild(woSheet);
+}
+
+function closeWriteOffCartSheet() {
+  if(woSheet) {
+    woSheet.classList.remove('open');
+    woSheet.style.transform = '';
+  }
+  if(woSheetOverlay) woSheetOverlay.classList.remove('show');
+  setTimeout(() => {
+    if(woSheet) { woSheet.remove(); woSheet = null; }
+    if(woSheetOverlay) { woSheetOverlay.remove(); woSheetOverlay = null; }
+  }, 300);
+}
+
+function changeWriteOffQty(name, reason, delta) {
+  const loc = currentWriteOffLocation;
+  if(!loc || !writeOffCart[loc]) return;
+  const item = writeOffCart[loc].find(c => c.name === name && c.reason === reason);
+  if(!item) return;
+  item.qty = Math.max(0.01, +(item.qty + delta).toFixed(3));
+  saveData();
+  renderWriteOffCartSheet();
+}
+
+function setWriteOffQty(name, reason, val) {
+  const loc = currentWriteOffLocation;
+  if(!loc || !writeOffCart[loc]) return;
+  const num = parseFloat(val.toString().replace(',', '.'));
+  if(isNaN(num) || num <= 0) {
+    removeWriteOffItem(name, reason);
+    return;
+  }
+  const item = writeOffCart[loc].find(c => c.name === name && c.reason === reason);
+  if(item) {
+    item.qty = Math.round(num * 1000) / 1000;
+    saveData();
+    renderWriteOffCartSheet();
+  }
+}
+
+function removeWriteOffItem(name, reason) {
+  const loc = currentWriteOffLocation;
+  if(!loc || !writeOffCart[loc]) return;
+  const idx = writeOffCart[loc].findIndex(c => c.name === name && c.reason === reason);
+  if(idx >= 0) {
+    writeOffCart[loc].splice(idx, 1);
+    saveData();
+    renderWriteOffCartSheet();
+    renderWriteOffLocation();
+  }
+}
+
+function clearWriteOffCart() {
+  const loc = currentWriteOffLocation;
+  if(!loc) return;
+  writeOffCart[loc] = [];
+  saveData();
+  closeWriteOffCartSheet();
+  renderWriteOffLocation();
+  showToast('Корзина списания очищена');
+}
+
+function copyWriteOff() {
+  const loc = currentWriteOffLocation;
+  if(!loc) return;
+  const allItems = writeOffCart[loc] || [];
+  const items = filterWriteOffByPeriod(allItems);
+  if(items.length === 0) return;
+
+  // Aggregate
+  const aggregated = {};
+  items.forEach(i => {
+    const key = i.name + '|' + i.reason;
+    if(!aggregated[key]) aggregated[key] = {name: i.name, unit: i.unit, qty: 0, reason: i.reason, category: ''};
+    aggregated[key].qty += i.qty;
+    for(const [cat, prods] of Object.entries(WRITE_OFF_PRODUCTS)) {
+      if(prods.some(p => p[0] === i.name)) { aggregated[key].category = cat; break; }
+    }
+  });
+
+  const byCat = {};
+  Object.values(aggregated).forEach(i => {
+    if(!byCat[i.category]) byCat[i.category] = [];
+    byCat[i.category].push(i);
+  });
+
+  const periodLabel = writeOffPeriod === 'today' ? 'за сегодня' : writeOffPeriod === 'week' ? 'за неделю' : 'за месяц';
+  const dateStr = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+
+  let text = `🗑 АКТ СПИСАНИЯ\n${loc} · ${periodLabel}\n${dateStr}\n\n`;
+  for(const [cat, catItems] of Object.entries(byCat)) {
+    text += `📦 ${cat}\n`;
+    catItems.forEach(i => {
+      const qtyStr = i.qty.toFixed(3).replace(/\.0+$/,'').replace(/(\.\d+?)0+$/,'$1');
+      text += `• ${i.name} — ${qtyStr} ${i.unit} (${i.reason})\n`;
+    });
+    text += `\n`;
+  }
+  text += `—\nОтправлено из ШефБук`;
+  navigator.clipboard.writeText(text).then(() => showToast('Скопировано! Вставьте в заметки'));
+}
+
+// ============================================================
+// ADMIN MODAL (Spring Physics Sheet)
+// ============================================================
+let adminSheetOverlay = null;
+let adminSheet = null;
+let adminSheetAnim = null;
+
+function showAdminModal() {
+  haptic('hard');
+  if(adminSheetOverlay) { closeAdminSheet(); return; }
+
+  adminSheetOverlay = document.createElement('div');
+  adminSheetOverlay.className = 'sheet-overlay show';
+  adminSheetOverlay.onclick = e => { if(e.target === adminSheetOverlay) closeAdminSheet(); };
+
+  adminSheet = document.createElement('div');
+  adminSheet.className = 'sheet';
+  adminSheet.style.transform = 'translateY(100%)';
+
+  adminSheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <span>✏️ Админ-панель</span>
+      <button onclick="closeAdminSheet();haptic('light')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div class="sheet-body">
+      <h3>📋 Чек-листы</h3>
+      <button class="btn btn-sec" onclick="resetChecklists();haptic('medium')">🔄 Сбросить чек-листы</button>
+      <h3 style="margin-top:20px">📊 Данные</h3>
+      <button class="btn btn-sec" onclick="clearAllData();haptic('hard')">🗑 Очистить все данные</button>
+      <h3 style="margin-top:20px">📰 Новости (Firebase)</h3>
+      <div id="admin-news-list" style="margin-bottom:12px"></div>
+      <input type="text" id="newsTitle" placeholder="Заголовок" style="width:100%;padding:10px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);margin-bottom:8px">
+      <textarea id="newsText" placeholder="Текст новости" style="width:100%;padding:10px;background:var(--bg);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text);margin-bottom:8px;height:80px;resize:none;font-family:inherit"></textarea>
+      <button class="btn" onclick="addNews();haptic('medium')">➕ Добавить новость</button>
+    </div>
+  `;
+
+  document.body.appendChild(adminSheetOverlay);
+  document.body.appendChild(adminSheet);
+
+  // Spring open
+  requestAnimationFrame(() => {
+    springAnimate({
+      from: window.innerHeight, to: 0, velocity: 0,
+      stiffness: 380, damping: 32,
+      onUpdate: y => { adminSheet.style.transform = `translateY(${y}px)`; }
+    });
+  });
+
+  renderAdminNews();
+  initAdminDrag();
+}
+
+function closeAdminSheet() {
+  if(!adminSheet) return;
+  springAnimate({
+    from: 0, to: window.innerHeight, velocity: 0,
+    stiffness: 380, damping: 32,
+    onUpdate: y => { if(adminSheet) adminSheet.style.transform = `translateY(${y}px)`; },
+    onComplete: () => {
+      if(adminSheetOverlay) { adminSheetOverlay.remove(); adminSheetOverlay = null; }
+      if(adminSheet) { adminSheet.remove(); adminSheet = null; }
+    }
+  });
+}
+
+function initAdminDrag() {
+  if(!adminSheet) return;
+  const dragArea = adminSheet.querySelector('.sheet-handle') || adminSheet;
+  let isDragging = false, startY = 0, startSheetY = 0, dragHistory = [];
+
+  function onPointerDown(e) {
+    if(e.target.closest('button, input, textarea, select, .sheet-body')) return;
+    isDragging = true;
+    startY = e.clientY;
+    startSheetY = 0;
+    dragHistory = [];
+    if(adminSheetAnim) adminSheetAnim.cancel();
+    adminSheet.style.transition = 'none';
+    if(e.pointerId) adminSheet.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if(!isDragging) return;
+    const y = e.clientY;
+    const delta = y - startY;
+    let targetY = startSheetY + delta;
+    if(targetY < 0) targetY = -rubberband(-targetY, adminSheet.offsetHeight * 0.5);
+    dragHistory.push({y, t: performance.now()});
+    if(dragHistory.length > 6) dragHistory.shift();
+    adminSheet.style.transform = `translateY(${targetY}px)`;
+  }
+
+  function onPointerUp(e) {
+    if(!isDragging) return;
+    isDragging = false;
+    const now = performance.now();
+    const recent = dragHistory.filter(h => now - h.t < 80);
+    let releaseVelocity = 0;
+    if(recent.length >= 2) {
+      const first = recent[0], last = recent[recent.length - 1];
+      const dt = last.t - first.t;
+      if(dt > 0) releaseVelocity = (last.y - first.y) / dt * 1000;
+    }
+    const projected = (adminSheet.style.transform.match(/translateY\(([^p]+)px\)/)?.[1] || 0) * 1 + project(releaseVelocity);
+    const threshold = adminSheet.offsetHeight * 0.35;
+    if(projected > threshold || (parseFloat(adminSheet.style.transform.match(/translateY\(([^p]+)px\)/)?.[1]||0) > threshold && releaseVelocity > 0)) {
+      closeAdminSheet();
+    } else {
+      springAnimate({
+        from: parseFloat(adminSheet.style.transform.match(/translateY\(([^p]+)px\)/)?.[1]||0), to: 0, velocity: releaseVelocity,
+        stiffness: 380, damping: 32,
+        onUpdate: y => { if(adminSheet) adminSheet.style.transform = `translateY(${y}px)`; }
+      });
+    }
+  }
+
+  dragArea.addEventListener('pointerdown', onPointerDown);
+  adminSheet.addEventListener('pointermove', onPointerMove);
+  adminSheet.addEventListener('pointerup', onPointerUp);
+  adminSheet.addEventListener('pointercancel', onPointerUp);
+}
+
+function renderAdminNews() {
+  const list = document.getElementById('admin-news-list');
+  if(!list) return;
+  if(newsData.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px">Нет новостей</p>';
+    return;
+  }
+  let html = '';
+  newsData.forEach((n, i) => {
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <span style="font-size:13px">${n.title}</span>
+      <button onclick="deleteNews(${i});haptic('light')" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer">🗑</button>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function addNews() {
+  const title = document.getElementById('newsTitle')?.value.trim();
+  const text = document.getElementById('newsText')?.value.trim();
+  if(!title || !text) { showToast('Заполните заголовок и текст'); return; }
+  const news = {title, text, date: new Date().toLocaleDateString('ru-RU')};
+  newsData.unshift(news);
+  if(window.db && window.dbPush) {
+    const newsRef = window.dbPush(window.dbRef(window.db, 'chefbook/news'));
+    window.dbSet(newsRef, news);
+  }
+  saveData();
+  document.getElementById('newsTitle').value = '';
+  document.getElementById('newsText').value = '';
+  renderAdminNews();
+  showToast('Новость добавлена');
+}
+
+function deleteNews(idx) {
+  newsData.splice(idx, 1);
+  saveData();
+  renderAdminNews();
+}
+
+function resetChecklists() {
+  checklistOpen = JSON.parse(JSON.stringify(CHECKLISTS.open));
+  checklistClose = JSON.parse(JSON.stringify(CHECKLISTS.close));
+  saveData();
+  showToast('Чек-листы сброшены');
+}
+
+function clearAllData() {
+  if(!confirm('Очистить ВСЕ данные?')) return;
+  orderCart = [];
+  writeOffCart = {};
+  favorites = [];
+  checklistOpen = JSON.parse(JSON.stringify(CHECKLISTS.open));
+  checklistClose = JSON.parse(JSON.stringify(CHECKLISTS.close));
+  localStorage.removeItem('shefbuk_orderCart');
+  localStorage.removeItem('shefbuk_writeOffCart');
+  localStorage.removeItem('shefbuk_favorites');
+  localStorage.removeItem('shefbuk_checklistOpen');
+  localStorage.removeItem('shefbuk_checklistClose');
+  updateCartFab();
+  showToast('Все данные очищены');
+  closeAdminSheet();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadData();
+
+// Init home screen
+const homeScreen = document.createElement('div');
+homeScreen.className = 'screen current';
+homeScreen.id = 'screen-0';
+app.appendChild(homeScreen);
+currentScreen = homeScreen;
+renderHome();
+updateCartFab();
+updateAdminFab();
+
+// Telegram WebApp init
+if(window.Telegram && Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+}
+
+// Firebase listeners
+if(window.db && window.dbOnValue) {
+  window.dbOnValue(window.dbRef(window.db, 'chefbook/news'), snap => {
+    const val = snap.val();
+    if(val) {
+      newsData = Object.values(val).reverse();
+      if(currentView === 'news') renderNews();
+    }
+  });
+  window.dbOnValue(window.dbRef(window.db, 'chefbook/team'), snap => {
+    const val = snap.val();
+    if(val) {
+      teamData = Object.values(val);
+      if(currentView === 'team') renderTeam();
+    }
+  });
+}
+
+// Prevent keyboard scroll jump
+document.addEventListener('focusout', e => {
+  if(e.target.closest('.cart-qty input, .sheet-body input, .sheet-body textarea')) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const scroller = app.querySelector('.screen.current');
+        if(scroller && savedScrollTop) scroller.scrollTop = savedScrollTop;
+      });
+    });
+  }
+});
+
 </script>
 </body>
 </html>
