@@ -71,6 +71,26 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 .note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:14px;font-size:13px;line-height:1.5}
 .admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
 .admin-btn:active{transform:scale(.9)}
+
+/* Order buttons in matrix */
+.order-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s ease}
+.order-btn:active{transform:scale(.85)}
+.order-btn.on{background:var(--green);border-color:var(--green);color:#000}
+
+/* Cart FAB */
+.cart-fab{position:fixed;bottom:14px;right:70px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:18px;z-index:100;display:flex;align-items:center;justify-content:center}
+.cart-fab:active{transform:scale(.9)}
+.cart-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--green);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* Cart sheet */
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.cart-item:last-child{border:none}
+.cart-name{flex:1;font-size:14px;min-width:0}
+.cart-supplier{font-size:11px;color:var(--muted);display:block}
+.cart-qty-wrap{display:flex;align-items:center;gap:6px}
+.cart-qty-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cart-qty-btn:active{background:rgba(255,255,255,.15)}
+.cart-qty-val{font-weight:700;font-size:15px;min-width:24px;text-align:center}
 /* === НОВАЯ МОДАЛКА С DRAG === */
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .25s ease}
 .sheet-bg.open{background:rgba(0,0,0,.55);pointer-events:auto}
@@ -577,13 +597,12 @@ let useLocalSchedule = false;
 let isLoading = false;
 
 function saveData() {
-    // Локальный backup (на случай отключения интернета)
     localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
     localStorage.setItem('chef_news', JSON.stringify(NEWS));
     localStorage.setItem('chef_team', JSON.stringify(TEAM));
     localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
     localStorage.setItem('chef_favorites', JSON.stringify(FAVORITES));
-    // Синхронизация между вкладками
+    localStorage.setItem('chef_cart', JSON.stringify(orderCart));
     window.dispatchEvent(new Event('local-storage-update'));
 }
 
@@ -862,6 +881,7 @@ let expandedLocations = new Set();
 let FAVORITES = [];
 let ttkSearchRaf = null;
 let matrixSearchRaf = null;
+let orderCart = JSON.parse(localStorage.getItem('chef_cart')) || [];
 
 function toggleFavorite(id){
   const idx = FAVORITES.indexOf(id);
@@ -1679,6 +1699,151 @@ function renderTeam(){
   currentScreen.innerHTML = html;
 }
 
+function getCartItem(supplier, name){
+  return orderCart.find(c => c.supplier === supplier && c.name === name);
+}
+
+function addToCart(supplier, item){
+  const existing = getCartItem(supplier, item.name);
+  if(existing){
+    existing.qty = item.limit !== null ? item.limit : 1;
+  } else {
+    orderCart.push({
+      supplier: supplier,
+      name: item.name,
+      unit: item.unit,
+      qty: item.limit !== null ? item.limit : 1
+    });
+  }
+  saveData();
+  haptic('hard');
+  renderMatrix();
+  toast('Добавлено в заявку', 'success');
+}
+
+function removeFromCart(supplier, name){
+  orderCart = orderCart.filter(c => !(c.supplier === supplier && c.name === name));
+  saveData();
+  haptic();
+  renderMatrix();
+}
+
+function updateCartQty(idx, delta){
+  orderCart[idx].qty = Math.max(0.1, parseFloat((orderCart[idx].qty + delta).toFixed(2)));
+  if(orderCart[idx].qty <= 0) orderCart.splice(idx, 1);
+  saveData();
+  renderCartSheet();
+}
+
+function deleteCartItem(idx){
+  orderCart.splice(idx, 1);
+  saveData();
+  renderCartSheet();
+  if(orderCart.length === 0) closeCartSheet();
+}
+
+function closeCartSheet(){
+  const bg = document.getElementById('cart-sheet-bg');
+  if(bg) bg.remove();
+}
+
+function copyOrder(){
+  if(!orderCart.length){ toast('Корзина пуста', 'error'); return; }
+  const date = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+  // Group by supplier
+  const grouped = {};
+  orderCart.forEach(c => {
+    if(!grouped[c.supplier]) grouped[c.supplier] = [];
+    grouped[c.supplier].push(c);
+  });
+  let text = `📋 ЗАЯВКА НА ПОСТАВКУ\n${date}\n\n`;
+  for(const [sup, items] of Object.entries(grouped)){
+    text += `📦 ${sup}\n`;
+    items.forEach(it => {
+      text += `• ${it.name} — ${it.qty} ${it.unit}\n`;
+    });
+    text += `\n`;
+  }
+  text += `—\nОтправлено из ШефБук`;
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => {
+      toast('Скопировано! Вставьте в заметки', 'success');
+      haptic('hard');
+    }).catch(() => {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); toast('Скопировано! Вставьте в заметки', 'success'); haptic('hard'); }
+  catch{ toast('Не удалось скопировать', 'error'); }
+  ta.remove();
+}
+
+function renderCartSheet(){
+  const old = document.getElementById('cart-sheet-bg');
+  if(old) old.remove();
+
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg open';
+  bg.id = 'cart-sheet-bg';
+  bg.style.zIndex = '250';
+
+  const grouped = {};
+  orderCart.forEach((c, i) => {
+    if(!grouped[c.supplier]) grouped[c.supplier] = [];
+    grouped[c.supplier].push({...c, idx: i});
+  });
+
+  const itemsHtml = Object.entries(grouped).map(([sup, items]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">${sup}</div>
+      ${items.map(it => `
+        <div class="cart-item">
+          <div class="cart-name">
+            <div>${it.name}</div>
+            <span class="cart-supplier">${it.unit}</span>
+          </div>
+          <div class="cart-qty-wrap">
+            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
+            <div class="cart-qty-val">${it.qty}</div>
+            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, 1)">+</button>
+          </div>
+          <button class="icon-btn danger" style="width:28px;height:28px" onclick="deleteCartItem(${it.idx})">✕</button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  bg.innerHTML = `
+    <div class="sheet open" style="max-width:500px">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="sheet-title">📋 Заявка (${orderCart.length})</div>
+        <button class="sheet-close" onclick="closeCartSheet()">✕</button>
+      </div>
+      <div class="sheet-body" style="padding-bottom:30px">
+        ${itemsHtml}
+        <button class="btn" onclick="copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
+        <button class="btn btn-sec" onclick="orderCart=[];saveData();closeCartSheet();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
+      </div>
+    </div>
+  `;
+
+  bg.addEventListener('click', e => { if(e.target === bg) closeCartSheet(); });
+  document.body.appendChild(bg);
+}
+
 function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
   const q = window._matrixQ.toLowerCase();
@@ -1706,9 +1871,13 @@ function renderMatrix(){
           ${sup.items.map(it => `
             <div class="matrix-item">
               <div class="matrix-name">${it.name}</div>
-              <div class="matrix-meta">
+              <div class="matrix-meta" style="display:flex;align-items:center;gap:10px">
                 <span class="matrix-unit">${it.unit}</span>
                 ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+                <button class="order-btn ${getCartItem(sup.supplier, it.name) ? 'on' : ''}" 
+                        onclick="event.stopPropagation();${getCartItem(sup.supplier, it.name) ? `removeFromCart('${sup.supplier.replace(/'/g, "\'")}','${it.name.replace(/'/g, "\'")}')` : `addToCart('${sup.supplier.replace(/'/g, "\'")}', {name:'${it.name.replace(/'/g, "\'")}', unit:'${it.unit}', limit:${it.limit !== null ? it.limit : 'null'}})`}">
+                  ${getCartItem(sup.supplier, it.name) ? '✓' : '+'}
+                </button>
               </div>
             </div>
           `).join('')}
@@ -1734,8 +1903,9 @@ function renderMatrix(){
     <div id="matrix-list-container">
         ${listHtml}
     </div>
+    ${orderCart.length ? `<button class="cart-fab" onclick="renderCartSheet();haptic('hard')"><span>📋</span><span class="cart-badge">${orderCart.length}</span></button>` : ''}
   `;
-  
+
   const input = document.getElementById(searchInputId);
   if (input) {
       input.addEventListener('input', (e) => {
