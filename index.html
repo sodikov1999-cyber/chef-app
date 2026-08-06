@@ -6,210 +6,170 @@
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{
-  --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.25rem;
-  --sp-6:1.5rem; --sp-8:2rem; --sp-10:2.5rem; --sp-12:3rem;
-  --r-sm:.5rem; --r-md:.75rem; --r-lg:1rem; --r-xl:1.25rem; --r-full:9999px;
-  --z-fab:100; --z-panel:200; --z-snack:300;
-  --tap:2.75rem;
-  --fs-xs:.6875rem; --fs-sm:.75rem; --fs-md:.875rem; --fs-body:.9375rem; --fs-lg:1.125rem; --fs-xl:1.625rem;
-  --bg:#0F0D0B; --surface:#1B1613; --surface-solid:#1B1613;
-  --text:#F5ECE2; --text-2:#9C8D7E;
-  --primary:#FF8A3D; --primary-soft:rgba(255,138,61,.14);
-  --success:#5FD38A; --danger:#FF6B5E;
-  --glass:rgba(27,22,19,.82); --hairline:rgba(255,255,255,.08); --hairline-2:rgba(255,255,255,.14);
-}
+:root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--red:#FF6B5E;--glass:rgba(27,22,19,0.85);--glass-border:rgba(255,255,255,0.1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{font-size:100%}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-  background:var(--bg);color:var(--text);font-size:var(--fs-body);line-height:1.5;
-  height:100vh;height:100dvh;overflow:hidden;
-  -webkit-user-select:none;user-select:none;touch-action:manipulation;
-}
-input,textarea,select{-webkit-user-select:text;user-select:text}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 ::-webkit-scrollbar{width:0;height:0}
-button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:var(--r-sm)}
-:focus:not(:focus-visible){outline:none}
-
-h1{font-weight:800;font-size:var(--fs-xl);line-height:1.15;letter-spacing:-.02em;margin-bottom:var(--sp-4)}
-h2{font-weight:700;font-size:var(--fs-lg);line-height:1.2;letter-spacing:-.01em;margin:var(--sp-5) 0 var(--sp-3)}
-h3{font-weight:700;font-size:var(--fs-body);margin:var(--sp-4) 0 var(--sp-2);color:var(--primary)}
-.small{font-size:var(--fs-sm);letter-spacing:.01em}
-
-.hit{position:relative}
-.hit::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,var(--tap));height:max(100%,var(--tap));transform:translate(-50%,-50%)}
-
-#app{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden}
-.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);padding:var(--sp-5);padding-bottom:5.5rem;touch-action:pan-y;will-change:transform}
+button{font:inherit;color:inherit}
+#app{position:relative;width:100%;height:100vh;overflow:hidden}
+.screen{position:absolute;top:0;left:0;right:0;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);padding:20px;padding-bottom:40px;touch-action:pan-y;overscroll-behavior:contain}
 .hscroll{touch-action:pan-x;overscroll-behavior-x:contain}
-
-[data-action]{transition:transform 90ms ease-out;touch-action:manipulation}
-[data-action].pressed{transform:scale(.96)}
-
-.card{background:var(--surface);border-radius:var(--r-lg);padding:var(--sp-4);margin-bottom:var(--sp-3);border:1px solid var(--hairline)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-bottom:var(--sp-5)}
-.tile{padding:var(--sp-4) var(--sp-3);background:var(--surface);border-radius:var(--r-md);border:1px solid var(--hairline);text-align:left;width:100%;min-height:var(--tap)}
-.tile-emoji{font-size:1.75rem;margin-bottom:var(--sp-2)}
-.tile-title{font-weight:700;font-size:var(--fs-body)}
-.tile-desc{font-size:var(--fs-sm);letter-spacing:.01em;color:var(--text-2);margin-top:var(--sp-1)}
-.pulse{display:inline-block;width:.5rem;height:.5rem;background:var(--success);border-radius:50%;margin-right:var(--sp-2);animation:blink 1.8s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
-
-.btn{display:block;width:100%;padding:var(--sp-3);min-height:var(--tap);background:var(--primary);color:#000;border-radius:var(--r-md);font-size:var(--fs-body);font-weight:700;margin-bottom:var(--sp-2);text-align:center}
-.btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--hairline-2)}
-.btn-sm{padding:var(--sp-2) var(--sp-3);min-height:2.25rem;font-size:var(--fs-md);width:auto;display:inline-flex;align-items:center;gap:var(--sp-1)}
-.back{display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;background:rgba(255,255,255,.08);border-radius:50%;margin-bottom:var(--sp-4);border:1px solid var(--hairline-2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.back svg{width:1.25rem;height:1.25rem;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.icon-btn{width:2.25rem;height:2.25rem;border-radius:var(--r-md);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:var(--fs-body);flex-shrink:0}
-.icon-btn.danger{background:rgba(255,107,94,.15);color:var(--danger)}
-.refresh-btn{background:var(--primary);color:#000;padding:var(--sp-2) var(--sp-4);min-height:2.25rem;border-radius:var(--r-full);font-weight:700;display:flex;align-items:center;gap:var(--sp-2);margin-left:auto}
-.tab-btn{flex:1;padding:var(--sp-2) var(--sp-1);min-height:var(--tap);background:rgba(255,255,255,.05);color:var(--text-2);font-weight:600;border-radius:var(--r-sm);font-size:var(--fs-md)}
-.tab-btn.on{background:var(--primary);color:#000}
-.today-btn{background:rgba(255,255,255,.05);border:1px solid var(--hairline-2);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-sm);font-size:var(--fs-sm);font-weight:600}
-
-.recipe{padding:var(--sp-3);background:rgba(255,255,255,.03);border-radius:var(--r-md);margin-bottom:var(--sp-2);width:100%;text-align:left;display:block;transition:background-color 120ms ease}
-.recipe.pressed{background:rgba(255,255,255,.08)}
-.recipe-name{font-weight:700;font-size:var(--fs-body);margin-bottom:var(--sp-1)}
-.recipe-meta{font-size:var(--fs-sm);letter-spacing:.01em;color:var(--text-2)}
-.ingredient{padding:var(--sp-2) 0;border-bottom:1px solid var(--hairline);display:flex;justify-content:space-between;font-size:var(--fs-md)}
+h1{font-weight:800;font-size:26px;margin-bottom:16px;letter-spacing:-.02em}
+h2{font-weight:700;font-size:18px;margin:22px 0 12px;letter-spacing:-.01em}
+h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.tile{padding:18px 14px;background:var(--card);border-radius:14px;border:1px solid rgba(255,255,255,.06);cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%;min-height:44px}
+.tile:active{transform:scale(.97)}
+.tile-emoji{font-size:28px;margin-bottom:8px}
+.tile-title{font-weight:700;font-size:15px}
+.tile-desc{font-size:12px;color:var(--muted);margin-top:3px;letter-spacing:.01em}
+.pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;margin-right:8px;animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.btn{display:block;width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:center;min-height:44px}
+.btn:active{transform:scale(.98)}
+.btn-sec{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1)}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;display:inline-flex;align-items:center;gap:6px;min-height:36px}
+.back{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;background:rgba(255,255,255,.08);border-radius:50%;color:var(--text);margin-bottom:16px;cursor:pointer;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:manipulation}
+.back svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.recipe{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;cursor:pointer;border:none;width:100%;text-align:left;color:inherit;font:inherit}
+.recipe:active{background:rgba(255,255,255,.07)}
+.recipe-name{font-weight:700;font-size:15px;margin-bottom:3px}
+.recipe-meta{font-size:12px;color:var(--muted);letter-spacing:.01em}
+.ingredient{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:14px}
 .ingredient:last-child{border:none}
-.ingredient b{color:var(--primary)}
-.step{padding:var(--sp-3);margin-bottom:var(--sp-2);background:rgba(255,255,255,.03);border-radius:var(--r-sm);border-left:3px solid var(--primary);font-size:var(--fs-md);line-height:1.5;overflow-wrap:break-word}
-.step-num{display:inline-block;width:1.25rem;height:1.25rem;background:var(--primary-soft);color:var(--primary);border-radius:.375rem;text-align:center;line-height:1.25rem;font-weight:700;font-size:var(--fs-xs);margin-right:var(--sp-2)}
-.note{padding:var(--sp-3);background:rgba(95,211,138,.1);border-left:3px solid var(--success);border-radius:var(--r-sm);margin-top:var(--sp-3);font-size:var(--fs-md);line-height:1.5}
-.kpi{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-3)}
-.kpi-box{flex:1;padding:var(--sp-2);background:rgba(255,255,255,.03);border-radius:var(--r-sm);text-align:center}
-.kpi-label{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2);margin-bottom:var(--sp-1)}
-.kpi-value{font-weight:700;font-size:var(--fs-md)}
-.mults{display:flex;gap:var(--sp-2);margin-bottom:var(--sp-3);flex-wrap:wrap}
-.mult{padding:var(--sp-2) var(--sp-3);background:rgba(255,255,255,.05);border:1px solid var(--hairline-2);border-radius:var(--r-full);font-size:var(--fs-md);font-weight:700}
-.mult.on{background:var(--primary);color:#000;border-color:var(--primary)}
-.news{padding:var(--sp-3);background:rgba(255,138,61,.08);border-radius:var(--r-md);margin-bottom:var(--sp-2);border-left:3px solid var(--primary)}
-.news-title{font-weight:700;font-size:var(--fs-md);margin-bottom:var(--sp-1)}
-.news-text{font-size:var(--fs-md);color:var(--text-2);line-height:1.4}
-.news-date{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2);margin-top:var(--sp-1)}
-.user{padding:var(--sp-3);background:rgba(255,255,255,.03);border-radius:var(--r-md);margin-bottom:var(--sp-2);display:flex;align-items:center;gap:var(--sp-3)}
-.avatar{width:2.625rem;height:2.625rem;border-radius:var(--r-md);background:linear-gradient(135deg,#FFB067,var(--primary));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;flex-shrink:0;font-size:var(--fs-md)}
-.user-info b{display:block;font-size:var(--fs-body)}
-.user-info span{font-size:var(--fs-sm);letter-spacing:.01em;color:var(--text-2)}
-
-.check-item{display:flex;align-items:center;width:100%;min-height:var(--tap);padding:var(--sp-3) 0;border-bottom:1px solid var(--hairline);text-align:left}
+.ingredient b{color:var(--accent)}
+.step{padding:12px;margin-bottom:8px;background:rgba(255,255,255,.03);border-radius:10px;border-left:3px solid var(--accent);font-size:14px;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word}
+.step-num{display:inline-block;width:20px;height:20px;background:var(--accent-soft);color:var(--accent);border-radius:6px;text-align:center;line-height:20px;font-weight:700;font-size:11px;margin-right:8px;flex-shrink:0}
+.news{padding:14px;background:rgba(255,138,61,.08);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--accent)}
+.news-title{font-weight:700;font-size:14px;margin-bottom:3px}
+.news-text{font-size:13px;color:var(--muted);line-height:1.4}
+.news-date{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.01em}
+.check-item{display:flex;align-items:center;width:100%;min-height:44px;padding:12px 0;border:none;border-bottom:1px solid rgba(255,255,255,.06);background:none;cursor:pointer;text-align:left;color:inherit}
 .check-item:last-child{border:none}
-.check-box{width:1.375rem;height:1.375rem;border:2px solid var(--text-2);border-radius:.375rem;margin-right:var(--sp-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;color:transparent;font-size:var(--fs-md);transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}
-.check-item.done .check-box{background:var(--success);border-color:var(--success);color:#000}
-.check-item.done .check-label{text-decoration:line-through;color:var(--text-2)}
-
-.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);gap:var(--sp-2)}
-.week-nav-btn{background:rgba(255,255,255,.1);width:2.25rem;height:2.25rem;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg)}
-.week-title{font-weight:700;font-size:var(--fs-md);text-align:center;flex:1;color:var(--text-2)}
-.day-row{display:flex;gap:var(--sp-1);margin-bottom:var(--sp-4)}
-.day-card{flex:1;text-align:center;padding:var(--sp-2) var(--sp-1);min-height:var(--tap);background:var(--surface);border-radius:var(--r-md);border:2px solid transparent;min-width:2.75rem}
-.day-card.selected{background:var(--primary);color:#000;border-color:#fff}
-.day-card.today{border-color:var(--success)}
-.day-card .dow-name{font-size:var(--fs-xs);font-weight:700;letter-spacing:.03em;color:var(--text-2);text-transform:uppercase}
-.day-card.selected .dow-name,.day-card.selected .count{color:#000}
-.day-card .day-num{font-weight:800;font-size:var(--fs-lg);margin:var(--sp-1) 0}
-.day-card .count{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2)}
-.loc-head{width:100%;padding:var(--sp-4);background:transparent;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2)}
-.chev{width:2rem;height:2rem;border-radius:var(--r-md);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;will-change:transform}
-.loc-body-wrap{overflow:hidden}
-.loc-section{font-size:var(--fs-xs);letter-spacing:.05em;color:var(--text-2);text-transform:uppercase;font-weight:700;margin:var(--sp-3) 0 var(--sp-2)}
-.person-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.person-row:last-child{border-bottom:none}
-.ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.supplier-block{margin-bottom:var(--sp-5)}
-.supplier-header{background:rgba(255,138,61,.1);border-left:3px solid var(--primary);padding:var(--sp-3);border-radius:var(--r-sm);margin-bottom:var(--sp-2)}
-.supplier-name{font-weight:700;font-size:var(--fs-body);color:var(--primary);margin-bottom:var(--sp-1)}
-.supplier-schedule{font-size:var(--fs-sm);letter-spacing:.01em;color:var(--text-2);line-height:1.4}
-.matrix-item{display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.matrix-item:last-child{border-bottom:none}
-.matrix-name{font-size:var(--fs-md);flex:1;padding-right:var(--sp-2);word-break:break-word}
-.matrix-meta{display:flex;align-items:center;gap:var(--sp-2);flex-shrink:0}
-.matrix-unit{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2)}
-.matrix-limit{font-size:var(--fs-md);font-weight:700;color:var(--success)}
-.order-btn{width:2rem;height:2rem;border-radius:50%;border:2px solid var(--primary);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:var(--fs-md);font-weight:700;flex-shrink:0;transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}
-.order-btn.on{background:var(--success);border-color:var(--success);color:#000}
-
-.search-input{width:100%;padding:var(--sp-3) var(--sp-4);background:var(--glass);border:1px solid var(--hairline-2);border-radius:var(--r-md);color:var(--text);font-size:var(--fs-body);margin-bottom:var(--sp-3);outline:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:inherit}
-.search-input:focus{border-color:var(--primary)}
-
-.admin-btn{position:fixed;bottom:var(--sp-3);right:var(--sp-3);width:2.875rem;height:2.875rem;border-radius:50%;background:var(--primary);color:#000;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:1.25rem;z-index:var(--z-fab);display:flex;align-items:center;justify-content:center}
-.cart-fab{position:fixed;bottom:var(--sp-3);right:4.375rem;width:2.875rem;height:2.875rem;border-radius:50%;background:var(--primary);color:#000;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:1.125rem;z-index:var(--z-fab);display:flex;align-items:center;justify-content:center}
-.cart-badge{position:absolute;top:-.25rem;right:-.25rem;min-width:1.125rem;height:1.125rem;border-radius:.5625rem;background:var(--success);color:#000;font-size:var(--fs-xs);font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 var(--sp-1)}
-
-.panel-root{position:fixed;inset:0;z-index:var(--z-panel);display:flex;align-items:flex-end;justify-content:center}
-.panel-root .scrim{position:absolute;inset:0;background:#000;opacity:0}
-.panel{position:relative;width:100%;max-width:31.25rem;display:flex;flex-direction:column;will-change:transform;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
-.panel--sheet{background:var(--glass);border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:82vh;border:1px solid var(--hairline-2);border-bottom:none;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
-.panel--modal{background:var(--bg);border-radius:var(--r-xl) var(--r-xl) 0 0;height:90vh;height:90dvh;border-top:1px solid var(--hairline)}
-.panel-grip{touch-action:none;cursor:grab;padding-top:var(--sp-2);flex-shrink:0}
-.panel-grip:active{cursor:grabbing}
-.sheet-handle{width:2.25rem;height:.25rem;border-radius:.125rem;background:rgba(255,255,255,.25);margin:0 auto}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3) var(--sp-5) var(--sp-3);gap:var(--sp-2)}
-.panel-title{font-weight:800;font-size:var(--fs-lg);letter-spacing:-.01em}
-.sheet-close{background:rgba(255,255,255,.08);width:2rem;height:2rem;border-radius:var(--r-md);font-size:var(--fs-body);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.panel-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));min-height:0}
-.panel-tabs{display:flex;gap:var(--sp-1);padding:0 var(--sp-5) var(--sp-3);flex-shrink:0}
-
-.form-field{margin-bottom:var(--sp-3)}
-.form-label{display:block;font-size:var(--fs-xs);letter-spacing:.05em;color:var(--text-2);margin-bottom:var(--sp-1);font-weight:600;text-transform:uppercase}
-.form-input,.form-textarea,.form-select{width:100%;padding:var(--sp-3);background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-md);color:var(--text);font-size:var(--fs-md);font-family:inherit;outline:none}
-.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--primary)}
-.form-textarea{min-height:5rem;resize:vertical}
-.item-card{padding:var(--sp-3);background:var(--surface);border-radius:var(--r-md);margin-bottom:var(--sp-2);border:1px solid var(--hairline)}
-.item-card-head{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2)}
-.item-card-title{font-weight:700;font-size:var(--fs-body)}
-.ing-editor{background:rgba(255,255,255,.03);padding:var(--sp-3);border-radius:var(--r-md);margin-bottom:var(--sp-2)}
-
-.cart-item{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;border-bottom:1px solid var(--hairline)}
+.check-box{width:22px;height:22px;border:2px solid var(--muted);border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:bold;color:transparent;font-size:13px}
+.check-item.done .check-box{background:var(--green);border-color:var(--green);color:#000}
+.check-item.done .check-label{text-decoration:line-through;color:var(--muted)}
+.kpi{display:flex;gap:8px;margin-bottom:14px}
+.kpi-box{flex:1;padding:10px;background:rgba(255,255,255,.03);border-radius:10px;text-align:center}
+.kpi-label{font-size:11px;color:var(--muted);margin-bottom:3px;letter-spacing:.01em}
+.kpi-value{font-weight:700;font-size:14px}
+.mults{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.mult{padding:7px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text)}
+.mult.on{background:var(--accent);color:#000;border-color:var(--accent)}
+.user{padding:14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#FFB067,var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;flex-shrink:0}
+.user-info b{display:block;font-size:15px}
+.user-info span{font-size:12px;color:var(--muted)}
+.note{padding:14px;background:rgba(95,211,138,.1);border-left:3px solid var(--green);border-radius:10px;margin-top:14px;font-size:13px;line-height:1.5}
+.admin-btn{position:fixed;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:20px;z-index:100}
+.admin-btn:active{transform:scale(.9)}
+.order-btn{width:28px;height:28px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0}
+.order-btn.on{background:var(--green);border-color:var(--green);color:#000}
+.cart-fab{position:fixed;bottom:14px;right:70px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#000;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(255,138,61,.4);font-size:18px;z-index:100;display:flex;align-items:center;justify-content:center}
+.cart-fab:active{transform:scale(.9)}
+.cart-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--green);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
 .cart-item:last-child{border:none}
-.cart-name{flex:1;font-size:var(--fs-md);min-width:0}
-.cart-supplier{font-size:var(--fs-xs);letter-spacing:.01em;color:var(--text-2);display:block}
-.cart-qty-wrap{display:flex;align-items:center;gap:var(--sp-1)}
-.cart-qty-btn{width:2rem;height:2rem;border-radius:var(--r-sm);background:rgba(255,255,255,.08);font-size:var(--fs-body);display:flex;align-items:center;justify-content:center}
-.cart-qty-input{width:3.5rem;height:2rem;border-radius:var(--r-sm);background:rgba(255,255,255,.08);border:1px solid var(--hairline-2);color:var(--text);font-size:var(--fs-body);font-weight:700;text-align:center;outline:none;padding:0 var(--sp-1);font-family:inherit}
-.cart-qty-input:focus{border-color:var(--primary)}
-
-.toast{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(5rem);background:var(--text);color:var(--bg);padding:var(--sp-3) var(--sp-5);border-radius:var(--r-full);font-weight:600;font-size:var(--fs-md);opacity:0;z-index:var(--z-snack);max-width:85vw;text-align:center;will-change:transform,opacity;pointer-events:none}
-.snackbar{position:fixed;bottom:calc(var(--sp-8) + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(5rem);display:flex;align-items:center;gap:var(--sp-2);background:var(--surface);color:var(--text);border:1px solid var(--hairline-2);padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);border-radius:var(--r-lg);z-index:var(--z-snack);max-width:92vw;font-size:var(--fs-md);font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.5);will-change:transform,opacity}
-.snackbar-msg{flex:1;min-width:0}
-.snackbar-action{color:var(--primary);font-weight:800;font-size:var(--fs-md);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-md);white-space:nowrap}
-
-.loader-inline{border:4px solid rgba(255,255,255,.1);border-left-color:var(--primary);border-radius:50%;width:1.875rem;height:1.875rem;animation:spin 1s linear infinite;margin:0 auto}
+.cart-name{flex:1;font-size:14px;min-width:0}
+.cart-supplier{font-size:11px;color:var(--muted);display:block}
+.cart-qty-wrap{display:flex;align-items:center;gap:6px}
+.cart-qty-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cart-qty-btn:active{background:rgba(255,255,255,.15)}
+.cart-qty-input{width:56px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:15px;font-weight:700;text-align:center;outline:none;padding:0 4px}
+.cart-qty-input:focus{border-color:var(--accent)}
+/* Панели: позиции ведутся springs из JS — CSS-переходов нет */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.sheet{position:relative;width:100%;max-width:500px;background:var(--glass);border-radius:20px 20px 0 0;transform:translateY(100%);will-change:transform;touch-action:none;box-shadow:0 -8px 32px rgba(0,0,0,.5),inset 0 1px 0 var(--glass-border);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);display:flex;flex-direction:column;max-height:85vh;outline:none}
+.sheet-handle{width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin:8px auto 0;flex-shrink:0}
+.sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;flex-shrink:0;cursor:grab}
+.sheet-header:active{cursor:grabbing}
+.sheet-title{font-weight:800;font-size:18px}
+.sheet-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 30px;touch-action:pan-y;overscroll-behavior:contain}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:250;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;transform:translateY(100%);will-change:transform;outline:none}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 8px;flex-shrink:0}
+.modal-title{font-weight:800;font-size:18px}
+.modal-close{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px}
+.modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 20px 20px;touch-action:pan-y;overscroll-behavior:contain}
+.form-field{margin-bottom:14px}
+.form-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.form-input,.form-textarea,.form-select{width:100%;padding:12px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent)}
+.form-textarea{min-height:80px;resize:vertical}
+.item-card{padding:14px;background:var(--card);border-radius:12px;margin-bottom:10px;border:1px solid rgba(255,255,255,.06)}
+.item-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item-card-title{font-weight:700;font-size:15px}
+.icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center}
+.icon-btn:active{background:rgba(255,255,255,.1)}
+.icon-btn.danger{background:rgba(255,107,94,.15);color:var(--red)}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text);color:var(--bg);padding:12px 22px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;z-index:300;max-width:85vw;text-align:center;will-change:transform,opacity;pointer-events:none}
+.loader-inline{border:4px solid rgba(255,255,255,0.1);border-left-color:var(--accent);border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-
+.refresh-btn{background:var(--accent);color:#000;border:none;padding:8px 16px;border-radius:20px;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;margin-left:auto;min-height:36px}
+.refresh-btn:active{transform:scale(.95)}
+.tab-btn{flex:1;padding:10px;background:rgba(255,255,255,.05);border:none;color:var(--muted);font-weight:600;border-radius:8px;margin-right:4px;cursor:pointer;min-height:44px}
+.tab-btn.on{background:var(--accent);color:#000}
+.supplier-block{margin-bottom:20px}
+.supplier-header{background:rgba(255,138,61,.1);border-left:3px solid var(--accent);padding:12px;border-radius:8px;margin-bottom:10px}
+.supplier-name{font-weight:700;font-size:15px;color:var(--accent);margin-bottom:4px}
+.supplier-schedule{font-size:12px;color:var(--muted);line-height:1.4}
+.matrix-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.matrix-item:last-child{border-bottom:none}
+.matrix-name{font-size:14px;font-weight:500;flex:1;padding-right:10px;word-break:break-word}
+.matrix-meta{text-align:right;flex-shrink:0;margin-left:10px}
+.matrix-unit{font-size:11px;color:var(--muted);display:block;letter-spacing:.01em}
+.matrix-limit{font-size:13px;font-weight:700;color:var(--green)}
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px}
+.week-nav-btn{background:rgba(255,255,255,.1);border:none;color:var(--text);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+.week-nav-btn:active{background:var(--accent);color:#000}
+.week-title{font-weight:700;font-size:14px;text-align:center;flex:1;color:var(--muted)}
+.today-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;min-height:32px}
+.today-btn:active{background:var(--accent);color:#000;border-color:var(--accent)}
+.day-card{flex:1;text-align:center;padding:8px 4px;background:var(--card);border-radius:10px;color:var(--text);cursor:pointer;border:2px solid transparent;min-width:45px;font:inherit}
+.day-card:active{transform:scale(.92)}
+.day-card.selected{background:var(--accent);color:#000;border-color:#fff}
+.day-card.today{border-color:var(--green)}
+.day-card .dow-name{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.day-card.selected .dow-name{color:#000}
+.day-card .day-num{font-weight:800;font-size:17px;margin:3px 0}
+.day-card .count{font-size:11px;color:var(--muted)}
+.day-card.selected .count{color:#000}
+.loc-head{width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font:inherit;min-height:44px}
+.chev{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;will-change:transform}
+.acc-wrap{overflow:hidden}
+.recipe-detail-container{width:100%;padding-bottom:20px}
+.recipe-detail-container .ingredient,.recipe-detail-container .step{word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
+/* G016/AC013: интерактивная зона ≥44px при любом визуальном размере */
+.tap44{position:relative}
+.tap44::after{content:'';position:absolute;top:50%;left:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
 @media (prefers-reduced-motion:reduce){
-  [data-action]{transition:none!important}
-  .panel-root .panel,.panel-root .scrim{transition:opacity .16s ease!important}
-  .panel-root:not(.rm-in) .panel{opacity:0}
-  .panel-root .scrim{opacity:0!important}
-  .panel-root.rm-in .scrim{opacity:.55!important}
-  .pulse,.loader-inline{animation:none!important}
+*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 @media (prefers-reduced-transparency:reduce){
-  .panel--sheet,.back,.search-input{background:var(--surface-solid)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.sheet,.modal,.back{background:var(--card)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.modal-bg{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 }
 @media (prefers-contrast:more){
-  :root{--text-2:#BBA998;--hairline-2:rgba(255,255,255,.45)}
-  .card,.tile,.item-card,.recipe,.panel--sheet{border:1px solid rgba(255,255,255,.5)!important}
-  .panel--sheet{background:rgba(27,22,19,.97)!important}
+.card,.tile,.item-card,.recipe{border:1px solid rgba(255,255,255,.5)}
+.sheet,.modal{border:1px solid rgba(255,255,255,.5)}
 }
 </style>
 </head>
 <body>
 <div id="app"></div>
-<button id="admin-btn" class="admin-btn" data-action="Admin.open" data-haptic="hard" aria-label="Редактор">✏️</button>
+<button id="admin-btn" class="admin-btn" onclick="CB.openAdmin()" aria-label="Редактор">✏️</button>
 <script>
+(function(){
 'use strict';
+/* ================= НАСТРОЙКИ ================= */
 const SHEET_ID='1qwcKV8_0bmbj1OSLPPMmTHke6t2U8fFz94xHE6iriIk';
 const SHEET_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 const FIREBASE_URL='https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app';
 const FB_PATH='/chefbook';
 
+/* ================= ДАННЫЕ ================= */
 const DEFAULT_RECIPES=[
 {id:1,name:'Борщ с говядиной',cat:'Горячее',time:'45 мин',yield:'350 г',kcal:96,note:'Срок хранения основы — 12 ч.',ingr:[['Говядина',121,80]],steps:['Варить.']},
 {id:2,name:'Цезарь',cat:'Салаты',time:'25 мин',yield:'220 г',kcal:185,note:'',ingr:[['Курица',90,70]],steps:['Обжарить.']},
@@ -225,7 +185,11 @@ const DEFAULT_NEWS=[
 {tag:'Событие',title:'Дегустация',text:'Пятница 16:00',date:'Вчера'},
 {tag:'Важно',title:'ТТК обновлены',text:'Сливки 33%',date:'2 дня назад'}
 ];
-const DEFAULT_TEAM=[{name:'Марина К.',role:'Су-шеф',init:'МК'},{name:'Олег С.',role:'Повар',init:'ОС'},{name:'Даша П.',role:'Кондитер',init:'ДП'}];
+const DEFAULT_TEAM=[
+{name:'Марина К.',role:'Су-шеф',init:'МК'},
+{name:'Олег С.',role:'Повар',init:'ОС'},
+{name:'Даша П.',role:'Кондитер',init:'ДП'}
+];
 const DEFAULT_MATRIX=[
 {supplier:"ИП Максимова",schedule:"Ежедневно (сегодня на завтра)",items:[{name:"Лаваш традиционный",unit:"шт",limit:40}]},
 {supplier:"Булочная Пирогов",schedule:"Ежедневно (сегодня на завтра)",items:[{name:"Панини",unit:"шт",limit:10},{name:"Чиабатта",unit:"шт",limit:10},{name:"Багет французский",unit:"шт",limit:10},{name:"Хлеб Бородинский без тмина",unit:"шт",limit:15},{name:"Хлеб Датский",unit:"шт",limit:10},{name:"Пампушки Бородинские",unit:"шт",limit:40}]},
@@ -247,1453 +211,1652 @@ const DEFAULT_MATRIX=[
 {supplier:"Першин (микрозелень)",schedule:"Ежедневно (сегодня на завтра)",items:[{name:"Руккола мини",unit:"уп",limit:null},{name:"Шпинат мини",unit:"уп",limit:null},{name:"Щавель микро",unit:"уп",limit:null},{name:"Мята микро",unit:"уп",limit:null},{name:"Фиалки",unit:"уп",limit:null}]}
 ];
 const DEFAULT_LOCAL_DATA={
-  month:'Август 2026',
-  locations:[
-    {name:'Галактика',staff:[{name:'Бочаров Вадим',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1],total:23}]},
-    {name:'Сибирь',staff:[{name:'Акбар Мирбонов',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1],total:23}]},
-    {name:'Пионер',staff:[{name:'Романов Алексей',role:'Су-шеф',shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0],total:19}]},
-    {name:'Европа',staff:[{name:'Александр Кузниченко',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1],total:21}]},
-    {name:'Лазурная',staff:[{name:'Содиков Михаил',role:'Верховный шеф',shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0],total:15}]}
-  ]
+month:'Август 2026',
+locations:[
+{name:'Галактика',staff:[{name:'Бочаров Вадим',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1],total:23}]},
+{name:'Сибирь',staff:[{name:'Акбар Мирборонов',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1],total:23}]},
+{name:'Пионер',staff:[{name:'Романов Алексей',role:'Су-шеф',shifts:[0,1,1,1,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0],total:19}]},
+{name:'Европа',staff:[{name:'Александр Кузниченко',role:'Су-шеф',shifts:[1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,0,0,1,1,0,0,1,1,1,1],total:21}]},
+{name:'Лазурная',staff:[{name:'Содиков Михаил',role:'Верховный шеф',shifts:[0,0,0,0,1,0,1,1,1,0,0,0,0,1,1,1,0,0,1,0,1,1,1,0,0,1,0,1,1,1,0],total:15}]}
+]
 };
 const CHECKLISTS={
-  open:['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
-  close:['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
+open:['Включить вентиляцию','Проверить холодильники','Принять поставку','Обновить стоп-лист','Санобработка','Проверить кассу','Выставить меню'],
+close:['Убрать заготовки','Санобработка цеха','Почистить оборудование','Вынести мусор','Снять кассу','Выключить свет','Поставить на сигнализацию']
 };
+
+let RECIPES=JSON.parse(localStorage.getItem('chef_recipes'))||DEFAULT_RECIPES;
+let NEWS=JSON.parse(localStorage.getItem('chef_news'))||DEFAULT_NEWS;
+let TEAM=JSON.parse(localStorage.getItem('chef_team'))||DEFAULT_TEAM;
+let MATRIX_DATA=JSON.parse(localStorage.getItem('chef_matrix'))||DEFAULT_MATRIX;
+let FAVORITES=JSON.parse(localStorage.getItem('chef_favorites'))||[];
+let orderCart=JSON.parse(localStorage.getItem('chef_cart'))||[];
+let scheduleData=null;
+let isLoading=false;
+let internalSave=false;
 
 const tg=window.Telegram?.WebApp;
-if(tg){ try{tg.ready();tg.expand();}catch(e){} }
+if(tg){try{tg.ready();tg.expand();}catch(e){}}
 const $=s=>document.querySelector(s);
-const RM=matchMedia('(prefers-reduced-motion: reduce)');
+const app=$('#app');
+const REDUCED_MOTION=matchMedia('(prefers-reduced-motion: reduce)');
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-const EL='$el';
-function act(name,...args){
-  return `data-action="${name}"`+(args.length?` data-args='${JSON.stringify(args).replace(/'/g,"&#39;")}'`:'');
-}
-function resolveAction(name){
-  const parts=name.split('.');
-  let obj=window;
-  for(let i=0;i<parts.length-1;i++){ obj=obj?.[parts[i]]; }
-  const fn=obj?.[parts[parts.length-1]];
-  return typeof fn==='function' ? fn.bind(obj) : null;
-}
-function runAction(el){
-  try{
-    const fn=resolveAction(el.dataset.action);
-    if(!fn){console.warn('[ShefBuk] unknown action:',el.dataset.action);return;}
-    let args=[];
-    if(el.dataset.args){try{args=JSON.parse(el.dataset.args);}catch(e){args=[];}}
-    args=args.map(a=>a===EL?el:a);
-    fn(...args);
-  }catch(err){
-    console.error('[ShefBuk] action error:',el.dataset.action,err);
-  }
-}
+function escA(s){return String(s??'').replace(/'/g,"\\'");}
 function haptic(kind){try{if(tg?.HapticFeedback)tg.HapticFeedback.impactOccurred(kind==='hard'?'medium':'light');}catch(e){}}
 
-const SM={
-  create(cfg){
-    let cur=cfg.initial;
-    return {
-      id:cfg.id,
-      get state(){return cur;},
-      send(evt,payload){
-        const t=cfg.states[cur]?.on?.[evt];
-        if(!t){console.debug(`[SM:${cfg.id}] rejected: ${cur} × ${evt}`);return false;}
-        const target=typeof t==='string'?t:t.target;
-        if(typeof t==='object'&&t.guard&&!t.guard(payload))return false;
-        const prev=cur;
-        cfg.states[prev]?.exit?.(payload);
-        cur=target;
-        cfg.states[cur]?.entry?.(payload);
-        console.debug(`[SM:${cfg.id}] ${prev} →(${evt})→ ${cur}`);
-        return true;
-      }
-    };
-  }
-};
-
-function makeSpring(response=0.4,bounce=0,mass=1){
-  const zeta=Math.max(0.05,1-bounce), omega=(2*Math.PI)/response;
-  const stiffness=mass*omega*omega;
-  return {stiffness,damping:2*zeta*Math.sqrt(stiffness*mass),mass};
+/* ================= S001–S025: STATE MACHINE ================= */
+function createSM(initial,table){
+  let state=initial;
+  return{
+    get state(){return state;},
+    is(s){return state===s;},
+    send(evt){
+      const next=table[state]?.[evt];
+      if(!next)return false;
+      state=next;
+      return true;
+    }
+  };
 }
-const Motion={
-  nav:makeSpring(0.42,0),
-  navCancel:makeSpring(0.4,0.12),
-  navFlick:v=>makeSpring(0.4,v>600?0.1:0),
-  sheetOpen:makeSpring(0.36,0.05),
-  sheetSettle:v=>makeSpring(0.36,Math.abs(v)>400?0.15:0),
-  sheetDismiss:makeSpring(0.34,0),
-  toastIn:makeSpring(0.45,0.3),
-  snackIn:makeSpring(0.4,0.2),
-  gentle:makeSpring(0.4,0),
-  height:makeSpring(0.38,0),
-  rot:makeSpring(0.4,0.1),
-  pop:makeSpring(0.35,0.5)
-};
-function springAnimate({from,to,velocity=0,onUpdate,onComplete,stiffness,damping,mass=1}){
-  if(RM.matches){onUpdate(to,0);if(onComplete)onComplete();return{cancel(){},getVelocity:()=>0};}
-  let current=from,vel=velocity,rafId=null,last=performance.now(),running=true;
+
+/* ================= PHYSICS ================= */
+function springAnimate({from,to,velocity=0,onUpdate,onComplete,stiffness=520,damping=28,mass=1}){
+  if(REDUCED_MOTION.matches){onUpdate(to,0);if(onComplete)onComplete();return{cancel(){},getVelocity(){return 0;}};}
+  let current=from,vel=velocity,rafId=null,lastTime=performance.now(),running=true;
   function tick(now){
     if(!running)return;
-    const dt=Math.min((now-last)/1000,0.05);last=now;
-    const disp=current-to;
-    vel+=((-stiffness*disp)+(-damping*vel))/mass*dt;
+    const dt=Math.min((now-lastTime)/1000,0.05);
+    lastTime=now;
+    const acc=(-stiffness*(current-to)-damping*vel)/mass;
+    vel+=acc*dt;
     current+=vel*dt;
     onUpdate(current,vel);
-    if(Math.abs(current-to)<0.4&&Math.abs(vel)<0.5){onUpdate(to,0);if(onComplete)onComplete();return;}
+    if(Math.abs(current-to)<0.5&&Math.abs(vel)<0.5){
+      onUpdate(to,0);
+      if(onComplete)onComplete();
+      return;
+    }
     rafId=requestAnimationFrame(tick);
   }
   rafId=requestAnimationFrame(tick);
-  return{cancel(){running=false;if(rafId)cancelAnimationFrame(rafId);},getVelocity(){return vel;}};
+  return{
+    cancel(){running=false;if(rafId)cancelAnimationFrame(rafId);},
+    getVelocity(){return vel;}
+  };
 }
-function rubberband(o,d,c=0.55){return(o*d*c)/(d+c*Math.abs(o));}
-function project(v,d=0.998){return(v/1000)*d/(1-d);}
+function rubberband(overshoot,dimension,constant=0.55){
+  return(overshoot*dimension*constant)/(dimension+constant*Math.abs(overshoot));
+}
+function project(initialVelocity,decelerationRate=0.998){
+  return(initialVelocity/1000)*decelerationRate/(1-decelerationRate);
+}
 function velFromHistory(h){
-  const now=performance.now(),rec=h.filter(p=>now-p.t<100);
+  const now=performance.now();
+  const rec=h.filter(p=>now-p.t<100);
   if(rec.length<2)return 0;
   const a=rec[0],b=rec[rec.length-1],dt=b.t-a.t;
   return dt>0?(b.y-a.y)/dt*1000:0;
 }
-const heightMap=new WeakMap();
-function springHeight(el,open){
-  const st=heightMap.get(el)||{v:0,anim:null};heightMap.set(el,st);
-  const cur=el.offsetHeight,target=open?el.firstElementChild.offsetHeight:0;
-  st.anim?.cancel();el.style.height=cur+'px';
-  if(RM.matches){el.style.height=open?'auto':'0px';el.style.opacity=open?'1':'0';return;}
-  st.anim=springAnimate({from:cur,to:target,velocity:st.v,...Motion.height,
-    onUpdate:(h,v)=>{st.v=v;el.style.height=h+'px';el.style.opacity=String(clamp(h/Math.max(target,cur,1),0,1));},
-    onComplete:()=>{st.v=0;el.style.height=open?'auto':'0px';el.style.opacity=open?'1':'0';}});
-}
-const rotMap=new WeakMap();
-function springRotate(el,deg){
+function popEl(el,from=0.5){
   if(!el)return;
-  let st=rotMap.get(el);
-  if(!st){st={v:0,r:parseFloat(el.dataset.rot||'0'),anim:null};rotMap.set(el,st);}
-  st.anim?.cancel();
-  st.anim=springAnimate({from:st.r,to:deg,velocity:st.v,...Motion.rot,
-    onUpdate:(r,v)=>{st.r=r;st.v=v;el.style.transform=`rotate(${r}deg)`;},
+  springAnimate({from,to:1,velocity:0,stiffness:500,damping:18,
+    onUpdate:s=>{el.style.transform=`scale(${s})`;},
+    onComplete:()=>{el.style.transform='';}});
+}
+/* Аккордеон: spring по высоте + прозрачность */
+const heightState=new WeakMap();
+function springHeight(el,open){
+  let st=heightState.get(el);
+  if(!st){st={v:0,anim:null};heightState.set(el,st);}
+  const startH=el.getBoundingClientRect().height;
+  const target=open?el.firstElementChild.offsetHeight:0;
+  if(st.anim)st.anim.cancel();
+  el.style.height=startH+'px';
+  st.anim=springAnimate({from:startH,to:target,velocity:st.v,stiffness:420,damping:36,
+    onUpdate:(h,v)=>{
+      st.v=v;
+      el.style.height=h+'px';
+      el.style.opacity=String(clamp(h/Math.max(open?target:startH,1),0,1));
+    },
+    onComplete:()=>{
+      st.v=0;
+      el.style.height=open?'auto':'0px';
+      el.style.opacity=open?'1':'0';
+    }});
+}
+const rotState=new WeakMap();
+function springRotate(el,to){
+  if(!el)return;
+  let st=rotState.get(el);
+  if(!st){st={deg:parseFloat(el.dataset.rot||'0'),v:0,anim:null};rotState.set(el,st);}
+  if(st.anim)st.anim.cancel();
+  st.anim=springAnimate({from:st.deg,to,velocity:st.v,stiffness:420,damping:30,
+    onUpdate:(d,v)=>{st.deg=d;st.v=v;el.style.transform=`rotate(${d}deg)`;},
     onComplete:()=>{st.v=0;}});
 }
-function popEl(el,from=0.6){
-  if(!el||RM.matches)return;
-  springAnimate({from,to:1,velocity:0,...Motion.pop,onUpdate:s=>{el.style.transform=`scale(${s})`;},onComplete:()=>{el.style.transform='';}});
+
+/* ================= FOCUS / A11Y ================= */
+function trapFocus(container,e){
+  if(e.key!=='Tab')return;
+  const f=[...container.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.disabled&&el.offsetParent!==null);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+}
+function focusFirst(container){
+  const f=container.querySelector('input,select,textarea,button:not(.sheet-close):not(.modal-close)');
+  try{(f||container).focus({preventScroll:true});}catch(e){}
 }
 
-const Tap={
-  state:'Idle', el:null, id:null, x:0, y:0,
-  init(){
-    document.addEventListener('pointerdown',e=>{
-      const el=e.target.closest('[data-action]');
-      if(!el||e.button>0)return;
-      if(el.matches('input,select,textarea,a'))return;
-      e.preventDefault();
-      this.state='Pressed';this.el=el;this.id=e.pointerId;this.x=e.clientX;this.y=e.clientY;
-      el.classList.add('pressed');
-      haptic(el.dataset.haptic||'light');
-    },{passive:false});
-    document.addEventListener('pointermove',e=>{
-      if(this.state!=='Pressed'||e.pointerId!==this.id)return;
-      if(Math.hypot(e.clientX-this.x,e.clientY-this.y)>12){
-        this.state='Cancelled';this.el.classList.remove('pressed');
-      }
-    },{passive:true});
-    document.addEventListener('pointerup',e=>{
-      if(this.state==='Idle'||e.pointerId!==this.id)return;
-      const el=this.el,wasPressed=this.state==='Pressed';
-      this.state='Idle';this.el=null;
-      el.classList.remove('pressed');
-      if(wasPressed)runAction(el);
-    });
-    document.addEventListener('pointercancel',e=>{
-      if(this.state==='Idle'||e.pointerId!==this.id)return;
-      this.el?.classList.remove('pressed');this.state='Idle';this.el=null;
-    });
-    document.addEventListener('keydown',e=>{
-      if(e.key!=='Enter'&&e.key!==' ')return;
-      const el=document.activeElement;
-      if(el?.dataset?.action){e.preventDefault();runAction(el);}
-    });
-  }
-};
-
-const Toast={
-  el:null,anim:null,timer:null,
-  show(msg,type='info'){
-    this._kill();
-    const t=document.createElement('div');
-    t.className='toast';t.setAttribute('role','status');t.textContent=msg;
-    if(type==='error'){t.style.background='var(--danger)';t.style.color='#fff';}
-    if(type==='success'){t.style.background='var(--success)';t.style.color='#000';}
-    document.body.appendChild(t);this.el=t;
-    const apply=y=>{t.style.transform=`translateX(-50%) translateY(${y}px)`;t.style.opacity=String(clamp(1-y/80,0,1));};
-    this.anim=springAnimate({from:80,to:0,velocity:0,...Motion.toastIn,onUpdate:apply,
-      onComplete:()=>{this.timer=setTimeout(()=>this.hide(),2200);}});
-  },
-  hide(){
-    clearTimeout(this.timer);
-    const t=this.el;if(!t)return;this.el=null;
-    this.anim?.cancel();
-    springAnimate({from:0,to:80,velocity:0,...Motion.gentle,
-      onUpdate:y=>{t.style.transform=`translateX(-50%) translateY(${y}px)`;t.style.opacity=String(clamp(1-y/80,0,1));},
-      onComplete:()=>t.remove()});
-  },
-  _kill(){clearTimeout(this.timer);this.anim?.cancel();if(this.el){this.el.remove();this.el=null;}}
-};
-const Snackbar={
-  el:null,timer:null,
-  show(msg,opts={}){
-    this._kill();
-    const s=document.createElement('div');
-    s.className='snackbar';s.setAttribute('role','status');
-    const m=document.createElement('span');m.className='snackbar-msg';m.textContent=msg;s.appendChild(m);
-    if(opts.action){
-      const b=document.createElement('button');
-      b.className='snackbar-action';b.textContent=opts.action.label;
-      b.addEventListener('pointerdown',e=>{e.preventDefault();this._kill();opts.action.fn();});
-      s.appendChild(b);
-    }
-    document.body.appendChild(s);this.el=s;
-    springAnimate({from:80,to:0,velocity:0,...Motion.snackIn,
-      onUpdate:y=>{s.style.transform=`translateX(-50%) translateY(${y}px)`;s.style.opacity=String(clamp(1-y/80,0,1));}});
-    this.timer=setTimeout(()=>this.hide(),opts.duration||5000);
-  },
-  hide(){
-    clearTimeout(this.timer);
-    const s=this.el;if(!s)return;this.el=null;
-    springAnimate({from:0,to:80,velocity:0,...Motion.gentle,
-      onUpdate:y=>{s.style.transform=`translateX(-50%) translateY(${y}px)`;s.style.opacity=String(clamp(1-y/80,0,1));},
-      onComplete:()=>s.remove()});
-  },
-  _kill(){clearTimeout(this.timer);if(this.el){this.el.remove();this.el=null;}}
-};
-
-const Store={
-  recipes:[],news:[],team:[],matrix:[],favorites:[],cart:[],
-  load(){
-    this.recipes=JSON.parse(localStorage.getItem('chef_recipes'))||DEFAULT_RECIPES;
-    this.news=JSON.parse(localStorage.getItem('chef_news'))||DEFAULT_NEWS;
-    this.team=JSON.parse(localStorage.getItem('chef_team'))||DEFAULT_TEAM;
-    this.matrix=JSON.parse(localStorage.getItem('chef_matrix'))||DEFAULT_MATRIX;
-    this.favorites=JSON.parse(localStorage.getItem('chef_favorites'))||[];
-    this.cart=JSON.parse(localStorage.getItem('chef_cart'))||[];
-  },
-  save(){
-    localStorage.setItem('chef_recipes',JSON.stringify(this.recipes));
-    localStorage.setItem('chef_news',JSON.stringify(this.news));
-    localStorage.setItem('chef_team',JSON.stringify(this.team));
-    localStorage.setItem('chef_matrix',JSON.stringify(this.matrix));
-    localStorage.setItem('chef_favorites',JSON.stringify(this.favorites));
-    localStorage.setItem('chef_cart',JSON.stringify(this.cart));
-    Nav.markStale();
-  }
-};
-
-const FB={
-  async sync(){
-    if(FIREBASE_URL.includes('ВАШ-ПРОЕКТ'))return;
-    try{
-      await fetch(`${FIREBASE_URL}${FB_PATH}.json`,{method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({recipes:Store.recipes,news:Store.news,team:Store.team,matrix:Store.matrix,favorites:Store.favorites,updatedAt:Date.now()})});
-    }catch(e){console.warn('FB sync:',e.message);}
-  },
-  async load(){
-    try{
-      const res=await fetch(`${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`);
-      if(!res.ok)return;
-      const d=await res.json();
-      if(d?.recipes){
-        Store.recipes=d.recipes;Store.news=d.news||DEFAULT_NEWS;Store.team=d.team||DEFAULT_TEAM;
-        Store.matrix=d.matrix||DEFAULT_MATRIX;Store.favorites=d.favorites||[];
-        localStorage.setItem('chef_recipes',JSON.stringify(Store.recipes));
-        localStorage.setItem('chef_news',JSON.stringify(Store.news));
-        localStorage.setItem('chef_team',JSON.stringify(Store.team));
-        localStorage.setItem('chef_matrix',JSON.stringify(Store.matrix));
-      }
-    }catch(e){console.warn('FB load:',e.message);}
-  }
-};
-
-const Cart={
-  listeners:[],
-  onChange(fn){this.listeners.push(fn);},
-  notify(){this.listeners.forEach(f=>{try{f();}catch(e){console.error(e);}});},
-  find(s,n){return Store.cart.find(c=>c.supplier===s&&c.name===n);},
-  toggle(supplier,name){
-    const ex=this.find(supplier,name);
-    let added;
-    if(ex){Store.cart=Store.cart.filter(c=>c!==ex);added=false;}
-    else{
-      const sup=Store.matrix.find(s=>s.supplier===supplier);
-      const it=sup?.items.find(i=>i.name===name)||{unit:'шт',limit:1};
-      Store.cart.push({supplier,name,unit:it.unit,qty:it.limit!==null?it.limit:1});
-      added=true;
-    }
-    Store.save();this.notify();return added;
-  },
-  changeQty(i,d){
-    if(!Store.cart[i])return;
-    Store.cart[i].qty=Math.max(0.01,parseFloat((Store.cart[i].qty+d).toFixed(3)));
-    Store.save();this.notify();
-  },
-  setQty(i,raw){
-    const num=parseFloat(String(raw).replace(',','.').replace(/[^0-9.]/g,''));
-    if(isNaN(num)||num<=0)Store.cart.splice(i,1);
-    else Store.cart[i].qty=Math.round(num*1000)/1000;
-    Store.save();this.notify();
-  },
-  remove(i){Store.cart.splice(i,1);Store.save();this.notify();},
-  clear(){Store.cart=[];Store.save();this.notify();}
-};
-
-/* ============================================================
-   NAV: единый стек + NavMachine
-   v3.2: PUSH разрешён из Pushing, POP разрешён из Pushing
-============================================================ */
-const Nav={
-  stack:[],machine:null,anim:null,liveX:0,_pending:null,
-  init(){
-    this.machine=SM.create({id:'Nav',initial:'Idle',states:{
-      Idle:{on:{PUSH:'Pushing',POP:'Popping',GRAB:'Interactive'}},
-      Pushing:{on:{PUSH:'Pushing',PUSH_DONE:'Idle',POP:'Popping',GRAB:'Interactive'}},
-      Interactive:{on:{COMMIT:'Popping',CANCEL:'Idle'}},
-      Popping:{on:{POP_DONE:'Idle',GRAB:'Interactive'}}
-    }});
-  },
-  current(){return this.stack[this.stack.length-1];},
-  prev(){return this.stack[this.stack.length-2];},
-  markStale(){for(let i=0;i<this.stack.length-1;i++)this.stack[i].stale=true;},
-  push(view,data){
-    if(data instanceof Element)data=null;
-    if(!this.machine.send('PUSH'))return;
-    haptic();
-    if(this.anim){this.anim.cancel();this.anim=null;}
-    const prevEl=this.current()?.el||null;
-    const el=document.createElement('div');el.className='screen';
-    $('#app').appendChild(el);
-    this.stack.push({view,data:data??null,el,stale:false});
-    for(let i=0;i<this.stack.length-2;i++)hideEl(this.stack[i].el);
-    render();
-    const w=innerWidth;
-    this.liveX=w;
-    this.anim=springAnimate({from:w,to:0,velocity:0,...Motion.nav,
-      onUpdate:x=>{this.liveX=x;applyNav(el,prevEl,x);},
-      onComplete:()=>{this.anim=null;this.liveX=0;el.style.transform='';hideEl(prevEl);this.machine.send('PUSH_DONE');focusHeading(el);}});
-  },
-  goBack(){
-    if(this.stack.length<=1)return;
-    if(!this.machine.send('POP'))return;
-    haptic();
-    if(this.anim){this.anim.cancel();this.anim=null;}
-    const from=Math.max(0,this.liveX);
-    const entry=this.stack.pop();this._pending=entry;
-    animatePopOut(entry.el,this.current()?.el||null,from,0);
-  },
-  restorePending(){
-    if(this._pending){this.stack.push(this._pending);this._pending=null;}
-  }
-};
-function hideEl(p){if(!p)return;p.style.display='none';p.style.visibility='hidden';clearEl(p);}
-function showEl(p){if(!p)return;p.style.display='';p.style.visibility='';}
-function clearEl(p){if(!p)return;p.style.transform='';p.style.opacity='';}
-function applyNav(cur,prev,x){
-  Nav.liveX=x;
-  cur.style.transform=`translateX(${x}px)`;
-  if(prev){
-    const p=clamp(x/innerWidth,0,1.2);
-    prev.style.transform=`translateX(${(p*30-30)}%)`;
-    prev.style.opacity=String(Math.max(0.45,1-p*0.55));
-  }
-}
-function animatePopOut(curEl,prevEl,from,vel){
-  showEl(prevEl);
-  Nav.anim?.cancel();
-  Nav.anim=springAnimate({from,to:innerWidth,velocity:vel,...Motion.navFlick(vel),
-    onUpdate:x=>applyNav(curEl,prevEl,x),
+/* ================= TOAST (spring) ================= */
+let toastEl=null,toastAnim=null,toastTimer=null;
+function toast(msg,type='info'){
+  if(toastEl){toastAnim?.cancel();clearTimeout(toastTimer);toastEl.remove();toastEl=null;}
+  const t=document.createElement('div');
+  t.className='toast';t.textContent=msg;t.setAttribute('role','status');
+  if(type==='error'){t.style.background='var(--red)';t.style.color='#fff';}
+  if(type==='success'){t.style.background='var(--green)';t.style.color='#000';}
+  document.body.appendChild(t);
+  toastEl=t;
+  const apply=y=>{
+    t.style.transform=`translateX(-50%) translateY(${y}px)`;
+    t.style.opacity=String(clamp(1-y/100,0,1));
+  };
+  toastAnim=springAnimate({from:100,to:0,velocity:0,stiffness:300,damping:20,
+    onUpdate:apply,
     onComplete:()=>{
-      Nav.anim=null;Nav.liveX=0;
-      curEl.remove();Nav._pending=null;clearEl(prevEl);
-      Nav.machine.send('POP_DONE');
-      const cur=Nav.current();
-      if(cur?.stale){const st=cur.el.scrollTop;render();cur.el.scrollTop=st;cur.stale=false;}
-      focusHeading(cur?.el);
+      toastTimer=setTimeout(()=>{
+        toastAnim=springAnimate({from:0,to:100,velocity:0,stiffness:420,damping:34,
+          onUpdate:apply,
+          onComplete:()=>{t.remove();if(toastEl===t)toastEl=null;}});
+      },2500);
     }});
 }
-function focusHeading(el){
-  const h=el?.querySelector('h1');
-  if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true});}
+
+/* ================= НАВИГАЦИЯ ================= */
+let currentScreen=app;
+let currentView='home';
+let currentRecipeId=null;
+let currentMult=1;
+let viewStack=[{view:'home',data:null}];
+let screenAnim=null;
+const sheetStates=new Map();
+const modalStates=new Map();
+
+function getCurrentScreen(){
+  const screens=app.querySelectorAll('.screen');
+  return screens[screens.length-1]||app;
 }
-/* ============================================================
-   Interactive pop gesture — v3.2
-   FIX: машина захватывается ТОЛЬКО после engagement (движение),
-   а не на pointerdown — тапы больше не блокируются
-============================================================ */
-const sb={id:null,startX:0,startY:0,baseX:0,x:0,engaged:false,cur:null,prev:null,fromPop:false,history:[]};
-function initSwipeBack(){
-  document.addEventListener('pointerdown',e=>{
-    if(Panel.count()||Nav.stack.length<=1)return;
-    if(e.clientX>44)return;
-    const ms=Nav.machine.state;
-    if(ms!=='Idle'&&ms!=='Pushing'&&ms!=='Popping')return;
-    if(ms==='Popping'&&!Nav._pending)return;
-    sb.id=e.pointerId;sb.startX=e.clientX;sb.startY=e.clientY;
-    sb.engaged=false;sb.fromPop=(ms==='Popping');
-    sb.x=0;sb.history=[];
-    /* нажатие только запоминаем — ничего не блокируем */
-  },true);
-  document.addEventListener('pointermove',e=>{
-    if(sb.id!==e.pointerId)return;
-    const dx=e.clientX-sb.startX,dy=e.clientY-sb.startY;
-    if(!sb.engaged){
-      if(dx<0||(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>10)){sb.id=null;return;}
-      if(dx>12&&Math.abs(dx)>Math.abs(dy)*1.3){
-        if(Nav.anim){Nav.anim.cancel();Nav.anim=null;}
-        let cur,prev;
-        if(sb.fromPop){cur=Nav._pending.el;prev=Nav.current()?.el||null;}
-        else{cur=Nav.current().el;prev=Nav.prev()?.el||null;}
-        if(!Nav.machine.send('GRAB')){sb.id=null;return;}
-        sb.cur=cur;sb.prev=prev;
-        sb.baseX=Nav.liveX||0;sb.x=sb.baseX;
-        showEl(prev);
-        applyNav(cur,prev,sb.x);
-        sb.engaged=true;
-        try{cur.setPointerCapture(e.pointerId);}catch(_){}
-      }
-      return;
-    }
-    e.preventDefault();
-    sb.history.push({x:e.clientX,t:performance.now()});
-    if(sb.history.length>8)sb.history.shift();
-    sb.x=Math.max(0,sb.baseX+dx);
-    applyNav(sb.cur,sb.prev,sb.x);
-  },{passive:false});
-  document.addEventListener('pointerup',e=>{if(sb.id===e.pointerId)finishSwipe();});
-  document.addEventListener('pointercancel',e=>{if(sb.id===e.pointerId)sbAbort();});
-}
-function sbAbort(){
-  if(sb.id===null)return;
-  const engaged=sb.engaged,cur=sb.cur,prev=sb.prev,x=sb.x||0,fromPop=sb.fromPop;
-  sb.id=null;sb.engaged=false;
-  if(!engaged)return;
-  Nav.machine.send('CANCEL');
-  if(fromPop)Nav.restorePending();
-  if(x>2){
-    Nav.anim=springAnimate({from:x,to:0,velocity:0,...Motion.nav,
-      onUpdate:v=>applyNav(cur,prev,v),
-      onComplete:()=>{Nav.anim=null;Nav.liveX=0;clearEl(cur);if(!fromPop)hideEl(prev);else clearEl(prev);}});
-  }else{clearEl(cur);if(!fromPop)hideEl(prev);else clearEl(prev);}
-}
-function finishSwipe(){
-  if(sb.id===null)return;
-  if(!sb.engaged){sb.id=null;return;}
-  const x=sb.x,cur=sb.cur,prev=sb.prev,fromPop=sb.fromPop;
-  const v=velFromHistory(sb.history.map(h=>({y:h.x,t:h.t})));
-  sb.id=null;sb.engaged=false;
-  const commit=v>900||(v>-300&&x+project(v)>innerWidth*0.5);
-  if(commit){
-    if(!Nav.machine.send('COMMIT'))return;
-    if(!fromPop){Nav._pending=Nav.stack.pop();}
-    animatePopOut(cur,prev,x,Math.max(0,v));
+function navigate(view,data){
+  haptic();
+  if(data!==undefined)currentRecipeId=data;
+  const prevScreen=getCurrentScreen();
+  if(prevScreen&&prevScreen!==app)prevScreen.classList.remove('current');
+  const newScreen=document.createElement('div');
+  newScreen.className='screen';
+  newScreen.style.transform='translateX(100%)';
+  app.appendChild(newScreen);
+  currentScreen=newScreen;
+  currentView=view;
+  render();
+  if(prevScreen&&prevScreen!==app){
+    if(screenAnim)screenAnim.cancel();
+    screenAnim=springAnimate({from:100,to:0,velocity:0,stiffness:450,damping:42,
+      onUpdate:x=>{
+        newScreen.style.transform=`translateX(${x}%)`;
+        prevScreen.style.transform=`translateX(${x*0.3-30}%)`;
+        prevScreen.style.opacity=Math.max(0.4,1-x/150);
+      },
+      onComplete:()=>{
+        screenAnim=null;
+        prevScreen.style.display='none';
+        prevScreen.style.visibility='hidden';
+        prevScreen.style.transform='';
+        prevScreen.style.opacity='';
+        newScreen.style.transform='';
+      }});
   }else{
-    Nav.machine.send('CANCEL');
-    if(fromPop)Nav.restorePending();
-    Nav.anim?.cancel();
-    Nav.anim=springAnimate({from:x,to:0,velocity:v,...Motion.navCancel,
-      onUpdate:vx=>applyNav(cur,prev,vx),
-      onComplete:()=>{Nav.anim=null;Nav.liveX=0;clearEl(cur);if(!fromPop)hideEl(prev);else clearEl(prev);}});
+    newScreen.style.transform='';
   }
+  newScreen.classList.add('current');
+  viewStack.push({view,data});
 }
-
-const Panel={
-  stack:[],
-  count(){return this.stack.length;},
-  top(){return this.stack[this.stack.length-1];},
-  byId(id){return this.stack.find(s=>s.id===id);},
-  open(opts){
-    this.killInstant(opts.id);
-    const root=document.createElement('div');root.className='panel-root';
-    root.innerHTML=`
-      <div class="scrim"></div>
-      <div class="panel panel--${opts.variant||'sheet'}" role="dialog" aria-modal="true" aria-labelledby="pt-${opts.id}" tabindex="-1">
-        <div class="panel-grip">
-          <div class="sheet-handle"></div>
-          <div class="panel-header">
-            <div class="panel-title" id="pt-${opts.id}">${opts.title}</div>
-            <button class="sheet-close hit" ${act('Panel.requestClose')} aria-label="Закрыть">✕</button>
-          </div>
-        </div>
-        <div class="panel-body">${opts.body}</div>
-      </div>`;
-    document.body.appendChild(root);
-    const st={
-      id:opts.id,root,
-      panel:root.querySelector('.panel'),
-      scrim:root.querySelector('.scrim'),
-      H:0,y:0,anim:null,drag:null,dirty:false,
-      protected:!!opts.protected,onClose:opts.onClose,
-      trigger:document.activeElement,
-      machine:SM.create({id:'Panel:'+opts.id,initial:'Closed',states:{
-        Closed:{on:{OPEN:'Opening'}},
-        Opening:{on:{OPEN_DONE:'Open',GRAB:'Dragging',CLOSE:'Closing'}},
-        Open:{on:{GRAB:'Dragging',CLOSE:'Closing'}},
-        Dragging:{on:{RELEASE_SETTLE:'Settling',RELEASE_DISMISS:'Closing'}},
-        Settling:{on:{SETTLE_DONE:'Open',GRAB:'Dragging',CLOSE:'Closing'}},
-        Closing:{on:{CLOSE_DONE:'Closed',GRAB:'Dragging'}}
-      }})
-    };
-    st.H=st.panel.offsetHeight;st.y=st.H;
-    st.panel.style.transform=`translateY(${st.H}px)`;
-    this.stack.push(st);
-    this._wire(st);
-    st.scrim.addEventListener('pointerdown',e=>{e.preventDefault();this.tryClose(st);});
-    root.addEventListener('keydown',e=>{if(e.key==='Tab')this._trap(st.panel,e);});
-    root.addEventListener('input',()=>{st.dirty=true;},true);
-    st.machine.send('OPEN');
-    if(RM.matches){
-      st.panel.style.transform='';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        root.classList.add('rm-in');st.machine.send('OPEN_DONE');this._focusIn(st);
-      }));
-    }else{
-      requestAnimationFrame(()=>{
-        st.anim=springAnimate({from:st.H,to:0,velocity:0,...Motion.sheetOpen,
-          onUpdate:y=>this._setY(st,y),
-          onComplete:()=>{st.anim=null;st.machine.send('OPEN_DONE');this._focusIn(st);}});
-      });
-    }
-    if(opts.afterRender)opts.afterRender(root);
-    return st;
-  },
-  _focusIn(st){
-    const f=st.panel.querySelector('input,select,textarea,button:not(.sheet-close)');
-    try{(f||st.panel).focus({preventScroll:true});}catch(e){}
-  },
-  _trap(root,e){
-    const f=[...root.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
-      .filter(el=>!el.disabled&&el.offsetParent!==null);
-    if(!f.length)return;
-    const first=f[0],last=f[f.length-1];
-    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
-    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
-  },
-  _setY(st,y){
-    st.y=y;
-    st.panel.style.transform=`translateY(${y}px)`;
-    const f=clamp(1-y/st.H,0,1);
-    st.scrim.style.opacity=(0.55*f).toFixed(3);
-    const idx=this.stack.indexOf(st);
-    const below=idx>0?this.stack[idx-1].panel:Nav.current()?.el;
-    this._push(below,f);
-    if(idx>1)this._push(this.stack[idx-2].panel,f*0.5);
-  },
-  _push(el,f){
-    if(!el)return;
-    if(f<=0.01){el.style.scale='';el.style.opacity='';el.style.borderRadius='';return;}
-    el.style.scale=String(1-0.045*f);
-    el.style.opacity=String(1-0.25*f);
-    el.style.borderRadius=(16*f)+'px';
-  },
-  _refreshPush(){
-    const st=this.top();
-    if(st)this._setY(st,st.y);
-    else{const s=Nav.current()?.el;if(s){s.style.scale='';s.style.opacity='';s.style.borderRadius='';}}
-  },
-  _wire(st){
-    const grip=st.root.querySelector('.panel-grip');
-    grip.addEventListener('pointerdown',e=>{
-      if(e.target.closest('[data-action]'))return;
-      const ms=st.machine.state;
-      if(ms!=='Open'&&ms!=='Opening'&&ms!=='Settling'&&ms!=='Closing')return;
-      e.preventDefault();
-      try{grip.setPointerCapture(e.pointerId);}catch(_){}
-      if(st.anim){st.anim.cancel();st.anim=null;}
-      st.machine.send('GRAB');
-      st.drag={id:e.pointerId,startY:e.clientY,baseY:st.y,history:[]};
-    });
-    grip.addEventListener('pointermove',e=>{
-      const d=st.drag;
-      if(!d||e.pointerId!==d.id||st.machine.state!=='Dragging')return;
-      let y=d.baseY+(e.clientY-d.startY);
-      if(y<0)y=-rubberband(-y,st.H*0.6,0.55);
-      d.history.push({y:e.clientY,t:performance.now()});
-      if(d.history.length>8)d.history.shift();
-      this._setY(st,y);
-    });
-    const release=(e,cancel)=>{
-      const d=st.drag;
-      if(!d||e.pointerId!==d.id)return;
-      st.drag=null;
-      if(st.machine.state!=='Dragging')return;
-      const v=cancel?0:velFromHistory(d.history);
-      const dismiss=v>1100||(v>-250&&st.y+project(v)>st.H*0.45);
-      if(dismiss){st.machine.send('RELEASE_DISMISS');this._animateOut(st,Math.max(0,v));}
-      else{
-        st.machine.send('RELEASE_SETTLE');
-        st.anim=springAnimate({from:st.y,to:0,velocity:v,...Motion.sheetSettle(v),
-          onUpdate:y=>this._setY(st,y),
-          onComplete:()=>{st.anim=null;st.machine.send('SETTLE_DONE');}});
-      }
-    };
-    grip.addEventListener('pointerup',e=>release(e,false));
-    grip.addEventListener('pointercancel',e=>release(e,true));
-  },
-  requestClose(){const st=this.top();if(st)this.tryClose(st);},
-  tryClose(st,force=false){
-    if(st.protected&&st.dirty&&!force){
-      Snackbar.show('Есть несохранённые изменения',{
-        action:{label:'Закрыть без сохранения',fn:()=>this.dismiss(st,0,true)},
-        duration:6000
-      });
-      return;
-    }
-    this.dismiss(st,0,force);
-  },
-  dismiss(st,velocity,force=false){
-    if(!st)return;
-    if(st.protected&&st.dirty&&!force){this.tryClose(st);return;}
-    const ms=st.machine.state;
-    if(ms==='Closing'||ms==='Closed')return;
-    st.machine.send('CLOSE');
-    if(st.anim){st.anim.cancel();st.anim=null;}
-    if(RM.matches){
-      st.root.classList.remove('rm-in');
-      setTimeout(()=>this._cleanup(st),180);
-      return;
-    }
-    this._animateOut(st,velocity);
-  },
-  _animateOut(st,velocity){
-    st.anim=springAnimate({from:st.y,to:st.H,velocity,...Motion.sheetDismiss,
-      onUpdate:y=>this._setY(st,y),
-      onComplete:()=>this._cleanup(st)});
-  },
-  _cleanup(st){
-    st.machine.send('CLOSE_DONE');
-    st.root.remove();
-    const i=this.stack.indexOf(st);if(i>=0)this.stack.splice(i,1);
-    this._refreshPush();
-    if(st.trigger&&document.contains(st.trigger)){try{st.trigger.focus({preventScroll:true});}catch(e){}}
-    if(st.onClose)st.onClose();
-  },
-  killInstant(id){
-    const st=this.byId(id);
-    if(st){st.root.remove();const i=this.stack.indexOf(st);if(i>=0)this.stack.splice(i,1);this._refreshPush();}
-  },
-  updateBody(id,html){const st=this.byId(id);if(st)st.root.querySelector('.panel-body').innerHTML=html;},
-  updateTitle(id,html){const st=this.byId(id);if(st)st.root.querySelector('.panel-title').innerHTML=html;}
-};
-
+function goBack(){
+  if(viewStack.length<=1)return;
+  haptic();
+  viewStack.pop();
+  const prevState=viewStack[viewStack.length-1];
+  currentView=prevState.view;
+  if(prevState.data!==undefined)currentRecipeId=prevState.data;
+  const screens=app.querySelectorAll('.screen');
+  if(screens.length<2){
+    currentScreen=app;
+    render();
+    return;
+  }
+  const curScreen=screens[screens.length-1];
+  const prevScreen=screens[screens.length-2];
+  prevScreen.style.display='';
+  prevScreen.style.visibility='';
+  prevScreen.classList.add('current');
+  currentScreen=prevScreen;
+  if(screenAnim)screenAnim.cancel();
+  screenAnim=springAnimate({from:0,to:100,velocity:0,stiffness:450,damping:42,
+    onUpdate:x=>{
+      curScreen.style.transform=`translateX(${x}%)`;
+      prevScreen.style.transform=`translateX(${x*0.3-30}%)`;
+      prevScreen.style.opacity=Math.max(0.4,1-x/150);
+    },
+    onComplete:()=>{
+      screenAnim=null;
+      curScreen.remove();
+      prevScreen.style.transform='';
+      prevScreen.style.opacity='';
+    }});
+}
 function render(){
-  try{
-    const v=Nav.current().view;
-    const map={
-      home:renderHome,
-      ttk:()=>TTK.render(),
-      recipe:renderRecipe,
-      schedule:()=>Schedule.render(),
-      checklist:()=>CL.render(),
-      team:renderTeam,
-      matrix:()=>Matrix.render()
-    };
-    map[v]?.();
-  }catch(err){
-    console.error('[ShefBuk] render error:',err);
-  }
+  if(currentView==='home')renderHome();
+  else if(currentView==='ttk')renderTTK();
+  else if(currentView==='recipe')renderRecipe();
+  else if(currentView==='schedule')renderSchedule();
+  else if(currentView==='checklist')renderChecklist();
+  else if(currentView==='team')renderTeam();
+  else if(currentView==='matrix')renderMatrix();
 }
-const backBtn=()=>`<button class="back hit" ${act('Nav.goBack')} aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>`;
-const refreshBtn=a=>`<button class="refresh-btn hit" ${act(a)} data-haptic="hard" aria-label="Обновить"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>`;
 
+/* ================= SWIPE-BACK: Pointer Events + SM ================= */
+const swipe={
+  sm:createSM('idle',{
+    idle:{TRACK:'tracking'},
+    tracking:{DRAG:'dragging',CANCEL:'idle'},
+    dragging:{SETTLE:'settling',CANCEL:'idle'},
+    settling:{DONE:'idle',TRACK:'tracking'}
+  }),
+  pointerId:null,startX:0,baseX:0,x:0,cur:null,prev:null,anim:null,history:[]
+};
+function initSwipeBack(){
+  if(!window.PointerEvent)return;
+  document.addEventListener('pointerdown',e=>{
+    if(viewStack.length<=1)return;
+    if(sheetStates.size||modalStates.size)return;
+    if(e.clientX>50)return;
+    if(!swipe.sm.is('idle')&&!swipe.sm.is('settling'))return;
+    if(swipe.sm.is('settling')&&swipe.anim){swipe.anim.cancel();swipe.anim=null;}
+    const screens=app.querySelectorAll('.screen');
+    const cur=screens[screens.length-1];
+    if(!cur)return;
+    swipe.cur=cur;
+    swipe.prev=screens.length>1?screens[screens.length-2]:null;
+    swipe.pointerId=e.pointerId;
+    swipe.startX=e.clientX;
+    swipe.baseX=swipe.sm.is('settling')?(swipe.x||0):0;
+    swipe.history=[];
+    swipe.sm.send('TRACK');
+  },{passive:true});
+  document.addEventListener('pointermove',e=>{
+    if(swipe.pointerId!==e.pointerId)return;
+    if(swipe.sm.is('tracking')){
+      const dx=e.clientX-swipe.startX;
+      const dy=e.clientY-(swipe.startY||e.clientY);
+      if(swipe.startY===undefined)swipe.startY=e.clientY;
+      if(dx<0||(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>8)){
+        swipe.sm.send('CANCEL');swipe.pointerId=null;swipe.startY=undefined;return;
+      }
+      if(dx>12&&Math.abs(dx)>Math.abs(dy)*1.5){
+        if(!swipe.sm.send('DRAG'))return;
+        try{swipe.cur.setPointerCapture(e.pointerId);}catch(_){}
+        if(swipe.prev){
+          swipe.prev.style.display='';
+          swipe.prev.style.visibility='';
+        }
+      }else return;
+    }
+    if(!swipe.sm.is('dragging'))return;
+    e.preventDefault();
+    const dx=swipe.baseX+(e.clientX-swipe.startX);
+    swipe.x=dx;
+    swipe.history.push({x:e.clientX,t:performance.now()});
+    if(swipe.history.length>8)swipe.history.shift();
+    swipe.cur.style.transform=`translateX(${dx}px)`;
+    if(swipe.prev){
+      const pct=dx/window.innerWidth;
+      swipe.prev.style.transform=`translateX(${(pct*30-30)}%)`;
+      swipe.prev.style.opacity=Math.max(0.4,1-pct*0.6);
+    }
+  },{passive:false});
+  document.addEventListener('pointerup',e=>{
+    if(swipe.pointerId!==e.pointerId)return;
+    swipe.startY=undefined;
+    if(swipe.sm.is('tracking')){swipe.sm.send('CANCEL');swipe.pointerId=null;return;}
+    if(!swipe.sm.is('dragging'))return;
+    swipe.sm.send('SETTLE');
+    swipe.pointerId=null;
+    const v=velFromHistory(swipe.history.map(h=>({y:h.x,t:h.t})));
+    const projected=swipe.x+project(v);
+    const commit=projected>window.innerWidth*0.4||v>900;
+    settleSwipe(commit,v);
+  });
+  document.addEventListener('pointercancel',e=>{
+    if(swipe.pointerId!==e.pointerId)return;
+    swipe.startY=undefined;
+    if(swipe.sm.is('tracking')){swipe.sm.send('CANCEL');swipe.pointerId=null;return;}
+    if(!swipe.sm.is('dragging'))return;
+    swipe.sm.send('SETTLE');
+    swipe.pointerId=null;
+    settleSwipe(false,0);
+  });
+}
+function settleSwipe(commit,velocity){
+  const cur=swipe.cur,prev=swipe.prev;
+  if(swipe.anim)swipe.anim.cancel();
+  swipe.anim=springAnimate({from:swipe.x,to:commit?window.innerWidth:0,velocity,stiffness:520,damping:32,
+    onUpdate:x=>{
+      swipe.x=x;
+      cur.style.transform=`translateX(${x}px)`;
+      if(prev){
+        const p=x/window.innerWidth;
+        prev.style.transform=`translateX(${(p*30-30)}%)`;
+        prev.style.opacity=Math.max(0.4,1-p*0.6);
+      }
+    },
+    onComplete:()=>{
+      swipe.anim=null;
+      swipe.sm.send('DONE');
+      if(commit){
+        viewStack.pop();
+        const prevState=viewStack[viewStack.length-1];
+        currentView=prevState.view;
+        if(prevState.data!==undefined)currentRecipeId=prevState.data;
+        cur.remove();
+        if(prev){
+          prev.classList.add('current');
+          prev.style.transform='';prev.style.opacity='';
+          currentScreen=prev;
+        }
+      }else{
+        if(prev){prev.style.display='none';prev.style.visibility='hidden';prev.style.transform='';prev.style.opacity='';}
+        cur.style.transform='';
+      }
+      swipe.cur=null;swipe.prev=null;swipe.x=0;
+    }});
+}
+
+/* ================= SHEET (spring + SM + focus) ================= */
+function openSheet(opts){
+  closeSheetImmediate(opts.id);
+  const bg=document.createElement('div');
+  bg.className='sheet-bg';bg.id=opts.id;
+  const sheet=document.createElement('div');
+  sheet.className='sheet';
+  sheet.setAttribute('role','dialog');
+  sheet.setAttribute('aria-modal','true');
+  sheet.setAttribute('aria-label',opts.title.replace(/[^\wа-яА-ЯёЁ \-]/g,''));
+  sheet.setAttribute('tabindex','-1');
+  sheet.innerHTML=`
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">${opts.title}</div>
+      <button class="sheet-close tap44" onclick="CB.closeSheet('${opts.id}')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="sheet-body">${opts.body}</div>`;
+  bg.appendChild(sheet);
+  document.body.appendChild(bg);
+  const H=sheet.offsetHeight;
+  const st={
+    id:opts.id,bg,sheet,H,y:H,anim:null,drag:null,
+    trigger:document.activeElement,
+    onClosed:opts.onClosed,
+    sm:createSM('closed',{
+      closed:{OPEN:'opening'},
+      opening:{OPENED:'open',GRAB:'dragging',CLOSE:'closing'},
+      open:{GRAB:'dragging',CLOSE:'closing'},
+      dragging:{SETTLE:'settling',CLOSE:'closing'},
+      settling:{SETTLED:'open',GRAB:'dragging',CLOSE:'closing'},
+      closing:{CLOSED:'closed',GRAB:'dragging'}
+    })
+  };
+  sheetStates.set(opts.id,st);
+  sheet.style.transform=`translateY(${H}px)`;
+  bg.style.pointerEvents='auto';
+  bg.addEventListener('click',e=>{if(e.target===bg)dismissSheet(st,0);});
+  bg.addEventListener('keydown',e=>trapFocus(sheet,e));
+  wireSheetDrag(st);
+  st.sm.send('OPEN');
+  st.anim=springAnimate({from:H,to:0,velocity:0,stiffness:440,damping:33,
+    onUpdate:y=>setSheetPos(st,y),
+    onComplete:()=>{st.anim=null;st.sm.send('OPENED');focusFirst(sheet);}});
+  return st;
+}
+function setSheetPos(st,y){
+  st.y=y;
+  st.sheet.style.transform=`translateY(${y}px)`;
+  const p=clamp(1-y/st.H,0,1);
+  st.bg.style.background=`rgba(0,0,0,${(0.55*p).toFixed(3)})`;
+}
+function wireSheetDrag(st){
+  const sheet=st.sheet;
+  sheet.addEventListener('pointerdown',e=>{
+    if(e.target.closest('button,input,textarea,select,a'))return;
+    if(e.target.closest('.sheet-body'))return;
+    const s=st.sm.state;
+    if(s!=='open'&&s!=='opening'&&s!=='settling')return;
+    e.preventDefault();
+    if(st.anim){st.anim.cancel();st.anim=null;}
+    if(!st.sm.send('GRAB'))return;
+    st.drag={id:e.pointerId,startY:e.clientY,baseY:st.y,history:[]};
+    try{sheet.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  sheet.addEventListener('pointermove',e=>{
+    const d=st.drag;
+    if(!d||e.pointerId!==d.id)return;
+    let y=d.baseY+(e.clientY-d.startY);
+    if(y<0)y=-rubberband(-y,st.H*0.5,0.55);
+    d.history.push({y:e.clientY,t:performance.now()});
+    if(d.history.length>8)d.history.shift();
+    setSheetPos(st,y);
+  });
+  const release=(e,cancelled)=>{
+    const d=st.drag;
+    if(!d||e.pointerId!==d.id)return;
+    st.drag=null;
+    if(!st.sm.is('dragging'))return;
+    const v=cancelled?0:velFromHistory(d.history);
+    const projected=st.y+project(v);
+    if(projected>st.H*0.35||v>1000){
+      dismissSheet(st,v);
+    }else{
+      st.sm.send('SETTLE');
+      st.anim=springAnimate({from:st.y,to:0,velocity:v,stiffness:380,damping:32,
+        onUpdate:y=>setSheetPos(st,y),
+        onComplete:()=>{st.anim=null;st.sm.send('SETTLED');}});
+    }
+  };
+  sheet.addEventListener('pointerup',e=>release(e,false));
+  sheet.addEventListener('pointercancel',e=>release(e,true));
+}
+function dismissSheet(st,velocity){
+  if(!st)return;
+  const s=st.sm.state;
+  if(s==='closing'||s==='closed')return;
+  st.sm.send('CLOSE');
+  if(st.anim)st.anim.cancel();
+  st.anim=springAnimate({from:st.y,to:st.H,velocity:velocity||0,stiffness:440,damping:36,
+    onUpdate:y=>setSheetPos(st,y),
+    onComplete:()=>removeSheet(st)});
+}
+function removeSheet(st){
+  st.sm.send('CLOSED');
+  st.bg.remove();
+  sheetStates.delete(st.id);
+  if(st.trigger&&document.contains(st.trigger)){try{st.trigger.focus({preventScroll:true});}catch(e){}}
+  if(st.onClosed)st.onClosed();
+}
+function closeSheet(id){
+  const st=sheetStates.get(id);
+  if(st){haptic();dismissSheet(st,0);}
+}
+function closeSheetImmediate(id){
+  const st=sheetStates.get(id);
+  if(!st)return;
+  if(st.anim)st.anim.cancel();
+  st.bg.remove();
+  sheetStates.delete(id);
+}
+
+/* ================= MODAL (spring + focus trap) ================= */
+function openModal(opts){
+  closeModalImmediate(opts.id);
+  const bg=document.createElement('div');
+  bg.className='modal-bg';bg.id=opts.id;
+  const modal=document.createElement('div');
+  modal.className='modal';
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
+  modal.setAttribute('aria-label',opts.title.replace(/[^\wа-яА-ЯёЁ \-]/g,''));
+  modal.setAttribute('tabindex','-1');
+  modal.innerHTML=`
+    <div class="modal-header">
+      <div class="modal-title">${opts.title}</div>
+      <button class="modal-close tap44" onclick="CB.closeModal('${opts.id}')" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="modal-body">${opts.body}</div>`;
+  bg.appendChild(modal);
+  document.body.appendChild(bg);
+  const H=modal.offsetHeight;
+  const st={id:opts.id,bg,modal,H,y:0,anim:null,closing:false,trigger:document.activeElement};
+  modalStates.set(opts.id,st);
+  bg.style.background='rgba(0,0,0,0)';
+  modal.style.transform=`translateY(${H}px)`;
+  bg.addEventListener('keydown',e=>trapFocus(modal,e));
+  st.anim=springAnimate({from:H,to:0,velocity:0,stiffness:440,damping:33,
+    onUpdate:y=>setModalPos(st,y),
+    onComplete:()=>{st.anim=null;focusFirst(modal);}});
+  return st;
+}
+function setModalPos(st,y){
+  st.y=y;
+  st.modal.style.transform=`translateY(${y}px)`;
+  const p=clamp(1-y/st.H,0,1);
+  st.bg.style.background=`rgba(0,0,0,${(0.7*p).toFixed(3)})`;
+}
+function closeModal(id){
+  const st=modalStates.get(id);
+  if(!st||st.closing)return;
+  st.closing=true;
+  if(st.anim)st.anim.cancel();
+  st.anim=springAnimate({from:st.y,to:st.H,velocity:0,stiffness:480,damping:40,
+    onUpdate:y=>setModalPos(st,y),
+    onComplete:()=>{
+      st.bg.remove();
+      modalStates.delete(id);
+      if(st.trigger&&document.contains(st.trigger)){try{st.trigger.focus({preventScroll:true});}catch(e){}}
+    }});
+}
+function closeModalImmediate(id){
+  const st=modalStates.get(id);
+  if(!st)return;
+  if(st.anim)st.anim.cancel();
+  st.bg.remove();
+  modalStates.delete(id);
+}
+
+/* ================= КЛАВИАТУРА ================= */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(modalStates.size){closeModal([...modalStates.keys()].pop());return;}
+  if(sheetStates.size){dismissSheet(sheetStates.get([...sheetStates.keys()].pop()),0);return;}
+  if(viewStack.length>1)goBack();
+});
+
+/* ================= РЕНДЕРЫ ================= */
 function renderHome(){
-  const el=Nav.current().el;
   const user=tg?.initDataUnsafe?.user;
   const greet=user?'Привет, '+esc(user.first_name)+'!':'ШефБук 👨‍🍳';
-  const dayIndex=new Date().getDate()-1;
-  let todayShifts=0;
+  const today=new Date();
+  const dayIndex=today.getDate()-1;
+  let shiftCount=0;
   const source=scheduleData||DEFAULT_LOCAL_DATA;
-  source?.locations?.forEach(loc=>loc.staff.forEach(p=>{
-    if(p.shifts&&p.shifts[dayIndex]&&Number(p.shifts[dayIndex])>0)todayShifts++;
-  }));
-  el.innerHTML=`
-    <h1>${greet}</h1>
-    <div class="card"><span class="pulse"></span>Сегодня ${dayIndex+1} августа
-      <div style="margin-top:var(--sp-2);font-size:var(--fs-md);color:var(--text-2)">
-        На смене: <span style="color:var(--primary);font-weight:700">${todayShifts}</span> человек</div>
+  if(source?.locations){
+    source.locations.forEach(loc=>loc.staff.forEach(p=>{
+      if(p.shifts&&p.shifts[dayIndex]&&Number(p.shifts[dayIndex])>0)shiftCount++;
+    }));
+  }
+  currentScreen.innerHTML=`
+  <h1>${greet}</h1>
+  <div class="card">
+    <span class="pulse"></span>Сегодня ${today.getDate()} августа
+    <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+      На смене: <span style="color:var(--accent);font-weight:700">${shiftCount}</span> человек
     </div>
-    <div class="grid">
-      <button class="tile" ${act('Nav.push','ttk')}><div class="tile-emoji">📖</div><div class="tile-title">ТТК</div><div class="tile-desc">${Store.recipes.length} техкарт</div></button>
-      <button class="tile" ${act('Nav.push','schedule')}><div class="tile-emoji">🗓</div><div class="tile-title">График</div><div class="tile-desc">Смены</div></button>
-      <button class="tile" ${act('Nav.push','checklist')}><div class="tile-emoji">✅</div><div class="tile-title">Чек-лист</div><div class="tile-desc">Локации</div></button>
-      <button class="tile" ${act('Nav.push','matrix')}><div class="tile-emoji">📦</div><div class="tile-title">Матрица</div><div class="tile-desc">Заявки</div></button>
-      <button class="tile" ${act('Nav.push','team')}><div class="tile-emoji">👥</div><div class="tile-title">Команда</div><div class="tile-desc">${Store.team.length} чел</div></button>
-    </div>
-    <h2>Объявления</h2>
-    ${Store.news.map(n=>`<div class="news"><div class="news-title">${esc(n.tag)}: ${esc(n.title)}</div><div class="news-text">${esc(n.text)}</div><div class="news-date">${esc(n.date)}</div></div>`).join('')}`;
+  </div>
+  <div class="grid">
+    <button class="tile" onclick="CB.navigate('ttk')"><div class="tile-emoji">📖</div><div class="tile-title">ТТК</div><div class="tile-desc">${RECIPES.length} техкарт</div></button>
+    <button class="tile" onclick="CB.navigate('schedule')"><div class="tile-emoji">🗓</div><div class="tile-title">График</div><div class="tile-desc">Смены</div></button>
+    <button class="tile" onclick="CB.navigate('checklist')"><div class="tile-emoji">✅</div><div class="tile-title">Чек-лист</div><div class="tile-desc">Локации</div></button>
+    <button class="tile" onclick="CB.navigate('matrix')"><div class="tile-emoji">📦</div><div class="tile-title">Матрица</div><div class="tile-desc">Заявки</div></button>
+    <button class="tile" onclick="CB.navigate('team')"><div class="tile-emoji">👥</div><div class="tile-title">Команда</div><div class="tile-desc">${TEAM.length} чел</div></button>
+  </div>
+  <h2>Объявления</h2>
+  ${NEWS.map(n=>`
+  <div class="news">
+    <div class="news-title">${esc(n.tag)}: ${esc(n.title)}</div>
+    <div class="news-text">${esc(n.text)}</div>
+    <div class="news-date">${esc(n.date)}</div>
+  </div>`).join('')}`;
 }
 
-const TTK={
-  q:'',cat:'Все',raf:null,
-  render(){
-    const el=Nav.current().el;
-    const cats=['Все',...new Set(Store.recipes.map(r=>r.cat))];
-    const q=this.q.toLowerCase();
-    const items=Store.recipes.filter(r=>(this.cat==='Все'||r.cat===this.cat)&&(!q||r.name.toLowerCase().includes(q)));
-    if(document.getElementById('ttk-list-container')&&document.getElementById('ttk-search-input')){
-      document.getElementById('ttk-cats-container').innerHTML=cats.map(c=>`<button class="mult hit ${c===this.cat?'on':''}" ${act('TTK.setCat',c)}>${esc(c)}</button>`).join('');
-      document.getElementById('ttk-list-container').innerHTML=items.length?items.map(r=>this.row(r)).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>';
-      return;
-    }
-    el.innerHTML=`
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">${backBtn()}${refreshBtn('TTK.refresh')}</div>
-      <h1>Техкарты</h1>
-      <input type="search" id="ttk-search-input" class="search-input" placeholder="🔍 Поиск блюда..." aria-label="Поиск блюда" value="${esc(this.q)}">
-      <div id="ttk-cats-container" class="hscroll" style="display:flex;gap:var(--sp-2);overflow-x:auto;margin-bottom:var(--sp-4);padding-bottom:var(--sp-1)">
-        ${cats.map(c=>`<button class="mult hit ${c===this.cat?'on':''}" ${act('TTK.setCat',c)}>${esc(c)}</button>`).join('')}
-      </div>
-      <div id="ttk-list-container">
-        ${items.length?items.map(r=>this.row(r)).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>'}
-      </div>`;
-    document.getElementById('ttk-search-input').addEventListener('input',e=>{
-      this.q=e.target.value;
-      if(this.raf)cancelAnimationFrame(this.raf);
-      this.raf=requestAnimationFrame(()=>this.render());
-    });
-  },
-  row(r){return `<button class="recipe" ${act('Nav.push','recipe',r.id)}><div class="recipe-name">${esc(r.name)}</div><div class="recipe-meta">${esc(r.cat)} · ${esc(r.time)} · ${esc(r.yield)}</div></button>`;},
-  setCat(c){this.cat=c;this.render();},
-  refresh(){
-    Store.recipes=JSON.parse(localStorage.getItem('chef_recipes'))||DEFAULT_RECIPES;
-    this.q='';this.cat='Все';
-    const inp=document.getElementById('ttk-search-input');if(inp)inp.value='';
-    this.render();Toast.show('Данные обновлены','success');
+let ttkQ='',ttkCat='Все',ttkSearchRaf=null;
+function renderTTK(){
+  const cats=['Все',...new Set(RECIPES.map(r=>r.cat))];
+  const q=ttkQ.toLowerCase();
+  const items=RECIPES.filter(r=>(ttkCat==='Все'||r.cat===ttkCat)&&(!q||r.name.toLowerCase().includes(q)));
+  const existingContainer=document.getElementById('ttk-list-container');
+  const existingInput=document.getElementById('ttk-search-input');
+  if(existingContainer&&existingInput){
+    document.getElementById('ttk-cats-container').innerHTML=
+      cats.map(c=>`<button class="mult tap44 ${c===ttkCat?'on':''}" onclick="CB.setTtkCat('${escA(c)}')">${esc(c)}</button>`).join('');
+    existingContainer.innerHTML=items.length?items.map(r=>recipeRow(r)).join('')
+      :'<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+    return;
   }
-};
-
-let currentMult=1;
+  currentScreen.innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <button class="back tap44" onclick="CB.goBack()" style="margin-bottom:0" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="refresh-btn tap44" onclick="CB.refreshTTKData()" aria-label="Обновить">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+  </div>
+  <h1>Техкарты</h1>
+  <input type="search" id="ttk-search-input" placeholder="🔍 Поиск блюда..." aria-label="Поиск блюда" value="${esc(ttkQ)}"
+    style="width:100%;padding:12px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none;backdrop-filter:blur(4px)">
+  <div id="ttk-cats-container" class="hscroll" style="display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px">
+    ${cats.map(c=>`<button class="mult tap44 ${c===ttkCat?'on':''}" onclick="CB.setTtkCat('${escA(c)}')">${esc(c)}</button>`).join('')}
+  </div>
+  <div id="ttk-list-container">
+    ${items.length?items.map(r=>recipeRow(r)).join(''):'<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
+  </div>`;
+  document.getElementById('ttk-search-input').addEventListener('input',e=>{
+    ttkQ=e.target.value;
+    if(ttkSearchRaf)cancelAnimationFrame(ttkSearchRaf);
+    ttkSearchRaf=requestAnimationFrame(()=>renderTTK());
+  });
+}
+function recipeRow(r){
+  return `<button class="recipe" onclick="CB.navigate('recipe',${r.id})">
+    <div class="recipe-name">${esc(r.name)}</div>
+    <div class="recipe-meta">${esc(r.cat)} · ${esc(r.time)} · ${esc(r.yield)}</div>
+  </button>`;
+}
 function renderRecipe(){
-  const el=Nav.current().el,id=Nav.current().data;
-  const r=Store.recipes.find(x=>x.id===id);
-  if(!r){Nav.goBack();return;}
-  const fav=Store.favorites.includes(r.id);
-  el.innerHTML=`
-    ${backBtn()}
-    <div style="display:flex;align-items:center;gap:var(--sp-3)">
-      <h1 style="flex:1">${esc(r.name)}</h1>
-      <button class="hit" ${act('Recipes.toggleFav',r.id)} aria-label="Избранное" aria-pressed="${fav}"
-        style="font-size:1.75rem;padding:var(--sp-1);color:${fav?'var(--primary)':'var(--text-2)'}">${fav?'⭐':'☆'}</button>
-    </div>
+  const r=RECIPES.find(x=>x.id===currentRecipeId);
+  if(!r){navigate('ttk');return;}
+  const fav=FAVORITES.includes(r.id);
+  currentScreen.innerHTML=`
+  <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div style="display:flex;align-items:center;gap:12px">
+    <h1 style="flex:1">${esc(r.name)}</h1>
+    <button class="tap44" onclick="CB.toggleFavorite(${r.id})" aria-label="Избранное" aria-pressed="${fav}"
+      style="background:none;border:none;font-size:28px;cursor:pointer;padding:4px;color:${fav?'var(--accent)':'var(--muted)'}">
+      ${fav?'⭐':'☆'}
+    </button>
+  </div>
+  <div class="recipe-detail-container">
     <div class="kpi">
       <div class="kpi-box"><div class="kpi-label">Время</div><div class="kpi-value">${esc(r.time)}</div></div>
       <div class="kpi-box"><div class="kpi-label">Выход</div><div class="kpi-value">${esc(r.yield)}</div></div>
       <div class="kpi-box"><div class="kpi-label">Ккал</div><div class="kpi-value">${r.kcal}</div></div>
     </div>
     <h2>Ингредиенты</h2>
-    <div class="mults">${[1,2,5,10].map(m=>`<button class="mult hit ${m===currentMult?'on':''}" ${act('Recipes.setMult',m)}>×${m}</button>`).join('')}</div>
-    <div class="card">${(r.ingr||[]).map(i=>`<div class="ingredient"><span>${esc(i[0])}</span><b>${Math.round(i[2]*currentMult)} г</b></div>`).join('')}</div>
+    <div class="mults">
+      ${[1,2,5,10].map(m=>`<button class="mult tap44 ${m===currentMult?'on':''}" onclick="CB.setMult(${m})">×${m}</button>`).join('')}
+    </div>
+    <div class="card">
+      ${(r.ingr||[]).map(i=>`<div class="ingredient"><span>${esc(i[0])}</span><b>${Math.round(i[2]*currentMult)} г</b></div>`).join('')}
+    </div>
     <h2>Приготовление</h2>
     ${(r.steps||[]).map((s,i)=>`<div class="step"><span class="step-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}
-    ${r.note?`<div class="note">📝 <b>Важно:</b> ${esc(r.note)}</div>`:''}`;
-}
-window.Recipes={
-  toggleFav(id){
-    const i=Store.favorites.indexOf(id);
-    if(i>=0)Store.favorites.splice(i,1);else Store.favorites.push(id);
-    Store.save();FB.sync();render();
-  },
-  setMult(m){currentMult=m;renderRecipe();}
-};
-
-let scheduleData=null,isLoading=false;
-let expandedLocations=new Set();
-const Schedule={
-  weekStart:null,dayIdx:null,
-  render(){
-    if(!this.weekStart){
-      const t=new Date(),dow=t.getDay();
-      this.weekStart=new Date(t);this.weekStart.setDate(t.getDate()+(dow===0?-6:1-dow));
-      this.dayIdx=t.getDate()-1;
-    }
-    Nav.current().el.innerHTML=`
-      ${backBtn()}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
-        <h1 style="margin:0">График</h1>${refreshBtn('Schedule.refresh')}
-      </div>
-      <div class="card" style="text-align:center;padding:var(--sp-8)">
-        <div class="loader-inline"></div>
-        <div style="margin-top:var(--sp-3);color:var(--text-2)">Загрузка данных...</div>
-      </div>`;
-    fetchScheduleData(true).then(()=>this.renderContent());
-  },
-  refresh(){this.weekStart=null;this.dayIdx=null;this.render();},
-  week(offset){
-    if(!this.weekStart)return;
-    const d=new Date(this.weekStart);d.setDate(this.weekStart.getDate()+offset*7);
-    this.weekStart=d;this.dayIdx=null;this.renderContent();
-  },
-  today(){
-    const t=new Date(),dow=t.getDay();
-    this.weekStart=new Date(t);this.weekStart.setDate(t.getDate()+(dow===0?-6:1-dow));
-    this.dayIdx=t.getDate()-1;this.renderContent();
-  },
-  selectDay(i){this.dayIdx=i;this.renderContent();},
-  toggleLoc(name,el){
-    const open=!expandedLocations.has(name);
-    open?expandedLocations.add(name):expandedLocations.delete(name);
-    if(!el){this.renderContent();return;}
-    springHeight(el.closest('.loc-card').querySelector('.loc-body-wrap'),open);
-    springRotate(el.querySelector('.chev'),open?180:0);
-  },
-  renderContent(){
-    const el=Nav.current().el,today=new Date(),currentDay=today.getDate();
-    const weekDays=[];
-    for(let i=0;i<7;i++){
-      const d=new Date(this.weekStart);d.setDate(this.weekStart.getDate()+i);
-      const dayNum=d.getDate(),dayIdx=dayNum-1;
-      let count=0;
-      const source=scheduleData||DEFAULT_LOCAL_DATA;
-      source?.locations?.forEach(loc=>loc.staff.forEach(p=>{
-        if(p.shifts&&p.shifts[dayIdx]&&Number(p.shifts[dayIdx])>0)count++;
-      }));
-      weekDays.push({dayNum,count,isToday:dayNum===currentDay&&d.getMonth()===today.getMonth(),isSelected:this.dayIdx===dayIdx,dowName:['пн','вт','ср','чт','пт','сб','вск'][i]});
-    }
-    const lastDay=new Date(this.weekStart);lastDay.setDate(this.weekStart.getDate()+6);
-    const rangeStr=`${this.weekStart.getDate()} ${this.weekStart.toLocaleString('ru',{month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru',{month:'long'})}`;
-    const activeDay=this.dayIdx!==null?this.dayIdx:currentDay-1;
-    const source=scheduleData||DEFAULT_LOCAL_DATA;
-    el.innerHTML=`
-      ${backBtn()}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
-        <h1 style="margin:0">${esc(source.month||'Август 2026')}</h1>${refreshBtn('Schedule.refresh')}
-      </div>
-      <div class="week-nav">
-        <button class="week-nav-btn hit" ${act('Schedule.week',-1)} aria-label="Предыдущая неделя">←</button>
-        <div class="week-title">${rangeStr}</div>
-        <button class="week-nav-btn hit" ${act('Schedule.week',1)} aria-label="Следующая неделя">→</button>
-      </div>
-      <div style="text-align:center;margin-bottom:var(--sp-4)"><button class="today-btn hit" ${act('Schedule.today')}>Сегодня</button></div>
-      <div class="day-row">
-        ${weekDays.map(d=>`<button class="day-card ${d.isSelected?'selected':''} ${d.isToday?'today':''}" ${act('Schedule.selectDay',d.dayNum-1)}>
-          <div class="dow-name">${d.dowName}</div><div class="day-num">${d.dayNum}</div><div class="count">${d.count} чел</div>
-        </button>`).join('')}
-      </div>
-      <h2>Сотрудники (${new Date(this.weekStart.getFullYear(),this.weekStart.getMonth(),activeDay+1).getDate()} августа)</h2>
-      ${source?.locations?source.locations.map(loc=>{
-        if(!loc.staff?.length)return '';
-        const isOpen=expandedLocations.has(loc.name);
-        const working=loc.staff.filter(p=>p.shifts&&p.shifts[activeDay]&&Number(p.shifts[activeDay])>0);
-        const stats=[...loc.staff].sort((a,b)=>b.total-a.total);
-        return `
-        <div class="card loc-card" style="padding:0;overflow:hidden">
-          <button class="loc-head" ${act('Schedule.toggleLoc',loc.name,EL)}>
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:var(--fs-body);margin-bottom:var(--sp-1)">${esc(loc.name)}</div>
-              <div class="small" style="color:var(--text-2)">👥 На смене: <span style="color:var(--primary);font-weight:700">${working.length}</span> из ${loc.staff.length}</div>
-            </div>
-            <span class="chev" data-rot="${isOpen?180:0}" style="transform:rotate(${isOpen?180:0}deg)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-            </span>
-          </button>
-          <div class="loc-body-wrap" style="${isOpen?'height:auto;opacity:1':'height:0;opacity:0'}">
-            <div style="padding:0 var(--sp-4) var(--sp-4);border-top:1px solid var(--hairline)">
-              <div class="loc-section">На смене (${working.length})</div>
-              ${working.length?working.map(p=>personRow(p,`${p.shifts[activeDay]} см`)).join(''):'<div style="text-align:center;padding:var(--sp-4);color:var(--text-2);font-size:var(--fs-md)">🎉 Все отдыхают</div>'}
-              <div class="loc-section">Статистика за месяц</div>
-              ${stats.map(s=>{
-                let workDays=0;if(s.shifts)s.shifts.forEach(v=>{if(v&&v>0)workDays++;});
-                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:var(--fs-md)" class="ellipsis">${esc(s.name)}</div>
-                    <div class="small ellipsis" style="color:var(--text-2)">${esc(s.role)} · ${workDays} дн</div>
-                  </div>
-                  <div style="font-weight:800;font-size:var(--fs-body);color:var(--primary);margin-left:var(--sp-2)">${s.total}</div>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>
-        </div>`;
-      }).join(''):'<div class="card">Нет данных о локациях</div>'}
-      <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" rel="noopener" class="btn btn-sec" style="margin-top:var(--sp-4);text-decoration:none;text-align:center">📝 Открыть таблицу</a>`;
-  }
-};
-function personRow(p,sub){
-  const init=p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  return `<div class="person-row">
-    <div class="avatar" style="width:2.25rem;height:2.25rem;font-size:var(--fs-sm)">${esc(p.init||init)}</div>
-    <div style="flex:1;min-width:0">
-      <div style="font-weight:600;font-size:var(--fs-md)" class="ellipsis">${esc(p.name)}</div>
-      <div class="small ellipsis" style="color:var(--text-2)">${esc(p.role)} · ${esc(sub)}</div>
-    </div>
+    ${r.note?`<div class="note">📝 <b>Важно:</b> ${esc(r.note)}</div>`:''}
   </div>`;
 }
+
+/* ================= ГРАФИК ================= */
+let currentWeekStart=null,selectedDayIndex=null;
+const expandedLocations=new Set();
+const refreshBtnHtml=`<button class="refresh-btn tap44" onclick="CB.handleRefresh()" aria-label="Обновить">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+</button>`;
 async function fetchScheduleData(force=false,silent=false){
   if(isLoading)return;
   isLoading=true;
   if(!force&&scheduleData){isLoading=false;return;}
   try{
-    const res=await fetch(SHEET_URL+'&t='+Date.now());
-    if(!res.ok)throw new Error('Ошибка сети: '+res.status);
-    const parsed=parseComplexCSV(await res.text());
-    if(parsed?.locations?.length){scheduleData=parsed;if(!silent)Toast.show('Данные обновлены','success');}
-    else throw new Error('Неверный формат');
+    const response=await fetch(SHEET_URL+'&t='+Date.now());
+    if(!response.ok)throw new Error('Ошибка сети: '+response.status);
+    const parsed=parseComplexCSV(await response.text());
+    if(parsed?.locations?.length){
+      scheduleData=parsed;
+      if(!silent)toast('Данные обновлены','success');
+    }else throw new Error('Неверный формат данных');
   }catch(e){
+    console.warn('Онлайн загрузка не удалась:',e);
     if(!scheduleData)scheduleData=DEFAULT_LOCAL_DATA;
-    if(!silent)Toast.show('Нет связи с сервером. Показаны локальные данные.','error');
+    if(!silent)toast('Нет связи с сервером. Показаны локальные данные.','error');
   }finally{isLoading=false;}
 }
 function parseComplexCSV(csvText){
   const rows=csvText.split('\n').map(row=>{
-    const result=[];let cell='',inQ=false;
+    const result=[];let cell='',inQuotes=false;
     for(let i=0;i<row.length;i++){
-      const ch=row[i];
-      if(ch==='"')inQ=!inQ;
-      else if(ch===','&&!inQ){result.push(cell.trim());cell='';}
-      else cell+=ch;
+      const char=row[i];
+      if(char==='"')inQuotes=!inQuotes;
+      else if(char===','&&!inQuotes){result.push(cell.trim());cell='';}
+      else cell+=char;
     }
-    result.push(cell.trim());return result;
+    result.push(cell.trim());
+    return result;
   }).filter(r=>r.length>2);
   if(rows.length<5)return null;
-  const locations=[];let cur=null;
+  const locations=[];
+  let currentLoc=null;
   for(const row of rows){
-    const first=(row[0]||'').trim().toLowerCase();
-    if(first.includes('итого')||first.includes('дата')||first.includes('локация')||first===''||!isNaN(first)||first.includes('вск')||first.includes('пн'))continue;
-    const second=(row[1]||'').trim();
-    if(second==='Должность'||second===''){
-      if(row[0]&&row[0].trim()!==''&&!row[0].includes('итого')){cur={name:row[0].trim(),staff:[]};locations.push(cur);}
-    }else if(cur){
+    const firstCell=(row[0]||'').trim().toLowerCase();
+    if(firstCell.includes('итого')||firstCell.includes('дата')||firstCell.includes('локация')||
+       firstCell===''||!isNaN(firstCell)||firstCell.includes('вск')||firstCell.includes('пн'))continue;
+    const secondCell=(row[1]||'').trim();
+    if(secondCell==='Должность'||secondCell===''){
+      if(row[0]&&row[0].trim()!==''&&!row[0].includes('итого')){
+        currentLoc={name:row[0].trim(),staff:[]};
+        locations.push(currentLoc);
+      }
+    }else if(currentLoc){
       const shifts=[];
       for(let d=2;d<Math.min(row.length-2,33);d++){
-        let val=row[d];if(val&&val.includes(','))val=val.replace(',','.');
-        let num=parseFloat(val);if(isNaN(num))num=0;shifts.push(num);
+        let val=row[d];
+        if(val&&val.includes(','))val=val.replace(',','.');
+        let num=parseFloat(val);
+        if(isNaN(num))num=0;
+        shifts.push(num);
       }
-      cur.staff.push({name:row[0].trim(),role:second,shifts,total:shifts.reduce((a,b)=>a+b,0)});
+      currentLoc.staff.push({name:row[0].trim(),role:secondCell,shifts,total:shifts.reduce((a,b)=>a+b,0)});
     }
   }
   return locations.length?{month:'Август 2026',locations}:null;
 }
-
-const CL={
-  loc:null,tab:'open',
-  render(){
-    const el=Nav.current().el;
-    if(!this.loc){
-      el.innerHTML=`
-        ${backBtn()}
-        <h1>Чек-листы</h1>
-        <div style="display:grid;gap:var(--sp-2)">
-          ${DEFAULT_LOCAL_DATA.locations.map(l=>`<button class="tile" ${act('CL.openLoc',l.name)}><div class="tile-title">${esc(l.name)}</div><div class="tile-desc">Открыть чек-лист локации</div></button>`).join('')}
-        </div>`;
-      return;
-    }
-    const today=new Date().toISOString().slice(0,10);
-    const saved=JSON.parse(localStorage.getItem('cl_'+today+'_'+this.loc)||'{}');
-    const manager=saved.manager||'';
-    const source=scheduleData||DEFAULT_LOCAL_DATA;
-    const locData=source?.locations?.find(l=>l.name===this.loc);
-    const managers=(locData?.staff||[]).filter(p=>p.role.includes('Су-шеф')||p.role.includes('ИО')||p.role.includes('Верховный'));
-    const list=this.tab==='close'?CHECKLISTS.close:CHECKLISTS.open;
-    el.innerHTML=`
-      <button class="back hit" ${act('CL.backLoc')} aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <h1>${esc(this.loc)}</h1>
-      <div class="card" style="margin-bottom:var(--sp-4)">
-        <label class="form-label" for="cl-manager">Ответственный сегодня</label>
-        <select class="form-select" id="cl-manager">
-          <option value="">-- Не выбран --</option>
-          ${managers.map(m=>`<option value="${esc(m.name)}" ${manager===m.name?'selected':''}>${esc(m.name)} (${esc(m.role)})</option>`).join('')}
-        </select>
-        ${manager?`<div style="margin-top:var(--sp-2);font-size:var(--fs-md);color:var(--success)">✅ Ответственный: <b>${esc(manager)}</b></div>`:''}
-      </div>
-      <div class="mults">
-        <button class="mult hit ${this.tab==='open'?'on':''}" ${act('CL.setTab','open')}>Открытие (${(saved.open||[]).length}/${CHECKLISTS.open.length})</button>
-        <button class="mult hit ${this.tab==='close'?'on':''}" ${act('CL.setTab','close')}>Закрытие (${(saved.close||[]).length}/${CHECKLISTS.close.length})</button>
-      </div>
-      <div class="card">
-        ${list.map((item,i)=>{
-          const isDone=(saved[this.tab]||[]).includes(i);
-          return `<button class="check-item ${isDone?'done':''}" data-check="${this.tab}-${i}" ${act('CL.toggleItem',this.loc,this.tab,i)}>
-            <div class="check-box">✓</div><span class="check-label">${esc(item)}</span>
-          </button>`;
-        }).join('')}
-      </div>`;
-    document.getElementById('cl-manager').addEventListener('change',e=>this.saveManager(e.target.value));
-  },
-  openLoc(name){this.loc=name;this.render();},
-  backLoc(){this.loc=null;this.render();},
-  setTab(t){this.tab=t;this.render();},
-  saveManager(name){
-    const key='cl_'+new Date().toISOString().slice(0,10)+'_'+this.loc;
-    const saved=JSON.parse(localStorage.getItem(key)||'{}');
-    saved.manager=name;
-    localStorage.setItem(key,JSON.stringify(saved));
-    this.render();
-  },
-  toggleItem(loc,type,i){
-    const key='cl_'+new Date().toISOString().slice(0,10)+'_'+loc;
-    const saved=JSON.parse(localStorage.getItem(key)||'{}');
-    if(!saved[type])saved[type]=[];
-    const idx=saved[type].indexOf(i);
-    if(idx>=0)saved[type].splice(idx,1);else saved[type].push(i);
-    localStorage.setItem(key,JSON.stringify(saved));
-    this.render();
-    popEl(document.querySelector(`[data-check="${type}-${i}"] .check-box`),0.5);
+function renderSchedule(){
+  if(!currentWeekStart){
+    const today=new Date();
+    const dow=today.getDay();
+    currentWeekStart=new Date(today);
+    currentWeekStart.setDate(today.getDate()+(dow===0?-6:1-dow));
+    selectedDayIndex=today.getDate()-1;
   }
-};
-
-function renderTeam(){
-  const el=Nav.current().el,user=tg?.initDataUnsafe?.user;
-  const source=scheduleData||DEFAULT_LOCAL_DATA;
-  let groups=[];
-  source?.locations?.forEach(loc=>{if(loc.staff?.length)groups.push({name:loc.name,staff:loc.staff});});
-  if(!groups.length)groups.push({name:'Команда',staff:Store.team});
-  el.innerHTML=`
-    ${backBtn()}
-    <h1>Команда</h1>
-    ${user?`<div class="user" style="background:var(--primary-soft);border:1px solid var(--primary)">
-      <div class="avatar">${esc(user.first_name[0])}${esc((user.last_name||'')[0]||'')}</div>
-      <div class="user-info"><b>${esc(user.first_name)} ${esc(user.last_name||'')}</b><span>Это вы</span></div>
-    </div>`:''}
-    ${groups.map(g=>`<h3>${esc(g.name)}</h3>`+g.staff.map(u=>`
-      <div class="user">
-        <div class="avatar">${esc(u.init||u.name.split(' ').map(n=>n[0]).join('').substring(0,2))}</div>
-        <div class="user-info"><b>${esc(u.name)}</b><span>${esc(u.role)}</span></div>
-      </div>`).join('')).join('')}`;
+  currentScreen.innerHTML=`
+  <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h1 style="margin:0">График</h1>${refreshBtnHtml}
+  </div>
+  <div class="card" style="text-align:center;padding:30px">
+    <div class="loader-inline"></div>
+    <div style="margin-top:14px;color:var(--muted)">Загрузка данных...</div>
+  </div>`;
+  fetchScheduleData(true).then(()=>renderScheduleContent());
 }
-
-const Matrix={
-  q:'',raf:null,lastKey:null,
-  render(){
-    const el=Nav.current().el,q=this.q.toLowerCase();
-    const filtered=Store.matrix.map(sup=>{
-      const items=sup.items.filter(it=>it.name.toLowerCase().includes(q));
-      if(items.length>0||sup.supplier.toLowerCase().includes(q))
-        return(q&&!sup.supplier.toLowerCase().includes(q))?{...sup,items}:sup;
-      return null;
-    }).filter(Boolean);
-    const listHtml=filtered.length?filtered.map(sup=>`
-      <div class="supplier-block">
-        <div class="supplier-header"><div class="supplier-name">${esc(sup.supplier)}</div><div class="supplier-schedule">🕒 ${esc(sup.schedule)}</div></div>
-        <div class="card" style="padding:var(--sp-2) var(--sp-3)">
-          ${sup.items.map(it=>{
-            const inCart=Cart.find(sup.supplier,it.name);
-            return `<div class="matrix-item">
-              <div class="matrix-name">${esc(it.name)}</div>
-              <div class="matrix-meta">
-                <span class="matrix-unit">${esc(it.unit)}</span>
-                ${it.limit!==null?`<span class="matrix-limit">Макс: ${it.limit}</span>`:'<span class="matrix-unit">-</span>'}
-                <button class="order-btn hit ${inCart?'on':''}" data-key="${esc(sup.supplier+'::'+it.name)}"
-                  aria-label="${inCart?'Убрать из':'Добавить в'} заявку: ${esc(it.name)}" aria-pressed="${!!inCart}"
-                  ${act('Matrix.toggle',sup.supplier,it.name)}>${inCart?'✓':'+'}</button>
+function renderScheduleContent(){
+  const today=new Date();
+  const currentDay=today.getDate();
+  if(!currentWeekStart){
+    const dow=today.getDay();
+    currentWeekStart=new Date(today);
+    currentWeekStart.setDate(today.getDate()+(dow===0?-6:1-dow));
+    if(selectedDayIndex===null)selectedDayIndex=currentDay-1;
+  }
+  const weekDays=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(currentWeekStart);
+    d.setDate(currentWeekStart.getDate()+i);
+    const dayNum=d.getDate();
+    const dayIdx=dayNum-1;
+    let count=0;
+    const source=scheduleData||DEFAULT_LOCAL_DATA;
+    if(source?.locations){
+      source.locations.forEach(loc=>loc.staff.forEach(p=>{
+        if(p.shifts&&p.shifts[dayIdx]&&Number(p.shifts[dayIdx])>0)count++;
+      }));
+    }
+    weekDays.push({dayNum,count,isToday:dayNum===currentDay&&d.getMonth()===today.getMonth(),isSelected:selectedDayIndex===dayIdx,dowName:['пн','вт','ср','чт','пт','сб','вск'][i]});
+  }
+  const lastDay=new Date(currentWeekStart);
+  lastDay.setDate(currentWeekStart.getDate()+6);
+  const rangeStr=`${currentWeekStart.getDate()} ${currentWeekStart.toLocaleString('ru',{month:'long'})} — ${lastDay.getDate()} ${lastDay.toLocaleString('ru',{month:'long'})}`;
+  const activeDayIndex=selectedDayIndex!==null?selectedDayIndex:currentDay-1;
+  const source=scheduleData||DEFAULT_LOCAL_DATA;
+  currentScreen.innerHTML=`
+  <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h1 style="margin:0">${esc(source.month||'Август 2026')}</h1>${refreshBtnHtml}
+  </div>
+  <div class="week-nav">
+    <button class="week-nav-btn tap44" onclick="CB.changeWeek(-1)" aria-label="Предыдущая неделя">←</button>
+    <div class="week-title">${rangeStr}</div>
+    <button class="week-nav-btn tap44" onclick="CB.changeWeek(1)" aria-label="Следующая неделя">→</button>
+  </div>
+  <div style="text-align:center;margin-bottom:16px">
+    <button class="today-btn tap44" onclick="CB.goToToday()">Сегодня</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:16px">
+    ${weekDays.map(d=>`
+    <button class="day-card ${d.isSelected?'selected':''} ${d.isToday?'today':''}" onclick="CB.selectDay(${d.dayNum-1})" aria-label="${d.dayNum} августа, ${d.count} человек">
+      <div class="dow-name">${d.dowName}</div>
+      <div class="day-num">${d.dayNum}</div>
+      <div class="count">${d.count} чел</div>
+    </button>`).join('')}
+  </div>
+  <h2>Сотрудники (${new Date(currentWeekStart.getFullYear(),currentWeekStart.getMonth(),activeDayIndex+1).getDate()} августа)</h2>
+  ${source?.locations?source.locations.map(loc=>{
+    if(!loc.staff||!loc.staff.length)return '';
+    const isOpen=expandedLocations.has(loc.name);
+    const workingToday=loc.staff.filter(p=>p.shifts&&p.shifts[activeDayIndex]&&Number(p.shifts[activeDayIndex])>0);
+    const staffStats=[...loc.staff].sort((a,b)=>b.total-a.total);
+    return `
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
+      <button class="loc-head" onclick="CB.toggleLoc('${escA(loc.name)}',this)" aria-expanded="${isOpen}">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${esc(loc.name)}</div>
+          <div style="font-size:12px;color:var(--muted)">
+            👥 На смене: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
+          </div>
+        </div>
+        <span class="chev" data-rot="${isOpen?180:0}" style="transform:rotate(${isOpen?180:0}deg)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </span>
+      </button>
+      <div class="acc-wrap" style="height:${isOpen?'auto':'0px'};opacity:${isOpen?'1':'0'}">
+        <div style="padding:0 16px 16px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="margin-top:14px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700">На смене (${workingToday.length})</div>
+          ${workingToday.length>0?workingToday.map(p=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+            <div class="avatar" style="width:36px;height:36px;font-size:12px">${esc(p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</div>
+              <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.role)} · ${p.shifts[activeDayIndex]} см</div>
+            </div>
+          </div>`).join(''):'<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
+          <div style="margin-top:16px;margin-bottom:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700">Статистика за месяц</div>
+          ${staffStats.map(s=>{
+            let workDays=0;
+            if(s.shifts)s.shifts.forEach(v=>{if(v&&v>0)workDays++;});
+            return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}</div>
+                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.role)} · ${workDays} дн</div>
+              </div>
+              <div style="text-align:right;margin-left:10px">
+                <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
               </div>
             </div>`;
           }).join('')}
         </div>
-      </div>`).join(''):'<div class="card" style="text-align:center;color:var(--text-2)">Ничего не найдено 🔍</div>';
-    if(document.getElementById('matrix-search-input')){
-      const lc=document.getElementById('matrix-list-container');
-      if(lc)lc.innerHTML=listHtml;
-    }else{
-      el.innerHTML=`
-        ${backBtn()}
-        <h1>Матрица заявок</h1>
-        <input type="search" id="matrix-search-input" class="search-input" style="background:var(--surface)" placeholder="🔍 Поиск продукта или поставщика..." aria-label="Поиск по матрице" value="${esc(this.q)}">
-        <div id="matrix-list-container">${listHtml}</div>`;
-      document.getElementById('matrix-search-input').addEventListener('input',e=>{
-        this.q=e.target.value;
-        if(this.raf)cancelAnimationFrame(this.raf);
-        this.raf=requestAnimationFrame(()=>this.render());
-      });
-    }
-    if(this.lastKey){
-      popEl(document.querySelector(`.order-btn[data-key="${CSS.escape(this.lastKey)}"]`),0.6);
-      this.lastKey=null;
-    }
-  },
-  toggle(supplier,name){
-    const added=Cart.toggle(supplier,name);
-    if(added)Toast.show('Добавлено в заявку','success');
-    this.lastKey=supplier+'::'+name;
-    this.render();
-  }
-};
-
-const CartUI={
-  bodyHtml(){
-    const grouped={};
-    Store.cart.forEach((c,i)=>{(grouped[c.supplier]=grouped[c.supplier]||[]).push({...c,idx:i});});
-    return Object.entries(grouped).map(([sup,items])=>`
-      <div style="margin-bottom:var(--sp-4)">
-        <div class="loc-section" style="margin-top:var(--sp-2)">${esc(sup)}</div>
-        ${items.map(it=>`
-          <div class="cart-item">
-            <div class="cart-name"><div class="ellipsis">${esc(it.name)}</div><span class="cart-supplier">${esc(it.unit)}</span></div>
-            <div class="cart-qty-wrap">
-              <button class="cart-qty-btn hit" ${act('CartUI.changeQty',it.idx,-1)} aria-label="Уменьшить: ${esc(it.name)}">−</button>
-              <input class="cart-qty-input" type="text" inputmode="decimal" data-idx="${it.idx}" value="${it.qty}" aria-label="Количество: ${esc(it.name)}">
-              <button class="cart-qty-btn hit" ${act('CartUI.changeQty',it.idx,1)} aria-label="Увеличить: ${esc(it.name)}">+</button>
-            </div>
-            <button class="icon-btn danger hit" style="width:2rem;height:2rem" ${act('CartUI.deleteItem',it.idx)} aria-label="Удалить: ${esc(it.name)}">✕</button>
-          </div>`).join('')}
-      </div>`).join('')+`
-      <button class="btn" ${act('CartUI.copy')} data-haptic="hard" style="margin-top:var(--sp-2)">📋 Скопировать заявку</button>
-      <button class="btn btn-sec" ${act('CartUI.clear')}>🗑 Очистить</button>`;
-  },
-  wire(root){
-    (root||document).querySelectorAll('.cart-qty-input').forEach(inp=>{
-      inp.addEventListener('focus',()=>inp.select());
-      inp.addEventListener('change',()=>Cart.setQty(parseInt(inp.dataset.idx),inp.value));
-    });
-  },
-  open(){
-    const st=Panel.byId('cart');
-    if(st){
-      Panel.updateTitle('cart',`📋 Заявка (${Store.cart.length})`);
-      Panel.updateBody('cart',this.bodyHtml());
-      this.wire(st.root);
-    }else{
-      Panel.open({id:'cart',variant:'sheet',title:`📋 Заявка (${Store.cart.length})`,body:this.bodyHtml(),afterRender:r=>this.wire(r)});
-    }
-  },
-  changeQty(i,d){Cart.changeQty(i,d);},
-  deleteItem(i){
-    Cart.remove(i);
-    if(!Store.cart.length){const st=Panel.byId('cart');if(st)Panel.dismiss(st,0,true);}
-  },
-  clear(){
-    Cart.clear();
-    const st=Panel.byId('cart');if(st)Panel.dismiss(st,0,true);
-  },
-  copy(){
-    if(!Store.cart.length){Toast.show('Корзина пуста','error');return;}
-    const date=new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
-    const grouped={};
-    Store.cart.forEach(c=>{(grouped[c.supplier]=grouped[c.supplier]||[]).push(c);});
-    let text=`📋 ЗАЯВКА НА ПОСТАВКУ\n${date}\n\n`;
-    for(const [sup,items] of Object.entries(grouped)){
-      text+=`📦 ${sup}\n`;
-      items.forEach(it=>{text+=`• ${it.name} — ${it.qty} ${it.unit}\n`;});
-      text+='\n';
-    }
-    text+='—\nОтправлено из ШефБук';
-    if(navigator.clipboard?.writeText){
-      navigator.clipboard.writeText(text)
-        .then(()=>Toast.show('Скопировано! Вставьте в заметки','success'))
-        .catch(()=>fallbackCopy(text));
-    }else fallbackCopy(text);
-  },
-  refresh(){
-    updateCartFab();
-    const st=Panel.byId('cart');
-    if(st){
-      Panel.updateTitle('cart',`📋 Заявка (${Store.cart.length})`);
-      if(Store.cart.length){Panel.updateBody('cart',this.bodyHtml());this.wire(st.root);}
-      else Panel.dismiss(st,0,true);
-    }
-  }
-};
-function fallbackCopy(text){
-  const ta=document.createElement('textarea');
-  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');Toast.show('Скопировано! Вставьте в заметки','success');}
-  catch{Toast.show('Не удалось скопировать','error');}
-  ta.remove();
+      </div>
+    </div>`;
+  }).join(''):'<div class="card">Нет данных о локациях</div>'}
+  <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}" target="_blank" class="btn btn-sec" style="margin-top:16px;text-decoration:none;text-align:center">📝 Открыть таблицу</a>`;
 }
-let fabShown=false;
+/* Аккордеон: без ре-рендера, только spring */
+function toggleLoc(name,btn){
+  haptic();
+  const open=!expandedLocations.has(name);
+  open?expandedLocations.add(name):expandedLocations.delete(name);
+  btn.setAttribute('aria-expanded',String(open));
+  const wrap=btn.nextElementSibling;
+  const chev=btn.querySelector('.chev');
+  if(wrap)springHeight(wrap,open);
+  if(chev)springRotate(chev,open?180:0);
+}
+
+/* ================= ЧЕК-ЛИСТ ================= */
+let clLoc=null,clTab='open';
+function renderChecklist(){
+  if(!clLoc){
+    currentScreen.innerHTML=`
+    <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <h1>Чек-листы</h1>
+    <div style="display:grid;gap:10px">
+      ${DEFAULT_LOCAL_DATA.locations.map(loc=>`
+      <button class="tile" onclick="CB.openChecklist('${escA(loc.name)}')">
+        <div class="tile-title">${esc(loc.name)}</div>
+        <div class="tile-desc">Открыть чек-лист локации</div>
+      </button>`).join('')}
+    </div>`;
+    return;
+  }
+  const today=new Date().toISOString().slice(0,10);
+  const saved=JSON.parse(localStorage.getItem('cl_'+today+'_'+clLoc)||'{}');
+  const manager=saved.manager||'';
+  const doneOpen=(saved.open||[]).length;
+  const doneClose=(saved.close||[]).length;
+  const source=scheduleData||DEFAULT_LOCAL_DATA;
+  const locData=source?.locations?.find(l=>l.name===clLoc);
+  const managers=(locData?.staff||[]).filter(p=>p.role.includes('Су-шеф')||p.role.includes('ИО')||p.role.includes('Верховный'));
+  currentScreen.innerHTML=`
+  <button class="back tap44" onclick="CB.closeChecklistLoc()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <h1>${esc(clLoc)}</h1>
+  <div class="card" style="margin-bottom:16px">
+    <label class="form-label" for="cl-manager">Ответственный сегодня</label>
+    <select class="form-select" id="cl-manager" onchange="CB.saveManager('${escA(clLoc)}',this.value)">
+      <option value="">-- Не выбран --</option>
+      ${managers.map(m=>`<option value="${esc(m.name)}" ${manager===m.name?'selected':''}>${esc(m.name)} (${esc(m.role)})</option>`).join('')}
+    </select>
+    ${manager?`<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${esc(manager)}</b></div>`:''}
+  </div>
+  <div class="mults">
+    <button class="mult tap44 ${clTab==='open'?'on':''}" data-cltab="open" onclick="CB.setClTab('open')">Открытие (${doneOpen}/${CHECKLISTS.open.length})</button>
+    <button class="mult tap44 ${clTab==='close'?'on':''}" data-cltab="close" onclick="CB.setClTab('close')">Закрытие (${doneClose}/${CHECKLISTS.close.length})</button>
+  </div>
+  <div class="card">
+    ${(clTab==='close'?CHECKLISTS.close:CHECKLISTS.open).map((item,i)=>{
+      const isDone=(saved[clTab]||[]).includes(i);
+      return `<button class="check-item ${isDone?'done':''}" onclick="CB.toggleCheckItem('${escA(clLoc)}','${clTab}',${i},this)">
+        <div class="check-box">✓</div>
+        <span class="check-label">${esc(item)}</span>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+function updateClCounters(loc){
+  const today=new Date().toISOString().slice(0,10);
+  const saved=JSON.parse(localStorage.getItem('cl_'+today+'_'+loc)||'{}');
+  const bo=document.querySelector('[data-cltab="open"]');
+  const bc=document.querySelector('[data-cltab="close"]');
+  if(bo)bo.textContent=`Открытие (${(saved.open||[]).length}/${CHECKLISTS.open.length})`;
+  if(bc)bc.textContent=`Закрытие (${(saved.close||[]).length}/${CHECKLISTS.close.length})`;
+}
+/* In-place обновление: без перерендера экрана */
+function toggleCheckItem(loc,type,i,el){
+  const today=new Date().toISOString().slice(0,10);
+  const key='cl_'+today+'_'+loc;
+  const saved=JSON.parse(localStorage.getItem(key)||'{}');
+  if(!saved[type])saved[type]=[];
+  const idx=saved[type].indexOf(i);
+  let nowDone;
+  if(idx>=0){saved[type].splice(idx,1);nowDone=false;}
+  else{saved[type].push(i);nowDone=true;}
+  localStorage.setItem(key,JSON.stringify(saved));
+  haptic();
+  if(el){
+    el.classList.toggle('done',nowDone);
+    popEl(el.querySelector('.check-box'),0.5);
+  }
+  updateClCounters(loc);
+}
+
+/* ================= КОМАНДА ================= */
+function renderTeam(){
+  const user=tg?.initDataUnsafe?.user;
+  const source=scheduleData||DEFAULT_LOCAL_DATA;
+  let groups=[];
+  if(source?.locations){
+    source.locations.forEach(loc=>{
+      if(loc.staff&&loc.staff.length>0)groups.push({name:loc.name,staff:loc.staff});
+    });
+  }
+  if(!groups.length)groups.push({name:'Команда',staff:TEAM});
+  let html=`
+  <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <h1>Команда</h1>
+  ${user?`
+  <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
+    <div class="avatar">${esc(user.first_name[0])}${esc((user.last_name||'')[0]||'')}</div>
+    <div class="user-info"><b>${esc(user.first_name)} ${esc(user.last_name||'')}</b><span>Это вы</span></div>
+  </div>`:''}`;
+  groups.forEach(g=>{
+    html+=`<h3>${esc(g.name)}</h3>`;
+    g.staff.forEach(u=>{
+      html+=`
+      <div class="user">
+        <div class="avatar">${esc(u.init||u.name.split(' ').map(n=>n[0]).join('').substring(0,2))}</div>
+        <div class="user-info"><b>${esc(u.name)}</b><span>${esc(u.role)}</span></div>
+      </div>`;
+    });
+  });
+  currentScreen.innerHTML=html;
+}
+
+/* ================= МАТРИЦА ================= */
+let matrixQ='',matrixSearchRaf=null;
+function getCartItem(supplier,name){
+  return orderCart.find(c=>c.supplier===supplier&&c.name===name);
+}
+function renderMatrix(){
+  const q=matrixQ.toLowerCase();
+  const listHtml=matrixListHTML(q);
+  const existingInput=document.getElementById('matrix-search-input');
+  if(existingInput){
+    const lc=document.getElementById('matrix-list-container');
+    if(lc)lc.innerHTML=listHtml;
+    return;
+  }
+  currentScreen.innerHTML=`
+  <button class="back tap44" onclick="CB.goBack()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <h1>Матрица заявок</h1>
+  <input type="search" id="matrix-search-input" placeholder="🔍 Поиск продукта или поставщика..." aria-label="Поиск по матрице" value="${esc(matrixQ)}"
+    style="width:100%;padding:12px 16px;background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-size:15px;margin-bottom:16px;outline:none">
+  <div id="matrix-list-container">${listHtml}</div>`;
+  document.getElementById('matrix-search-input').addEventListener('input',e=>{
+    matrixQ=e.target.value;
+    if(matrixSearchRaf)cancelAnimationFrame(matrixSearchRaf);
+    matrixSearchRaf=requestAnimationFrame(()=>renderMatrix());
+  });
+}
+function matrixListHTML(q){
+  let out='';
+  MATRIX_DATA.forEach((sup,si)=>{
+    const items=sup.items.map((it,ii)=>({...it,ii})).filter(it=>it.name.toLowerCase().includes(q));
+    if(!items.length&&!sup.supplier.toLowerCase().includes(q))return;
+    const showItems=items.length?items:sup.items.map((it,ii)=>({...it,ii}));
+    out+=`
+    <div class="supplier-block">
+      <div class="supplier-header">
+        <div class="supplier-name">${esc(sup.supplier)}</div>
+        <div class="supplier-schedule">🕒 ${esc(sup.schedule)}</div>
+      </div>
+      <div class="card" style="padding:10px 14px">
+        ${showItems.map(it=>{
+          const on=!!getCartItem(sup.supplier,it.name);
+          return `<div class="matrix-item">
+            <div class="matrix-name">${esc(it.name)}</div>
+            <div class="matrix-meta" style="display:flex;align-items:center;gap:10px">
+              <span class="matrix-unit">${esc(it.unit)}</span>
+              ${it.limit!==null?`<span class="matrix-limit">Макс: ${it.limit}</span>`:'<span class="matrix-unit" style="color:var(--muted)">-</span>'}
+              <button class="order-btn tap44 ${on?'on':''}" data-mkey="${si}:${it.ii}"
+                onclick="CB.toggleOrder(${si},${it.ii})" aria-label="${on?'Убрать из':'Добавить в'} заявку: ${esc(it.name)}" aria-pressed="${on}">
+                ${on?'✓':'+'}
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  return out||'<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>';
+}
+/* In-place обновление кнопки вместо ре-рендера */
+function refreshMatrixBtn(si,ii){
+  const btn=document.querySelector(`[data-mkey="${si}:${ii}"]`);
+  if(!btn)return;
+  const sup=MATRIX_DATA[si],it=sup.items[ii];
+  const on=!!getCartItem(sup.supplier,it.name);
+  btn.classList.toggle('on',on);
+  btn.setAttribute('aria-pressed',String(on));
+  btn.textContent=on?'✓':'+';
+  popEl(btn,0.6);
+}
+function toggleOrder(si,ii){
+  const sup=MATRIX_DATA[si],it=sup.items[ii];
+  const existing=getCartItem(sup.supplier,it.name);
+  if(existing){
+    orderCart=orderCart.filter(c=>c!==existing);
+    haptic();
+  }else{
+    orderCart.push({supplier:sup.supplier,name:it.name,unit:it.unit,qty:it.limit!==null?it.limit:1});
+    haptic('hard');
+    toast('Добавлено в заявку','success');
+  }
+  saveData();
+  updateCartFab();
+  refreshMatrixBtn(si,ii);
+}
+
+/* ================= КОРЗИНА ================= */
 const cartFab=document.createElement('button');
-cartFab.className='cart-fab';cartFab.style.display='none';
-cartFab.setAttribute('data-action','CartUI.open');
-cartFab.setAttribute('data-haptic','hard');
+cartFab.className='cart-fab';
+cartFab.style.display='none';
 cartFab.setAttribute('aria-label','Корзина');
 cartFab.innerHTML='<span>📋</span>';
+cartFab.addEventListener('click',()=>{haptic('hard');renderCartSheet();});
 document.body.appendChild(cartFab);
 function updateCartFab(){
-  if(Store.cart.length>0){
+  if(orderCart.length>0){
     cartFab.style.display='flex';
     let badge=cartFab.querySelector('.cart-badge');
-    if(!badge){badge=document.createElement('span');badge.className='cart-badge';cartFab.appendChild(badge);}
-    badge.textContent=Store.cart.length;
-    if(!fabShown){fabShown=true;popEl(cartFab,0.4);}
-  }else{cartFab.style.display='none';fabShown=false;}
+    if(!badge){
+      badge=document.createElement('span');
+      badge.className='cart-badge';
+      cartFab.appendChild(badge);
+    }
+    badge.textContent=orderCart.length;
+  }else{
+    cartFab.style.display='none';
+  }
+}
+function cartBodyHTML(){
+  const grouped={};
+  orderCart.forEach((c,i)=>{
+    if(!grouped[c.supplier])grouped[c.supplier]=[];
+    grouped[c.supplier].push({...c,idx:i});
+  });
+  return Object.entries(grouped).map(([sup,items])=>`
+  <div style="margin-bottom:16px">
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px">${esc(sup)}</div>
+    ${items.map(it=>`
+    <div class="cart-item">
+      <div class="cart-name">
+        <div>${esc(it.name)}</div>
+        <span class="cart-supplier">${esc(it.unit)}</span>
+      </div>
+      <div class="cart-qty-wrap">
+        <button class="cart-qty-btn tap44" onclick="CB.updateCartQty(${it.idx},-1)" aria-label="Уменьшить">−</button>
+        <input class="cart-qty-input" type="text" inputmode="decimal" data-cidx="${it.idx}" value="${it.qty}"
+          aria-label="Количество: ${esc(it.name)}" onchange="CB.setCartQty(${it.idx},this.value)" onclick="this.select()">
+        <button class="cart-qty-btn tap44" onclick="CB.updateCartQty(${it.idx},1)" aria-label="Увеличить">+</button>
+      </div>
+      <button class="icon-btn danger tap44" style="width:28px;height:28px" onclick="CB.deleteCartItem(${it.idx})" aria-label="Удалить">✕</button>
+    </div>`).join('')}
+  </div>`).join('')+`
+  <button class="btn" onclick="CB.copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
+  <button class="btn btn-sec" onclick="CB.clearCart()" style="margin-top:8px">🗑 Очистить</button>`;
+}
+function renderCartSheet(){
+  const st=sheetStates.get('cart-sheet-bg');
+  if(st){
+    st.sheet.querySelector('.sheet-title').textContent=`📋 Заявка (${orderCart.length})`;
+    st.sheet.querySelector('.sheet-body').innerHTML=cartBodyHTML();
+  }else{
+    openSheet({id:'cart-sheet-bg',title:`📋 Заявка (${orderCart.length})`,body:cartBodyHTML()});
+  }
+}
+function updateCartQty(idx,delta){
+  if(!orderCart[idx])return;
+  haptic();
+  orderCart[idx].qty=Math.max(0.01,parseFloat((orderCart[idx].qty+delta).toFixed(3)));
+  saveData();
+  updateCartFab();
+  const inp=document.querySelector(`.cart-qty-input[data-cidx="${idx}"]`);
+  if(inp)inp.value=orderCart[idx].qty;
+  else renderCartSheet();
+}
+function setCartQty(idx,rawVal){
+  const num=parseFloat(String(rawVal).replace(',','.').replace(/[^0-9.]/g,''));
+  if(isNaN(num)||num<=0)orderCart.splice(idx,1);
+  else orderCart[idx].qty=Math.round(num*1000)/1000;
+  saveData();
+  updateCartFab();
+  renderCartSheet();
+  if(orderCart.length===0)closeSheet('cart-sheet-bg');
+}
+function deleteCartItem(idx){
+  haptic();
+  orderCart.splice(idx,1);
+  saveData();
+  updateCartFab();
+  renderCartSheet();
+  if(orderCart.length===0)closeSheet('cart-sheet-bg');
+}
+function clearCart(){
+  orderCart=[];
+  saveData();
+  updateCartFab();
+  closeSheet('cart-sheet-bg');
+  if(currentView==='matrix')renderMatrix();
+}
+function copyOrder(){
+  if(!orderCart.length){toast('Корзина пуста','error');return;}
+  const date=new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
+  const grouped={};
+  orderCart.forEach(c=>{
+    if(!grouped[c.supplier])grouped[c.supplier]=[];
+    grouped[c.supplier].push(c);
+  });
+  let text=`📋 ЗАЯВКА НА ПОСТАВКУ\n${date}\n\n`;
+  for(const [sup,items] of Object.entries(grouped)){
+    text+=`📦 ${sup}\n`;
+    items.forEach(it=>{text+=`• ${it.name} — ${it.qty} ${it.unit}\n`;});
+    text+='\n';
+  }
+  text+='—\nОтправлено из ШефБук';
+  if(navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(text)
+      .then(()=>{toast('Скопировано! Вставьте в заметки','success');haptic('hard');})
+      .catch(()=>fallbackCopy(text));
+  }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{document.execCommand('copy');toast('Скопировано! Вставьте в заметки','success');haptic('hard');}
+  catch{toast('Не удалось скопировать','error');}
+  ta.remove();
 }
 
-window.Admin={
-  tab:localStorage.getItem('chef_admin_tab')||'recipes',
-  open(){
-    const tabs=['recipes','news','team','matrix'];
-    const labels={recipes:'ТТК',news:'Новости',team:'Команда',matrix:'Матрица'};
-    Panel.open({id:'admin',variant:'sheet',title:'⚙️ Редактор',
-      body:`<div class="panel-tabs">
-        ${tabs.map(t=>`<button class="tab-btn ${t===this.tab?'on':''}" data-tab="${t}" ${act('Admin.setTab',t,EL)}>${labels[t]}</button>`).join('')}
-      </div><div id="admin-content"></div>`,
-      afterRender:()=>this.renderContent()});
-  },
-  setTab(tab,el){
-    this.tab=tab;localStorage.setItem('chef_admin_tab',tab);
-    el?.parentNode?.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-    this.renderContent();
-  },
-  renderContent(){
-    const c=document.getElementById('admin-content');if(!c)return;
-    if(this.tab==='recipes'){
-      c.innerHTML=`<button class="btn" ${act('Admin.editRecipe')}>+ Добавить техкарту</button>`+
-        Store.recipes.map(r=>`<div class="item-card"><div class="item-card-head">
-          <div><div class="item-card-title">${esc(r.name)}</div><div class="small" style="color:var(--text-2);margin-top:var(--sp-1)">${esc(r.cat)} · ${esc(r.time)}</div></div>
-          <div style="display:flex;gap:var(--sp-1)">
-            <button class="icon-btn hit" ${act('Admin.editRecipe',r.id)} aria-label="Редактировать: ${esc(r.name)}">✏️</button>
-            <button class="icon-btn danger hit" ${act('Admin.deleteRecipe',r.id)} aria-label="Удалить: ${esc(r.name)}">🗑</button>
-          </div></div></div>`).join('');
-    }else if(this.tab==='news'){
-      c.innerHTML=`<button class="btn" ${act('Admin.editNews')}>+ Добавить новость</button>`+
-        Store.news.map((n,i)=>`<div class="item-card"><div class="item-card-head">
-          <div><div class="item-card-title">${esc(n.tag)}: ${esc(n.title)}</div><div class="small" style="color:var(--text-2);margin-top:var(--sp-1)">${esc(n.date)}</div></div>
-          <div style="display:flex;gap:var(--sp-1)">
-            <button class="icon-btn hit" ${act('Admin.editNews',i)}>✏️</button>
-            <button class="icon-btn danger hit" ${act('Admin.deleteNews',i)}>🗑</button>
-          </div></div></div>`).join('');
-    }else if(this.tab==='team'){
-      c.innerHTML=`<button class="btn" ${act('Admin.editTeamMember')}>+ Добавить сотрудника</button>`+
-        Store.team.map((u,i)=>`<div class="item-card"><div class="item-card-head">
-          <div><div class="item-card-title">${esc(u.name)}</div><div class="small" style="color:var(--text-2);margin-top:var(--sp-1)">${esc(u.role)}</div></div>
-          <div style="display:flex;gap:var(--sp-1)">
-            <button class="icon-btn hit" ${act('Admin.editTeamMember',i)}>✏️</button>
-            <button class="icon-btn danger hit" ${act('Admin.deleteTeamMember',i)}>🗑</button>
-          </div></div></div>`).join('');
-    }else{
-      c.innerHTML=`<button class="btn" ${act('Admin.editSupplier')}>+ Добавить поставщика</button>`+
-        Store.matrix.map((s,i)=>`<div class="item-card"><div class="item-card-head">
-          <div><div class="item-card-title">${esc(s.supplier)}</div><div class="small" style="color:var(--text-2);margin-top:var(--sp-1)">${s.items.length} товаров</div></div>
-          <div style="display:flex;gap:var(--sp-1)">
-            <button class="icon-btn hit" ${act('Admin.editSupplier',i)}>✏️</button>
-            <button class="icon-btn danger hit" ${act('Admin.deleteSupplier',i)}>🗑</button>
-          </div></div></div>`).join('');
-    }
-  },
-  editRecipe(id){
-    Panel.killInstant('edit-modal');
-    const r=id?Store.recipes.find(x=>x.id===id):{id:null,name:'',cat:'Горячее',time:'',yield:'',kcal:0,note:'',ingr:[['',0,0]],steps:['']};
-    if(!r)return;
-    Panel.open({id:'edit-modal',variant:'modal',protected:true,
-      title:(id?'✏️ Редактировать':'✨ Новая')+' техкарта',
-      body:`
-        <div class="form-field"><label class="form-label" for="r-name">Название</label><input class="form-input" id="r-name" value="${esc(r.name)}"></div>
-        <div class="form-field"><label class="form-label" for="r-cat">Категория</label>
-          <select class="form-select" id="r-cat">${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+/* ================= АДМИНКА ================= */
+let adminTab='recipes';
+function openAdmin(){
+  haptic('hard');
+  closeModalImmediate('edit-modal');
+  closeModalImmediate('edit-supplier-modal');
+  if(sheetStates.has('admin-modal'))return;
+  adminTab=localStorage.getItem('chef_admin_tab')||adminTab||'recipes';
+  const tabs=[['recipes','ТТК'],['news','Новости'],['team','Команда'],['matrix','Матрица']];
+  const body=`
+  <div style="display:flex;gap:4px;margin-bottom:12px">
+    ${tabs.map(([t,label])=>`<button class="tab-btn ${adminTab===t?'on':''}" onclick="CB.setAdminTab('${t}',this)">${label}</button>`).join('')}
+  </div>
+  <div id="admin-content"></div>`;
+  openSheet({id:'admin-modal',title:'⚙️ Редактор',body});
+  renderAdminContent();
+}
+function setAdminTab(tab,btn){
+  haptic();
+  adminTab=tab;
+  localStorage.setItem('chef_admin_tab',tab);
+  btn.parentNode.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('on',b===btn));
+  renderAdminContent();
+}
+function renderAdminContent(){
+  const c=document.getElementById('admin-content');
+  if(!c)return;
+  if(adminTab==='recipes'){
+    c.innerHTML=`
+    <button class="btn" onclick="CB.editRecipe()">+ Добавить техкарту</button>
+    ${RECIPES.map(r=>`
+    <div class="item-card">
+      <div class="item-card-head">
+        <div>
+          <div class="item-card-title">${esc(r.name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(r.cat)} · ${esc(r.time)}</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-2)">
-          <div class="form-field"><label class="form-label" for="r-time">Время</label><input class="form-input" id="r-time" value="${esc(r.time)}"></div>
-          <div class="form-field"><label class="form-label" for="r-yield">Выход</label><input class="form-input" id="r-yield" value="${esc(r.yield)}"></div>
-          <div class="form-field"><label class="form-label" for="r-kcal">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
+        <div style="display:flex;gap:6px">
+          <button class="icon-btn tap44" onclick="CB.editRecipe(${r.id})" aria-label="Редактировать">✏️</button>
+          <button class="icon-btn danger tap44" onclick="CB.deleteRecipe(${r.id})" aria-label="Удалить">🗑</button>
         </div>
-        <div class="form-field">
-          <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:var(--sp-2)" ${act('Admin.addIngr')}>+ Добавить</button></label>
-          <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
+      </div>
+    </div>`).join('')}`;
+  }else if(adminTab==='news'){
+    c.innerHTML=`
+    <button class="btn" onclick="CB.editNews()">+ Добавить новость</button>
+    ${NEWS.map((n,i)=>`
+    <div class="item-card">
+      <div class="item-card-head">
+        <div>
+          <div class="item-card-title">${esc(n.tag)}: ${esc(n.title)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(n.date)}</div>
         </div>
-        <div class="form-field">
-          <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:var(--sp-2)" ${act('Admin.addStep')}>+ Добавить</button></label>
-          <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
+        <div style="display:flex;gap:6px">
+          <button class="icon-btn tap44" onclick="CB.editNews(${i})" aria-label="Редактировать">✏️</button>
+          <button class="icon-btn danger tap44" onclick="CB.deleteNews(${i})" aria-label="Удалить">🗑</button>
         </div>
-        <div class="form-field"><label class="form-label" for="r-note">Примечание</label><textarea class="form-textarea" id="r-note">${esc(r.note||'')}</textarea></div>
-        <button class="btn" ${act('Admin.saveRecipe',r.id)} data-haptic="hard">💾 Сохранить</button>`});
-  },
-  addIngr(){
-    const list=document.getElementById('ingr-list');
-    list.insertAdjacentHTML('beforeend',ingrRow(['',0,0],list.querySelectorAll('.ing-editor').length));
-  },
-  addStep(){
-    const list=document.getElementById('steps-list');
-    list.insertAdjacentHTML('beforeend',stepRow('',list.querySelectorAll('[data-step]').length));
-  },
-  removeRow(el){el.closest('.ing-editor,div[style*="flex"]').remove();},
-  saveRecipe(editId){
-    const r={
-      id:editId||Date.now(),
-      name:$('#r-name').value,cat:$('#r-cat').value,time:$('#r-time').value,yield:$('#r-yield').value,
-      kcal:parseInt($('#r-kcal').value)||0,note:$('#r-note').value,
-      ingr:Array.from(document.querySelectorAll('[data-ing]')).reduce((acc,el)=>{
-        const idx=el.dataset.ing,f=el.dataset.f;
-        acc[idx]=acc[idx]||[];
-        acc[idx][f==='name'?0:f==='brutto'?1:2]=f==='name'?el.value:parseFloat(el.value)||0;
-        return acc;
-      },[]).filter(x=>x&&x[0]),
-      steps:Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
-    };
-    if(!r.name){Toast.show('Введите название','error');return;}
-    if(editId)Store.recipes[Store.recipes.findIndex(x=>x.id===editId)]=r;
-    else Store.recipes.push(r);
-    Store.save();FB.sync();
-    Panel.dismiss(Panel.byId('edit-modal'),0,true);
-    Toast.show('Сохранено ✓','success');
-    this.renderContent();
-  },
-  deleteRecipe(id){
-    const idx=Store.recipes.findIndex(r=>r.id===id);
-    if(idx<0)return;
-    const [removed]=Store.recipes.splice(idx,1);
-    Store.save();FB.sync();this.renderContent();
-    Snackbar.show(`Удалено: ${removed.name}`,{action:{label:'Отменить',fn:()=>{
-      Store.recipes.splice(idx,0,removed);Store.save();FB.sync();this.renderContent();
-    }}});
-  },
-  editNews(i){
-    Panel.killInstant('edit-modal');
-    const isEdit=i!==undefined&&i!==null;
-    const n=isEdit?Store.news[i]:{tag:'',title:'',text:'',date:'Сегодня'};
-    Panel.open({id:'edit-modal',variant:'modal',protected:true,title:(isEdit?'Редактировать':'Новая')+' новость',
-      body:`
-        <div class="form-field"><label class="form-label" for="n-tag">Тег</label><input class="form-input" id="n-tag" value="${esc(n.tag)}"></div>
-        <div class="form-field"><label class="form-label" for="n-title">Заголовок</label><input class="form-input" id="n-title" value="${esc(n.title)}"></div>
-        <div class="form-field"><label class="form-label" for="n-text">Текст</label><textarea class="form-textarea" id="n-text">${esc(n.text)}</textarea></div>
-        <div class="form-field"><label class="form-label" for="n-date">Дата</label><input class="form-input" id="n-date" value="${esc(n.date)}"></div>
-        <button class="btn" ${act('Admin.saveNews',isEdit?i:null)} data-haptic="hard">💾 Сохранить</button>`});
-  },
-  saveNews(i){
-    const n={tag:$('#n-tag').value,title:$('#n-title').value,text:$('#n-text').value,date:$('#n-date').value};
-    if(!n.title){Toast.show('Введите заголовок','error');return;}
-    if(i!==null&&i!==undefined)Store.news[i]=n;else Store.news.unshift(n);
-    Store.save();FB.sync();
-    Panel.dismiss(Panel.byId('edit-modal'),0,true);
-    this.renderContent();Toast.show('Сохранено','success');
-  },
-  deleteNews(i){
-    const [removed]=Store.news.splice(i,1);
-    Store.save();FB.sync();this.renderContent();
-    Snackbar.show(`Удалено: ${removed.title}`,{action:{label:'Отменить',fn:()=>{
-      Store.news.splice(i,0,removed);Store.save();FB.sync();this.renderContent();
-    }}});
-  },
-  editTeamMember(i){
-    Panel.killInstant('edit-modal');
-    const isEdit=i!==undefined&&i!==null;
-    const u=isEdit?Store.team[i]:{name:'',role:'',init:'??'};
-    Panel.open({id:'edit-modal',variant:'modal',protected:true,title:(isEdit?'Редактировать':'Новый')+' сотрудник',
-      body:`
-        <div class="form-field"><label class="form-label" for="u-name">Имя</label><input class="form-input" id="u-name" value="${esc(u.name)}"></div>
-        <div class="form-field"><label class="form-label" for="u-role">Должность</label><input class="form-input" id="u-role" value="${esc(u.role)}"></div>
-        <div class="form-field"><label class="form-label" for="u-init">Инициалы</label><input class="form-input" id="u-init" value="${esc(u.init)}" maxlength="2"></div>
-        <button class="btn" ${act('Admin.saveTeamMember',isEdit?i:null)} data-haptic="hard">💾 Сохранить</button>`});
-  },
-  saveTeamMember(i){
-    const u={name:$('#u-name').value,role:$('#u-role').value,init:$('#u-init').value.toUpperCase()};
-    if(!u.name){Toast.show('Введите имя','error');return;}
-    if(i!==null&&i!==undefined)Store.team[i]=u;else Store.team.push(u);
-    Store.save();FB.sync();
-    Panel.dismiss(Panel.byId('edit-modal'),0,true);
-    this.renderContent();Toast.show('Сохранено','success');
-  },
-  deleteTeamMember(i){
-    const [removed]=Store.team.splice(i,1);
-    Store.save();FB.sync();this.renderContent();
-    Snackbar.show(`Удалено: ${removed.name}`,{action:{label:'Отменить',fn:()=>{
-      Store.team.splice(i,0,removed);Store.save();FB.sync();this.renderContent();
-    }}});
-  },
-  editSupplier(index){
-    Panel.killInstant('edit-supplier-modal');
-    const isEdit=index!==undefined&&index!==null;
-    const s=isEdit?Store.matrix[index]:{supplier:'',schedule:'',items:[]};
-    Panel.open({id:'edit-supplier-modal',variant:'modal',protected:true,
-      title:(isEdit?'✏️ Редактировать':'✨ Новый')+' поставщик',
-      body:`
-        <div class="form-field"><label class="form-label" for="m-supplier">Название поставщика</label><input class="form-input" id="m-supplier" value="${esc(s.supplier)}"></div>
-        <div class="form-field"><label class="form-label" for="m-schedule">График доставки</label><input class="form-input" id="m-schedule" value="${esc(s.schedule)}"></div>
-        <div class="form-field">
-          <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:var(--sp-2)" ${act('Admin.addMatrixItem')}>+ Добавить</button></label>
-          <div id="matrix-items-list">${s.items.map((it,idx)=>supplierItemRow(it,idx)).join('')}</div>
+      </div>
+    </div>`).join('')}`;
+  }else if(adminTab==='team'){
+    c.innerHTML=`
+    <button class="btn" onclick="CB.editTeamMember()">+ Добавить сотрудника</button>
+    ${TEAM.map((u,i)=>`
+    <div class="item-card">
+      <div class="item-card-head">
+        <div>
+          <div class="item-card-title">${esc(u.name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(u.role)}</div>
         </div>
-        <button class="btn" ${act('Admin.saveSupplier',isEdit?index:null)} data-haptic="hard">💾 Сохранить</button>`});
-  },
-  addMatrixItem(){
-    const list=document.getElementById('matrix-items-list');
-    list.insertAdjacentHTML('beforeend',supplierItemRow({name:'',unit:'',limit:null},list.querySelectorAll('.ing-editor').length));
-  },
-  saveSupplier(index){
-    const supplierName=$('#m-supplier').value,schedule=$('#m-schedule').value;
-    if(!supplierName){Toast.show('Введите название поставщика','error');return;}
-    const items=Array.from(document.querySelectorAll('[data-midx]')).reduce((acc,el)=>{
-      const idx=el.dataset.midx,f=el.dataset.f;
-      acc[idx]=acc[idx]||{};
-      acc[idx][f]=f==='limit'?(el.value===''?null:parseFloat(el.value)):el.value;
-      return acc;
-    },[]).filter(x=>x.name&&x.name.trim()!=='');
-    const ns={supplier:supplierName,schedule,items};
-    if(index!==null&&index!==undefined)Store.matrix[index]=ns;else Store.matrix.push(ns);
-    Store.save();FB.sync();
-    Panel.dismiss(Panel.byId('edit-supplier-modal'),0,true);
-    Toast.show('Сохранено','success');
-    this.renderContent();
-  },
-  deleteSupplier(index){
-    const [removed]=Store.matrix.splice(index,1);
-    Store.save();FB.sync();this.renderContent();
-    Snackbar.show(`Удалено: ${removed.supplier}`,{action:{label:'Отменить',fn:()=>{
-      Store.matrix.splice(index,0,removed);Store.save();FB.sync();this.renderContent();
-    }}});
+        <div style="display:flex;gap:6px">
+          <button class="icon-btn tap44" onclick="CB.editTeamMember(${i})" aria-label="Редактировать">✏️</button>
+          <button class="icon-btn danger tap44" onclick="CB.deleteTeamMember(${i})" aria-label="Удалить">🗑</button>
+        </div>
+      </div>
+    </div>`).join('')}`;
+  }else if(adminTab==='matrix'){
+    c.innerHTML=`
+    <button class="btn" onclick="CB.editSupplier()">+ Добавить поставщика</button>
+    ${MATRIX_DATA.map((s,i)=>`
+    <div class="item-card">
+      <div class="item-card-head">
+        <div>
+          <div class="item-card-title">${esc(s.supplier)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.items.length} товаров</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="icon-btn tap44" onclick="CB.editSupplier(${i})" aria-label="Редактировать">✏️</button>
+          <button class="icon-btn danger tap44" onclick="CB.deleteSupplier(${i})" aria-label="Удалить">🗑</button>
+        </div>
+      </div>
+    </div>`).join('')}`;
   }
-};
+}
+
+/* ================= CRUD ================= */
 function ingrRow(i,idx){
-  return `<div class="ing-editor"><div style="display:grid;grid-template-columns:1fr 4.375rem 4.375rem 2rem;gap:var(--sp-1)">
+  return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+  <div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
     <input class="form-input" placeholder="Продукт" aria-label="Продукт" data-ing="${idx}" data-f="name" value="${esc(i[0]||'')}">
     <input class="form-input" placeholder="Брутто" aria-label="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
     <input class="form-input" placeholder="Нетто" aria-label="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить строку">✕</button>
+    <button class="icon-btn danger tap44" onclick="this.closest('.ing-editor').remove()" aria-label="Удалить строку">✕</button>
   </div></div>`;
 }
 function stepRow(s,idx){
-  return `<div style="display:flex;gap:var(--sp-1);margin-bottom:var(--sp-2);align-items:flex-start">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" aria-label="Шаг ${idx+1}" style="flex:1;min-height:2.625rem">${esc(s||'')}</textarea>
-    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить шаг">✕</button>
+  return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" aria-label="Шаг ${idx+1}" style="flex:1;min-height:42px">${esc(s||'')}</textarea>
+    <button class="icon-btn danger tap44" onclick="this.parentElement.remove()" aria-label="Удалить шаг">✕</button>
   </div>`;
 }
-function supplierItemRow(it,idx){
-  return `<div class="ing-editor"><div style="display:grid;grid-template-columns:2fr 1fr 1fr 2rem;gap:var(--sp-1)">
-    <input class="form-input" placeholder="Продукт" aria-label="Продукт" value="${esc(it.name)}" data-midx="${idx}" data-f="name">
-    <input class="form-input" placeholder="Ед." aria-label="Единица" value="${esc(it.unit)}" data-midx="${idx}" data-f="unit">
-    <input class="form-input" placeholder="Лимит" aria-label="Лимит" type="number" value="${it.limit!==null?it.limit:''}" data-midx="${idx}" data-f="limit">
-    <button class="icon-btn danger hit" ${act('Admin.removeRow',EL)} aria-label="Удалить товар">✕</button>
-  </div></div>`;
+function editRecipe(id){
+  const r=id?RECIPES.find(x=>x.id===id):{id:Date.now(),name:'',cat:'Горячее',time:'',yield:'',kcal:0,note:'',ingr:[['',0,0]],steps:['']};
+  if(!r)return;
+  const isEdit=!!id;
+  openModal({id:'edit-modal',title:(isEdit?'✏️ Редактировать':'✨ Новая')+' техкарта',body:`
+    <div class="form-field"><label class="form-label" for="r-name">Название</label><input class="form-input" id="r-name" value="${esc(r.name)}"></div>
+    <div class="form-field"><label class="form-label" for="r-cat">Категория</label>
+      <select class="form-select" id="r-cat">
+        ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="form-field"><label class="form-label" for="r-time">Время</label><input class="form-input" id="r-time" value="${esc(r.time)}"></div>
+      <div class="form-field"><label class="form-label" for="r-yield">Выход</label><input class="form-input" id="r-yield" value="${esc(r.yield)}"></div>
+      <div class="form-field"><label class="form-label" for="r-kcal">Ккал</label><input class="form-input" id="r-kcal" type="number" value="${r.kcal}"></div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Ингредиенты <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="CB.addIngr()">+ Добавить</button></label>
+      <div id="ingr-list">${r.ingr.map((i,idx)=>ingrRow(i,idx)).join('')}</div>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="CB.addStep()">+ Добавить</button></label>
+      <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
+    </div>
+    <div class="form-field"><label class="form-label" for="r-note">Примечание</label><textarea class="form-textarea" id="r-note">${esc(r.note||'')}</textarea></div>
+    <button class="btn" onclick="CB.saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>`});
+}
+function addIngr(){
+  const list=document.getElementById('ingr-list');
+  if(list)list.insertAdjacentHTML('beforeend',ingrRow(['',0,0],list.querySelectorAll('.ing-editor').length));
+}
+function addStep(){
+  const list=document.getElementById('steps-list');
+  if(list)list.insertAdjacentHTML('beforeend',stepRow('',list.querySelectorAll('[data-step]').length));
+}
+function saveRecipe(editId){
+  const r={
+    id:editId||Date.now(),
+    name:$('#r-name').value,
+    cat:$('#r-cat').value,
+    time:$('#r-time').value,
+    yield:$('#r-yield').value,
+    kcal:parseInt($('#r-kcal').value)||0,
+    note:$('#r-note').value,
+    ingr:Array.from(document.querySelectorAll('[data-ing]')).reduce((acc,el)=>{
+      const idx=el.dataset.ing,f=el.dataset.f;
+      acc[idx]=acc[idx]||[];
+      acc[idx][f==='name'?0:f==='brutto'?1:2]=f==='name'?el.value:parseFloat(el.value)||0;
+      return acc;
+    },[]).filter(x=>x&&x[0]),
+    steps:Array.from(document.querySelectorAll('[data-step]')).map(el=>el.value).filter(x=>x.trim())
+  };
+  if(!r.name){toast('Введите название','error');return;}
+  if(editId){
+    const idx=RECIPES.findIndex(x=>x.id===editId);
+    RECIPES[idx]=r;
+  }else RECIPES.push(r);
+  saveData();
+  syncToFirebase();
+  closeModal('edit-modal');
+  haptic('hard');
+  toast('Сохранено ✓','success');
+  renderAdminContent();
+}
+function deleteRecipe(id){
+  if(!confirm('Удалить техкарту?'))return;
+  const idx=RECIPES.findIndex(r=>r.id===id);
+  if(idx>=0)RECIPES.splice(idx,1);
+  saveData();
+  syncToFirebase();
+  renderAdminContent();
+  toast('Удалено','success');
+}
+function editNews(i){
+  const isEdit=i!==undefined;
+  const n=isEdit?NEWS[i]:{tag:'',title:'',text:'',date:'Сегодня'};
+  openModal({id:'edit-modal',title:(isEdit?'Редактировать':'Новая')+' новость',body:`
+    <div class="form-field"><label class="form-label" for="n-tag">Тег</label><input class="form-input" id="n-tag" value="${esc(n.tag)}"></div>
+    <div class="form-field"><label class="form-label" for="n-title">Заголовок</label><input class="form-input" id="n-title" value="${esc(n.title)}"></div>
+    <div class="form-field"><label class="form-label" for="n-text">Текст</label><textarea class="form-textarea" id="n-text">${esc(n.text)}</textarea></div>
+    <div class="form-field"><label class="form-label" for="n-date">Дата</label><input class="form-input" id="n-date" value="${esc(n.date)}"></div>
+    <button class="btn" onclick="CB.saveNews(${isEdit?i:'null'})">💾 Сохранить</button>`});
+}
+function saveNews(i){
+  const n={tag:$('#n-tag').value,title:$('#n-title').value,text:$('#n-text').value,date:$('#n-date').value};
+  if(!n.title){toast('Введите заголовок','error');return;}
+  if(i!==null)NEWS[i]=n;else NEWS.unshift(n);
+  saveData();
+  syncToFirebase();
+  closeModal('edit-modal');
+  renderAdminContent();
+  toast('Сохранено','success');
+}
+function deleteNews(i){
+  if(!confirm('Удалить новость?'))return;
+  NEWS.splice(i,1);
+  saveData();
+  syncToFirebase();
+  renderAdminContent();
+  toast('Удалено','success');
+}
+function editTeamMember(i){
+  const isEdit=i!==undefined;
+  const u=isEdit?TEAM[i]:{name:'',role:'',init:'??'};
+  openModal({id:'edit-modal',title:(isEdit?'Редактировать':'Новый')+' сотрудник',body:`
+    <div class="form-field"><label class="form-label" for="u-name">Имя</label><input class="form-input" id="u-name" value="${esc(u.name)}"></div>
+    <div class="form-field"><label class="form-label" for="u-role">Должность</label><input class="form-input" id="u-role" value="${esc(u.role)}"></div>
+    <div class="form-field"><label class="form-label" for="u-init">Инициалы</label><input class="form-input" id="u-init" value="${esc(u.init)}" maxlength="2"></div>
+    <button class="btn" onclick="CB.saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>`});
+}
+function saveTeamMember(i){
+  const u={name:$('#u-name').value,role:$('#u-role').value,init:$('#u-init').value.toUpperCase()};
+  if(!u.name){toast('Введите имя','error');return;}
+  if(i!==null)TEAM[i]=u;else TEAM.push(u);
+  saveData();
+  syncToFirebase();
+  closeModal('edit-modal');
+  renderAdminContent();
+  toast('Сохранено','success');
+}
+function deleteTeamMember(i){
+  if(!confirm('Удалить сотрудника?'))return;
+  TEAM.splice(i,1);
+  saveData();
+  syncToFirebase();
+  renderAdminContent();
+  toast('Удалено','success');
+}
+function editSupplier(index){
+  const isEdit=index!==undefined;
+  const s=isEdit?MATRIX_DATA[index]:{supplier:'',schedule:'',items:[]};
+  openModal({id:'edit-supplier-modal',title:(isEdit?'✏️ Редактировать':'✨ Новый')+' поставщик',body:`
+    <div class="form-field"><label class="form-label" for="m-supplier">Название поставщика</label><input class="form-input" id="m-supplier" value="${esc(s.supplier)}"></div>
+    <div class="form-field"><label class="form-label" for="m-schedule">График доставки</label><input class="form-input" id="m-schedule" value="${esc(s.schedule)}"></div>
+    <div class="form-field">
+      <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="CB.addMatrixItem()">+ Добавить</button></label>
+      <div id="matrix-items-list">
+        ${s.items.map((it,idx)=>`
+        <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
+            <input class="form-input" placeholder="Продукт" aria-label="Продукт" value="${esc(it.name)}" data-midx="${idx}" data-f="name">
+            <input class="form-input" placeholder="Ед." aria-label="Единица" value="${esc(it.unit)}" data-midx="${idx}" data-f="unit">
+            <input class="form-input" placeholder="Лимит" aria-label="Лимит" type="number" value="${it.limit!==null?it.limit:''}" data-midx="${idx}" data-f="limit">
+            <button class="icon-btn danger tap44" onclick="this.closest('.ing-editor').remove()" aria-label="Удалить товар">✕</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <button class="btn" onclick="CB.saveSupplier(${isEdit?index:'null'})">💾 Сохранить</button>`});
+}
+function addMatrixItem(){
+  const list=document.getElementById('matrix-items-list');
+  if(!list)return;
+  const idx=list.querySelectorAll('.ing-editor').length;
+  list.insertAdjacentHTML('beforeend',`
+  <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
+      <input class="form-input" placeholder="Продукт" aria-label="Продукт" data-midx="${idx}" data-f="name" value="">
+      <input class="form-input" placeholder="Ед." aria-label="Единица" data-midx="${idx}" data-f="unit" value="">
+      <input class="form-input" placeholder="Лимит" aria-label="Лимит" type="number" data-midx="${idx}" data-f="limit" value="">
+      <button class="icon-btn danger tap44" onclick="this.closest('.ing-editor').remove()" aria-label="Удалить товар">✕</button>
+    </div>
+  </div>`);
+}
+function saveSupplier(index){
+  const supplierName=$('#m-supplier').value;
+  const schedule=$('#m-schedule').value;
+  if(!supplierName){toast('Введите название поставщика','error');return;}
+  const items=Array.from(document.querySelectorAll('[data-midx]')).reduce((acc,el)=>{
+    const idx=el.dataset.midx,f=el.dataset.f;
+    acc[idx]=acc[idx]||{};
+    acc[idx][f]=f==='limit'?(el.value===''?null:parseFloat(el.value)):el.value;
+    return acc;
+  },[]).filter(x=>x.name&&x.name.trim()!=='');
+  const ns={supplier:supplierName,schedule,items};
+  if(index!==null)MATRIX_DATA[index]=ns;
+  else MATRIX_DATA.push(ns);
+  saveData();
+  syncToFirebase();
+  closeModal('edit-supplier-modal');
+  toast('Сохранено','success');
+  renderAdminContent();
+}
+function deleteSupplier(index){
+  if(!confirm('Удалить поставщика и все его товары?'))return;
+  MATRIX_DATA.splice(index,1);
+  saveData();
+  syncToFirebase();
+  renderAdminContent();
+  toast('Удалено','success');
 }
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    if(Panel.count())Panel.requestClose();
-    else if(Nav.stack.length>1)Nav.goBack();
+/* ================= ХРАНИЛИЩЕ / FIREBASE ================= */
+function saveData(){
+  internalSave=true;
+  try{
+    localStorage.setItem('chef_recipes',JSON.stringify(RECIPES));
+    localStorage.setItem('chef_news',JSON.stringify(NEWS));
+    localStorage.setItem('chef_team',JSON.stringify(TEAM));
+    localStorage.setItem('chef_matrix',JSON.stringify(MATRIX_DATA));
+    localStorage.setItem('chef_favorites',JSON.stringify(FAVORITES));
+    localStorage.setItem('chef_cart',JSON.stringify(orderCart));
+    window.dispatchEvent(new Event('local-storage-update'));
+  }finally{
+    internalSave=false;
   }
-});
+}
+function reloadFromStorage(){
+  if(internalSave)return;
+  RECIPES=JSON.parse(localStorage.getItem('chef_recipes'))||DEFAULT_RECIPES;
+  NEWS=JSON.parse(localStorage.getItem('chef_news'))||DEFAULT_NEWS;
+  TEAM=JSON.parse(localStorage.getItem('chef_team'))||DEFAULT_TEAM;
+  MATRIX_DATA=JSON.parse(localStorage.getItem('chef_matrix'))||DEFAULT_MATRIX;
+  if(currentView==='home')renderHome();
+  if(currentView==='ttk')renderTTK();
+  if(currentView==='team')renderTeam();
+  if(currentView==='matrix')renderMatrix();
+}
+window.addEventListener('storage',reloadFromStorage);
+window.addEventListener('local-storage-update',reloadFromStorage);
+async function syncToFirebase(){
+  try{
+    await fetch(`${FIREBASE_URL}${FB_PATH}.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({recipes:RECIPES,news:NEWS,team:TEAM,matrix:MATRIX_DATA,favorites:FAVORITES,updatedAt:Date.now()})
+    });
+  }catch(e){console.warn('☁️ Ошибка синхронизации:',e.message);}
+}
+async function loadFromFirebase(){
+  try{
+    const res=await fetch(`${FIREBASE_URL}${FB_PATH}.json?t=${Date.now()}`);
+    if(!res.ok)return false;
+    const data=await res.json();
+    if(data&&data.recipes){
+      RECIPES=data.recipes;
+      NEWS=data.news||DEFAULT_NEWS;
+      TEAM=data.team||DEFAULT_TEAM;
+      MATRIX_DATA=data.matrix||DEFAULT_MATRIX;
+      FAVORITES=data.favorites||[];
+      localStorage.setItem('chef_recipes',JSON.stringify(RECIPES));
+      localStorage.setItem('chef_news',JSON.stringify(NEWS));
+      localStorage.setItem('chef_team',JSON.stringify(TEAM));
+      localStorage.setItem('chef_matrix',JSON.stringify(MATRIX_DATA));
+      localStorage.setItem('chef_favorites',JSON.stringify(FAVORITES));
+      return true;
+    }
+  }catch(e){console.warn('☁️ Не удалось загрузить из Firebase:',e.message);}
+  return false;
+}
+
+/* ================= ПРОЧИЕ ДЕЙСТВИЯ ================= */
+function toggleFavorite(id){
+  haptic();
+  const idx=FAVORITES.indexOf(id);
+  if(idx>=0)FAVORITES.splice(idx,1);
+  else FAVORITES.push(id);
+  saveData();
+  syncToFirebase();
+  render();
+}
+function refreshTTKData(){
+  RECIPES=JSON.parse(localStorage.getItem('chef_recipes'))||DEFAULT_RECIPES;
+  ttkQ='';ttkCat='Все';
+  const input=document.getElementById('ttk-search-input');
+  if(input)input.value='';
+  renderTTK();
+  toast('Данные обновлены','success');
+}
+function handleRefresh(){
+  currentWeekStart=null;
+  selectedDayIndex=null;
+  renderSchedule();
+}
+function changeWeek(offset){
+  if(!currentWeekStart)return;
+  haptic();
+  const d=new Date(currentWeekStart);
+  d.setDate(currentWeekStart.getDate()+offset*7);
+  currentWeekStart=d;
+  selectedDayIndex=null;
+  renderScheduleContent();
+}
+function goToToday(){
+  haptic();
+  const today=new Date();
+  const dow=today.getDay();
+  currentWeekStart=new Date(today);
+  currentWeekStart.setDate(today.getDate()+(dow===0?-6:1-dow));
+  selectedDayIndex=today.getDate()-1;
+  renderScheduleContent();
+}
+function selectDay(dayIndex){
+  haptic();
+  selectedDayIndex=dayIndex;
+  renderScheduleContent();
+}
+
+/* iOS: фикс прыжка скролла при blur quantity-input */
 document.addEventListener('focusout',e=>{
   if(e.target.classList?.contains('cart-qty-input')){
-    const scroller=Nav.current()?.el;
+    const scroller=app.querySelector('.screen.current');
     if(!scroller)return;
     const st=scroller.scrollTop;
-    requestAnimationFrame(()=>{scroller.scrollTop=st;requestAnimationFrame(()=>scroller.scrollTop=st);});
+    requestAnimationFrame(()=>{
+      scroller.scrollTop=st;
+      requestAnimationFrame(()=>{scroller.scrollTop=st;});
+    });
   }
 });
+/* Тап в верхней зоне — скролл наверх (как тап по статус-бару iOS) */
 document.addEventListener('touchend',e=>{
   const t=e.changedTouches[0];
-  if(t.clientY<80&&Nav.stack.length>1&&!Panel.count()){
-    const scroller=Nav.current()?.el;
-    if(scroller){scroller.scrollTo({top:0,behavior:'smooth'});haptic();}
+  if(t.clientY<80&&viewStack.length>1&&!sheetStates.size&&!modalStates.size){
+    const scroller=app.querySelector('.screen.current');
+    if(scroller){
+      scroller.scrollTo({top:0,behavior:'smooth'});
+      haptic();
+    }
   }
 },{passive:true});
-window.addEventListener('storage',()=>{
-  Store.load();
-  CartUI.refresh();
-  render();
-});
 
-Nav.init();
-Tap.init();
+/* ================= ПУБЛИЧНЫЙ API ================= */
+window.CB={
+  navigate,goBack,openAdmin,closeSheet,closeModal,setAdminTab,
+  editRecipe,deleteRecipe,saveRecipe,addIngr,addStep,
+  editNews,saveNews,deleteNews,
+  editTeamMember,saveTeamMember,deleteTeamMember,
+  editSupplier,saveSupplier,deleteSupplier,addMatrixItem,
+  toggleFavorite,setMult,setTtkCat,refreshTTKData,
+  handleRefresh,changeWeek,goToToday,selectDay,toggleLoc,
+  openChecklist(name){clLoc=name;renderChecklist();haptic();},
+  closeChecklistLoc(){clLoc=null;renderChecklist();haptic();},
+  setClTab(t){clTab=t;renderChecklist();haptic();},
+  toggleCheckItem,saveManager(loc,name){
+    const today=new Date().toISOString().slice(0,10);
+    const key='cl_'+today+'_'+loc;
+    const saved=JSON.parse(localStorage.getItem(key)||'{}');
+    saved.manager=name;
+    localStorage.setItem(key,JSON.stringify(saved));
+    haptic();
+    renderChecklist();
+  },
+  toggleOrder,updateCartQty,setCartQty,deleteCartItem,clearCart,copyOrder
+};
+
+/* ================= СТАРТ ================= */
 initSwipeBack();
-Cart.onChange(()=>{updateCartFab();CartUI.refresh();});
-Store.load();
-const homeEl=document.createElement('div');homeEl.className='screen';
-$('#app').appendChild(homeEl);
-Nav.stack.push({view:'home',data:null,el:homeEl,stale:false});
 updateCartFab();
-console.log('[ShefBuk] v3.2 init, nav state:',Nav.machine.state);
 (async function init(){
-  await FB.load();
+  await loadFromFirebase();
   render();
+})();
 })();
 </script>
 </body>
