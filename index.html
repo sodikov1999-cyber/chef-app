@@ -992,15 +992,19 @@ function navigate(view, data){
 }
 
 function goBack(){
-  if(viewStack.length <= 1) return;
+  console.log('goBack called, stack:', viewStack.length);
+  if(viewStack.length <= 1) { console.log('goBack: stack too short'); return; }
   haptic();
   viewStack.pop();
   const prevState = viewStack[viewStack.length - 1];
+  if (!prevState) { console.error('goBack: no prev state'); return; }
   currentView = prevState.view;
   if(prevState.data !== undefined) currentRecipeId = prevState.data;
 
   const screens = app.querySelectorAll('.screen');
+  console.log('goBack: screens found', screens.length);
   if (screens.length < 2) {
+    console.log('goBack: fallback to app render');
     currentScreen = app;
     render();
     return;
@@ -1008,6 +1012,7 @@ function goBack(){
 
   const curScreen = screens[screens.length - 1];
   const prevScreen = screens[screens.length - 2];
+  if (!curScreen || !prevScreen) { console.error('goBack: missing screens'); return; }
 
   prevScreen.style.display = '';
   prevScreen.style.visibility = '';
@@ -1018,12 +1023,14 @@ function goBack(){
   screenAnim = springAnimate({
     from: 0, to: 100, velocity: 0,
     onUpdate: x => {
-      curScreen.style.transform = `translateX(${x}%)`;
-      prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
-      prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
+      if (curScreen) curScreen.style.transform = `translateX(${x}%)`;
+      if (prevScreen) {
+        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
+        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
+      }
     },
     onComplete: () => {
-      curScreen.remove();
+      if (curScreen) curScreen.remove();
       if (prevScreen) {
         prevScreen.style.transform = '';
         prevScreen.style.opacity = '';
@@ -1909,6 +1916,11 @@ function openAdmin(){ showAdminModal(); }
    🌀 iOS SPRING SHEET SYSTEM
    Direct Manipulation + Interruptibility + Velocity Handoff
    ============================================================ */
+
+/* ============================================================
+   🌀 iOS SPRING SHEET SYSTEM v2
+   Проценты вместо пикселей. Fallback если анимация не сработает.
+   ============================================================ */
 const SheetSystem = {
   activeSheet: null,
   activeBg: null,
@@ -1916,8 +1928,7 @@ const SheetSystem = {
   dragState: null,
   triggerEl: null,
   sheetState: 'closed',
-  currentY: 0,
-  PHYS: { stiffness: 420, damping: 30, mass: 1 },
+  currentPct: 100,
 
   open({ title, contentHtml, onClose, onMount, maxHeight = '85vh' }) {
     this.closeImmediate();
@@ -1925,8 +1936,7 @@ const SheetSystem = {
 
     const bg = document.createElement('div');
     bg.className = 'sheet-bg';
-    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;';
-    if (!reduced) bg.style.transition = 'background .25s ease';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .25s ease';
 
     const sheet = document.createElement('div');
     sheet.className = 'sheet';
@@ -1950,6 +1960,7 @@ const SheetSystem = {
     this.onCloseCallback = onClose;
     this.triggerEl = document.activeElement;
     this.sheetState = 'opening';
+    this.currentPct = 100;
 
     // Focus trap
     this._focusin = (e) => { if (this.activeSheet && !this.activeSheet.contains(e.target)) { e.stopPropagation(); this.focusFirst(this.activeSheet); } };
@@ -1961,8 +1972,6 @@ const SheetSystem = {
 
     // Backdrop click
     bg.addEventListener('click', (e) => { if (e.target === bg) this.close(); });
-
-    // Close button
     sheet.querySelector('.sheet-close').addEventListener('click', () => this.close());
 
     // Drag
@@ -1972,20 +1981,35 @@ const SheetSystem = {
     sheet.addEventListener('pointerup', (e) => this.onPointerUp(e));
     sheet.addEventListener('pointercancel', (e) => this.onPointerUp(e));
 
-    // Show
+    // Show backdrop
     requestAnimationFrame(() => {
       bg.style.pointerEvents = 'auto';
       bg.style.background = 'rgba(0,0,0,.55)';
     });
 
+    // Fallback: если анимация не завершится за 600мс, показываем принудительно
+    this._fallbackTimer = setTimeout(() => {
+      if (this.sheetState === 'opening') {
+        console.warn('Sheet fallback: forcing open');
+        if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
+        this.currentPct = 0;
+        if (this.activeSheet) this.activeSheet.style.transform = 'translateY(0%)';
+        this.sheetState = 'open';
+        if (onMount) onMount();
+        this.focusFirst(sheet);
+      }
+    }, 600);
+
     if (reduced) {
-      sheet.style.transform = 'translateY(0)';
+      sheet.style.transform = 'translateY(0%)';
+      this.currentPct = 0;
       this.sheetState = 'open';
+      clearTimeout(this._fallbackTimer);
       if (onMount) onMount();
       this.focusFirst(sheet);
     } else {
-      const h = sheet.offsetHeight;
-      this.springTo(h, 0, 0, () => {
+      this.springTo(100, 0, 0, () => {
+        clearTimeout(this._fallbackTimer);
         this.sheetState = 'open';
         if (onMount) onMount();
         this.focusFirst(sheet);
@@ -1998,7 +2022,7 @@ const SheetSystem = {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     this.sheetState = 'dragging';
     if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
-    this.dragState = { startY: e.clientY, startSheetY: this.currentY || 0, history: [] };
+    this.dragState = { startY: e.clientY, startPct: this.currentPct, history: [] };
     this.activeSheet.setPointerCapture(e.pointerId);
     this.activeSheet.style.cursor = 'grabbing';
     e.preventDefault();
@@ -2007,82 +2031,94 @@ const SheetSystem = {
   onPointerMove(e) {
     if (!this.dragState || this.sheetState !== 'dragging') return;
     const y = e.clientY;
-    const delta = y - this.dragState.startY;
-    let targetY = this.dragState.startSheetY + delta;
-    if (targetY < 0) targetY = -this.rubberband(-targetY, this.activeSheet.offsetHeight * 0.5);
+    const startY = this.dragState.startY;
+    const h = this.activeSheet.offsetHeight || window.innerHeight * 0.5;
+    const deltaPct = ((y - startY) / h) * 100;
+    let targetPct = this.dragState.startPct + deltaPct;
+    if (targetPct < 0) targetPct = -this.rubberband(-targetPct, 50);
     this.dragState.history.push({ y, t: performance.now() });
     if (this.dragState.history.length > 6) this.dragState.history.shift();
-    this.currentY = targetY;
-    this.activeSheet.style.transform = `translateY(${targetY}px)`;
+    this.currentPct = targetPct;
+    this.activeSheet.style.transform = `translateY(${targetPct}%)`;
   },
 
   onPointerUp(e) {
     if (!this.dragState || this.sheetState !== 'dragging') return;
     this.sheetState = 'settling';
     this.dragState.history.push({ y: e.clientY, t: performance.now() });
-    const h = this.activeSheet.offsetHeight;
+    const h = this.activeSheet.offsetHeight || window.innerHeight * 0.5;
     const now = performance.now();
     const recent = this.dragState.history.filter(p => now - p.t < 80);
     let velocity = 0;
     if (recent.length >= 2) {
       const f = recent[0], l = recent[recent.length - 1];
       const dt = l.t - f.t;
-      if (dt > 0) velocity = (l.y - f.y) / dt * 1000;
+      if (dt > 0) velocity = ((l.y - f.y) / dt * 1000) / h * 100;
     }
-    const projected = (this.currentY || 0) + this.project(velocity);
-    const threshold = h * 0.35;
-    if (projected > threshold || ((this.currentY || 0) > threshold && velocity > 0)) {
-      this.springTo(this.currentY || 0, h, velocity, () => this.closeImmediate());
+    const projected = (this.currentPct || 0) + this.project(velocity);
+    if (projected > 35 || ((this.currentPct || 0) > 35 && velocity > 0)) {
+      this.springTo(this.currentPct || 0, 100, velocity, () => this.closeImmediate());
     } else {
-      this.springTo(this.currentY || 0, 0, velocity, () => { this.sheetState = 'open'; });
+      this.springTo(this.currentPct || 0, 0, velocity, () => { this.sheetState = 'open'; });
     }
     this.dragState = null;
     this.activeSheet.style.cursor = '';
   },
 
-  springTo(from, to, velocity, onComplete) {
+  springTo(fromPct, toPct, velocity, onComplete) {
     if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      if (this.activeSheet) this.activeSheet.style.transform = `translateY(${to}px)`;
-      this.currentY = to;
+      if (this.activeSheet) this.activeSheet.style.transform = `translateY(${toPct}%)`;
+      this.currentPct = toPct;
       if (onComplete) onComplete();
       return;
     }
-    this.currentY = from;
+    this.currentPct = fromPct;
     const self = this;
-    this.activeAnim = spring({
-      from, to, velocity,
-      stiffness: this.PHYS.stiffness,
-      damping: this.PHYS.damping,
-      onUpdate(v) { self.currentY = v; if (self.activeSheet) self.activeSheet.style.transform = `translateY(${v}px)`; },
-      onComplete() { self.activeAnim = null; self.currentY = to; if (onComplete) onComplete(); }
-    });
+    const stiffness = 420, damping = 30, mass = 1;
+    let cur = fromPct, vel = velocity, raf, last = performance.now(), run = true;
+    function tick(now) {
+      if (!run) return;
+      const dt = Math.min((now - last) / 1000, 0.05); last = now;
+      const disp = cur - toPct;
+      const acc = (-stiffness * disp - damping * vel) / mass;
+      vel += acc * dt; cur += vel * dt;
+      self.currentPct = cur;
+      if (self.activeSheet) self.activeSheet.style.transform = `translateY(${cur}%)`;
+      if (Math.abs(disp) < 0.5 && Math.abs(vel) < 0.5) {
+        self.currentPct = toPct;
+        if (self.activeSheet) self.activeSheet.style.transform = `translateY(${toPct}%)`;
+        if (onComplete) onComplete();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    this.activeAnim = { cancel() { run = false; cancelAnimationFrame(raf); } };
   },
 
   close() {
     if (!this.activeSheet) return;
-    const h = this.activeSheet.offsetHeight;
-    this.springTo(this.currentY || 0, h, 0, () => this.closeImmediate());
+    clearTimeout(this._fallbackTimer);
+    this.springTo(this.currentPct || 0, 100, 0, () => this.closeImmediate());
   },
 
   closeImmediate() {
+    clearTimeout(this._fallbackTimer);
     if (this._esc) { document.removeEventListener('keydown', this._esc); this._esc = null; }
     if (this._focusin) { document.removeEventListener('focusin', this._focusin); this._focusin = null; }
     if (this.triggerEl && typeof this.triggerEl.focus === 'function') { this.triggerEl.focus(); }
     if (this.onCloseCallback) this.onCloseCallback();
+    if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
     if (this.activeBg && this.activeBg.parentNode) this.activeBg.remove();
-    this.activeSheet = null; this.activeBg = null; this.activeAnim = null;
-    this.dragState = null; this.sheetState = 'closed'; this.currentY = 0;
+    this.activeSheet = null; this.activeBg = null;
+    this.dragState = null; this.sheetState = 'closed'; this.currentPct = 100;
   },
 
   rubberband(o, d) { return (o * d * 0.55) / (d + 0.55 * Math.abs(o)); },
   project(v) { const d = 0.998; return (v / 1000) * d / (1 - d); },
   focusFirst(s) { const f = s.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (f.length) f[0].focus(); }
 };
-
-/* ============================================================
-   🎛 НОВЫЕ ФУНКЦИИ: showAdminModal, renderCartSheet, closeSheet
-   ============================================================ */
 
 function showAdminModal(){
   adminTab = localStorage.getItem('chef_admin_tab') || adminTab || 'recipes';
@@ -2097,7 +2133,7 @@ function showAdminModal(){
       </div>
       <div id="admin-content"></div>
     `,
-    onMount: () => renderAdminContent()
+    onMount: () => { console.log('Admin mounted'); renderAdminContent(); }
   });
 }
 
@@ -2156,7 +2192,7 @@ function renderCartSheet(){
 }
 
 /* ============================================================
-   /SPRING SHEET SYSTEM
+   /SPRING SHEET SYSTEM v2
    ============================================================ */
 
 function renderAdminContent(){
