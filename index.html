@@ -1859,5 +1859,37 @@ updateCartFab();
 })();
 })();
 </script>
+  <script>
+/* === FIX: совместимость обработчиков === */
+(function(){
+  var names=[
+    'navigate','goBack','haptic','openAdmin','closeSheet','closeModal','setAdminTab',
+    'editRecipe','deleteRecipe','saveRecipe','addIngr','addStep',
+    'editNews','saveNews','deleteNews',
+    'editTeamMember','saveTeamMember','deleteTeamMember',
+    'editSupplier','saveSupplier','deleteSupplier','addMatrixItem',
+    'toggleFavorite','setMult','setTtkCat','refreshTTKData',
+    'handleRefresh','changeWeek','goToToday','selectDay','toggleLoc',
+    'openChecklist','closeChecklistLoc','setClTab','toggleCheckItem','saveManager',
+    'toggleOrder','updateCartQty','setCartQty','deleteCartItem','clearCart','copyOrder'
+  ];
+  // 1) Если есть пространство имён CB — делегируем ему отсутствующие функции
+  if(window.CB){
+    names.forEach(function(n){
+      if(typeof window[n]!=='function' && typeof window.CB[n]==='function'){
+        window[n]=function(){ return window.CB[n].apply(null,arguments); };
+      }
+    });
+  }
+  // 2) Фолбэк для setMult, если его нет вообще
+  if(typeof window.setMult!=='function'){
+    window.setMult=function(m){
+      window.currentMult=m;
+      if(window.haptic)window.haptic();
+      if(window.renderRecipe)window.renderRecipe();
+    };
+  }
+})();
+</script>
 </body>
 </html>
