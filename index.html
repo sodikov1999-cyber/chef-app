@@ -96,7 +96,7 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
 /* === НОВАЯ МОДАЛКА С DRAG === */
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .25s ease}
 .sheet-bg.open{background:rgba(0,0,0,.55);pointer-events:auto}
-.sheet{position:relative;width:100%;max-width:500px;background:var(--glass);border-radius:20px 20px 0 0;transform:translateY(100%);will-change:transform;touch-action:none;box-shadow:0 -8px 32px rgba(0,0,0,.5),inset 0 1px 0 var(--glass-border);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);transition:transform .35s cubic-bezier(.32,.72,0,1)}
+.sheet{position:relative;width:100%;max-width:500px;background:var(--glass);border-radius:20px 20px 0 0;transform:translateY(100%);will-change:transform;touch-action:none;box-shadow:0 -8px 32px rgba(0,0,0,.5),inset 0 1px 0 var(--glass-border);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);/* transition removed — spring physics drives motion */}
 .sheet.open{transform:translateY(0)}
 .sheet-handle{position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:8px;z-index:10;pointer-events:none}
 .sheet-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 12px;flex-shrink:0}
@@ -1820,64 +1820,7 @@ function fallbackCopy(text){
   ta.remove();
 }
 
-function renderCartSheet(){
-  const old = document.getElementById('cart-sheet-bg');
-  const scroller = app.querySelector('.screen.current');
-  const savedScroll = scroller ? scroller.scrollTop : 0;
-  if(old) old.remove();
 
-  const bg = document.createElement('div');
-  bg.className = 'sheet-bg open';
-  bg.id = 'cart-sheet-bg';
-  bg.style.zIndex = '250';
-
-  const grouped = {};
-  orderCart.forEach((c, i) => {
-    if(!grouped[c.supplier]) grouped[c.supplier] = [];
-    grouped[c.supplier].push({...c, idx: i});
-  });
-
-  const itemsHtml = Object.entries(grouped).map(([sup, items]) => `
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">${sup}</div>
-      ${items.map(it => `
-        <div class="cart-item">
-          <div class="cart-name">
-            <div>${_chef.esc(it.name)}</div>
-            <span class="cart-supplier">${_chef.esc(it.unit)}</span>
-          </div>
-          <div class="cart-qty-wrap">
-            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
-            <input class="cart-qty-input" type="text" inputmode="decimal" value="${it.qty}" 
-                   onchange="setCartQty(${it.idx}, this.value)" 
-                   onclick="this.select()">
-            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, 1)">+</button>
-          </div>
-          <button class="icon-btn danger" style="width:28px;height:28px" onclick="deleteCartItem(${it.idx})">✕</button>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
-
-  bg.innerHTML = `
-    <div class="sheet open" style="max-width:500px">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header">
-        <div class="sheet-title">📋 Заявка (${orderCart.length})</div>
-        <button class="sheet-close" onclick="closeCartSheet()">✕</button>
-      </div>
-      <div class="sheet-body" style="padding-bottom:30px">
-        ${itemsHtml}
-        <button class="btn" onclick="copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
-        <button class="btn btn-sec" onclick="orderCart=[];saveData();updateCartFab();closeCartSheet();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
-      </div>
-    </div>
-  `;
-
-  bg.addEventListener('click', e => { if(e.target === bg) closeCartSheet(); });
-  document.body.appendChild(bg);
-  if(scroller) requestAnimationFrame(() => { scroller.scrollTop = savedScroll; });
-}
 
 function renderMatrix(){
   window._matrixQ = window._matrixQ || '';
@@ -1957,168 +1900,264 @@ let adminTab = 'recipes';
 
 function openAdmin(){ showAdminModal(); }
 
-function showAdminModal(){
-  // Удаляем старую sheet, если есть
-  const old = document.getElementById('admin-modal');
-  if(old) old.remove();
-  // Удаляем все старые модалки редактирования
-  const oldEditModal = document.getElementById('edit-modal');
-  if(oldEditModal) oldEditModal.remove();
-  const oldSupplierModal = document.getElementById('edit-supplier-modal');
-  if(oldSupplierModal) oldSupplierModal.remove();
 
-  adminTab = localStorage.getItem('chef_admin_tab') || adminTab || 'recipes';
-
-  // Создаём фон
-  const bg = document.createElement('div');
-  bg.className = 'sheet-bg';
-  bg.id = 'admin-modal';
-
-  // Создаём саму панель
-  const sheet = document.createElement('div');
-  sheet.className = 'sheet';
-  sheet.id = 'admin-sheet';
-
-  // Drag-область (невидимая, но ловит тап)
-  const dragArea = document.createElement('div');
-  dragArea.className = 'sheet-drag-area';
-
-  // Содержимое
-  sheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">⚙️ Редактор</div>
-      <button class="sheet-close" onclick="event.stopPropagation();closeSheet()">✕</button>
-    </div>
-    <div style="display:flex;gap:4px;padding:0 20px 12px;flex-shrink:0">
-      <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="adminTab='recipes';localStorage.setItem('chef_admin_tab','recipes');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">ТТК</button>
-      <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="adminTab='news';localStorage.setItem('chef_admin_tab','news');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Новости</button>
-      <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="adminTab='team';localStorage.setItem('chef_admin_tab','team');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Команда</button>
-      <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="adminTab='matrix';localStorage.setItem('chef_admin_tab','matrix');Array.from(this.parentNode.children).forEach(b=>b.classList.remove('on'));this.classList.add('on');renderAdminContent()">Матрица</button>
-    </div>
-    <div id="admin-content" class="sheet-body"></div>
-  `;
-
-  sheet.insertBefore(dragArea, sheet.firstChild);
-  bg.appendChild(sheet);
-  document.body.appendChild(bg);
-
-  // Показываем с анимацией (следующий кадр)
-  requestAnimationFrame(() => {
-    bg.classList.add('open');
-    sheet.classList.add('open');
-  });
-
-  // === DRAG ЛОГИКА (Spring Physics) ===
-  let sheetAnim = null;
-  let sheetY = 0;
-  let isDraggingSheet = false;
-  let dragStartY = 0;
-  let dragStartSheetY = 0;
-  let dragHistory = [];
-
-  function setSheetY(y) {
-    sheetY = y;
-    sheet.style.transform = `translateY(${y}px)`;
-  }
-
-  function snapSheet(target, velocity = 0) {
-    if (sheetAnim) sheetAnim.cancel();
-    sheetAnim = springAnimate({
-      from: sheetY,
-      to: target,
-      velocity: velocity,
-      stiffness: 380,
-      damping: 32,
-      onUpdate: y => setSheetY(y),
-      onComplete: () => {
-        if (target > 0) closeSheet();
-      }
-    });
-  }
-
-  function onPointerDown(e) {
-    if (e.target.closest('button, input, textarea, select, .sheet-body')) return;
-    isDraggingSheet = true;
-    dragStartY = e.clientY;
-    dragStartSheetY = sheetY;
-    dragHistory = [];
-    if (sheetAnim) sheetAnim.cancel();
-    sheet.style.transition = 'none';
-    if (e.pointerId) sheet.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  }
-
-  function onPointerMove(e) {
-    if (!isDraggingSheet) return;
-    const y = e.clientY;
-    const delta = y - dragStartY;
-    let targetY = dragStartSheetY + delta;
-
-    // Rubber-banding: can't pull above 0
-    if (targetY < 0) {
-      targetY = -rubberband(-targetY, sheet.offsetHeight * 0.5);
-    }
-
-    // Track velocity history
-    dragHistory.push({ y, t: performance.now() });
-    if (dragHistory.length > 6) dragHistory.shift();
-
-    setSheetY(targetY);
-  }
-
-  function onPointerUp(e) {
-    if (!isDraggingSheet) return;
-    isDraggingSheet = false;
-
-    // Calculate release velocity from recent history
-    const now = performance.now();
-    const recent = dragHistory.filter(h => now - h.t < 80);
-    let releaseVelocity = 0;
-    if (recent.length >= 2) {
-      const first = recent[0];
-      const last = recent[recent.length - 1];
-      const dt = last.t - first.t;
-      if (dt > 0) releaseVelocity = (last.y - first.y) / dt * 1000;
-    }
-
-    // Momentum projection
-    const projected = sheetY + project(releaseVelocity);
-    const threshold = sheet.offsetHeight * 0.35;
-
-    if (projected > threshold || (sheetY > threshold && releaseVelocity > 0)) {
-      snapSheet(sheet.offsetHeight, releaseVelocity);
-    } else {
-      snapSheet(0, releaseVelocity);
-    }
-  }
-
-  dragArea.addEventListener('pointerdown', onPointerDown);
-  sheet.addEventListener('pointermove', onPointerMove);
-  sheet.addEventListener('pointerup', onPointerUp);
-  sheet.addEventListener('pointercancel', onPointerUp);
-
-  // Клик по фону = закрыть
-  bg.addEventListener('click', (e) => {
-    if (e.target === bg) closeSheet();
-  });
-
-  renderAdminContent();}
 
 // Функция закрытия
-function closeSheet(){
-  const bg = document.getElementById('admin-modal');
-  const sheet = document.getElementById('admin-sheet');
-  if(!bg) return;
-  
-  bg.classList.remove('open');
-  if(sheet) sheet.classList.remove('open');
-  
-  // Ждём конца анимации и убираем из DOM
-  setTimeout(() => {
-    if(bg && bg.parentNode) bg.remove();
-  }, 350);
+
+
+/* ============================================================
+   🌀 iOS SPRING SHEET SYSTEM
+   Direct Manipulation + Interruptibility + Velocity Handoff
+   ============================================================ */
+const SheetSystem = {
+  activeSheet: null,
+  activeBg: null,
+  activeAnim: null,
+  dragState: null,
+  triggerEl: null,
+  sheetState: 'closed',
+  currentY: 0,
+  PHYS: { stiffness: 420, damping: 30, mass: 1 },
+
+  open({ title, contentHtml, onClose, onMount, maxHeight = '85vh' }) {
+    this.closeImmediate();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const bg = document.createElement('div');
+    bg.className = 'sheet-bg';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0);z-index:200;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;';
+    if (!reduced) bg.style.transition = 'background .25s ease';
+
+    const sheet = document.createElement('div');
+    sheet.className = 'sheet';
+    sheet.style.cssText = `position:relative;width:100%;max-width:500px;background:var(--glass);border-radius:20px 20px 0 0;transform:translateY(100%);will-change:transform;touch-action:none;box-shadow:0 -8px 32px rgba(0,0,0,.5),inset 0 1px 0 var(--glass-border);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--glass-border);max-height:${maxHeight};display:flex;flex-direction:column;`;
+
+    sheet.innerHTML = `
+      <div class="sheet-handle" style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-top:8px;z-index:10;pointer-events:none"></div>
+      <div class="sheet-drag-area" style="position:absolute;top:0;left:0;right:0;height:40px;z-index:5;cursor:grab;touch-action:none"></div>
+      <div class="sheet-header" style="display:flex;align-items:center;justify-content:space-between;padding:20px 20px 12px;flex-shrink:0">
+        <div class="sheet-title" style="font-weight:800;font-size:18px">${_chef.esc(title)}</div>
+        <button class="sheet-close" style="background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="sheet-body" style="flex:1;overflow-y:auto;padding:0 20px 30px">${contentHtml}</div>
+    `;
+
+    bg.appendChild(sheet);
+    document.body.appendChild(bg);
+
+    this.activeSheet = sheet;
+    this.activeBg = bg;
+    this.onCloseCallback = onClose;
+    this.triggerEl = document.activeElement;
+    this.sheetState = 'opening';
+
+    // Focus trap
+    this._focusin = (e) => { if (this.activeSheet && !this.activeSheet.contains(e.target)) { e.stopPropagation(); this.focusFirst(this.activeSheet); } };
+    document.addEventListener('focusin', this._focusin);
+
+    // Escape
+    this._esc = (e) => { if (e.key === 'Escape') this.close(); };
+    document.addEventListener('keydown', this._esc);
+
+    // Backdrop click
+    bg.addEventListener('click', (e) => { if (e.target === bg) this.close(); });
+
+    // Close button
+    sheet.querySelector('.sheet-close').addEventListener('click', () => this.close());
+
+    // Drag
+    const dragArea = sheet.querySelector('.sheet-drag-area');
+    dragArea.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+    sheet.addEventListener('pointermove', (e) => this.onPointerMove(e));
+    sheet.addEventListener('pointerup', (e) => this.onPointerUp(e));
+    sheet.addEventListener('pointercancel', (e) => this.onPointerUp(e));
+
+    // Show
+    requestAnimationFrame(() => {
+      bg.style.pointerEvents = 'auto';
+      bg.style.background = 'rgba(0,0,0,.55)';
+    });
+
+    if (reduced) {
+      sheet.style.transform = 'translateY(0)';
+      this.sheetState = 'open';
+      if (onMount) onMount();
+      this.focusFirst(sheet);
+    } else {
+      const h = sheet.offsetHeight;
+      this.springTo(h, 0, 0, () => {
+        this.sheetState = 'open';
+        if (onMount) onMount();
+        this.focusFirst(sheet);
+      });
+    }
+  },
+
+  onPointerDown(e) {
+    if (e.target.closest('button, input, textarea, select, .sheet-body')) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.sheetState = 'dragging';
+    if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
+    this.dragState = { startY: e.clientY, startSheetY: this.currentY || 0, history: [] };
+    this.activeSheet.setPointerCapture(e.pointerId);
+    this.activeSheet.style.cursor = 'grabbing';
+    e.preventDefault();
+  },
+
+  onPointerMove(e) {
+    if (!this.dragState || this.sheetState !== 'dragging') return;
+    const y = e.clientY;
+    const delta = y - this.dragState.startY;
+    let targetY = this.dragState.startSheetY + delta;
+    if (targetY < 0) targetY = -this.rubberband(-targetY, this.activeSheet.offsetHeight * 0.5);
+    this.dragState.history.push({ y, t: performance.now() });
+    if (this.dragState.history.length > 6) this.dragState.history.shift();
+    this.currentY = targetY;
+    this.activeSheet.style.transform = `translateY(${targetY}px)`;
+  },
+
+  onPointerUp(e) {
+    if (!this.dragState || this.sheetState !== 'dragging') return;
+    this.sheetState = 'settling';
+    this.dragState.history.push({ y: e.clientY, t: performance.now() });
+    const h = this.activeSheet.offsetHeight;
+    const now = performance.now();
+    const recent = this.dragState.history.filter(p => now - p.t < 80);
+    let velocity = 0;
+    if (recent.length >= 2) {
+      const f = recent[0], l = recent[recent.length - 1];
+      const dt = l.t - f.t;
+      if (dt > 0) velocity = (l.y - f.y) / dt * 1000;
+    }
+    const projected = (this.currentY || 0) + this.project(velocity);
+    const threshold = h * 0.35;
+    if (projected > threshold || ((this.currentY || 0) > threshold && velocity > 0)) {
+      this.springTo(this.currentY || 0, h, velocity, () => this.closeImmediate());
+    } else {
+      this.springTo(this.currentY || 0, 0, velocity, () => { this.sheetState = 'open'; });
+    }
+    this.dragState = null;
+    this.activeSheet.style.cursor = '';
+  },
+
+  springTo(from, to, velocity, onComplete) {
+    if (this.activeAnim) { this.activeAnim.cancel(); this.activeAnim = null; }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (this.activeSheet) this.activeSheet.style.transform = `translateY(${to}px)`;
+      this.currentY = to;
+      if (onComplete) onComplete();
+      return;
+    }
+    this.currentY = from;
+    const self = this;
+    this.activeAnim = spring({
+      from, to, velocity,
+      stiffness: this.PHYS.stiffness,
+      damping: this.PHYS.damping,
+      onUpdate(v) { self.currentY = v; if (self.activeSheet) self.activeSheet.style.transform = `translateY(${v}px)`; },
+      onComplete() { self.activeAnim = null; self.currentY = to; if (onComplete) onComplete(); }
+    });
+  },
+
+  close() {
+    if (!this.activeSheet) return;
+    const h = this.activeSheet.offsetHeight;
+    this.springTo(this.currentY || 0, h, 0, () => this.closeImmediate());
+  },
+
+  closeImmediate() {
+    if (this._esc) { document.removeEventListener('keydown', this._esc); this._esc = null; }
+    if (this._focusin) { document.removeEventListener('focusin', this._focusin); this._focusin = null; }
+    if (this.triggerEl && typeof this.triggerEl.focus === 'function') { this.triggerEl.focus(); }
+    if (this.onCloseCallback) this.onCloseCallback();
+    if (this.activeBg && this.activeBg.parentNode) this.activeBg.remove();
+    this.activeSheet = null; this.activeBg = null; this.activeAnim = null;
+    this.dragState = null; this.sheetState = 'closed'; this.currentY = 0;
+  },
+
+  rubberband(o, d) { return (o * d * 0.55) / (d + 0.55 * Math.abs(o)); },
+  project(v) { const d = 0.998; return (v / 1000) * d / (1 - d); },
+  focusFirst(s) { const f = s.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); if (f.length) f[0].focus(); }
+};
+
+/* ============================================================
+   🎛 НОВЫЕ ФУНКЦИИ: showAdminModal, renderCartSheet, closeSheet
+   ============================================================ */
+
+function showAdminModal(){
+  adminTab = localStorage.getItem('chef_admin_tab') || adminTab || 'recipes';
+  SheetSystem.open({
+    title: '⚙️ Редактор',
+    contentHtml: `
+      <div style="display:flex;gap:4px;padding-bottom:12px;flex-shrink:0">
+        <button class="tab-btn ${adminTab==='recipes'?'on':''}" onclick="setAdminTab('recipes',this)">ТТК</button>
+        <button class="tab-btn ${adminTab==='news'?'on':''}" onclick="setAdminTab('news',this)">Новости</button>
+        <button class="tab-btn ${adminTab==='team'?'on':''}" onclick="setAdminTab('team',this)">Команда</button>
+        <button class="tab-btn ${adminTab==='matrix'?'on':''}" onclick="setAdminTab('matrix',this)">Матрица</button>
+      </div>
+      <div id="admin-content"></div>
+    `,
+    onMount: () => renderAdminContent()
+  });
 }
+
+window.setAdminTab = function(tab, btn){
+  adminTab = tab;
+  localStorage.setItem('chef_admin_tab', tab);
+  const parent = btn.parentNode;
+  Array.from(parent.children).forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderAdminContent();
+};
+
+function closeSheet(){
+  SheetSystem.close();
+}
+
+function renderCartSheet(){
+  const grouped = {};
+  orderCart.forEach((c, i) => {
+    if(!grouped[c.supplier]) grouped[c.supplier] = [];
+    grouped[c.supplier].push({...c, idx: i});
+  });
+
+  const itemsHtml = Object.entries(grouped).map(([sup, items]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">${_chef.esc(sup)}</div>
+      ${items.map(it => `
+        <div class="cart-item">
+          <div class="cart-name">
+            <div>${_chef.esc(it.name)}</div>
+            <span class="cart-supplier">${_chef.esc(it.unit)}</span>
+          </div>
+          <div class="cart-qty-wrap">
+            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
+            <input class="cart-qty-input" type="text" inputmode="decimal" value="${it.qty}" onchange="setCartQty(${it.idx}, this.value)" onclick="this.select()">
+            <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, 1)">+</button>
+          </div>
+          <button class="icon-btn danger" style="width:28px;height:28px" onclick="deleteCartItem(${it.idx})">✕</button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+
+  SheetSystem.open({
+    title: `📋 Заявка (${orderCart.length})`,
+    contentHtml: `
+      ${itemsHtml}
+      <button class="btn" onclick="copyOrder()" style="margin-top:8px">📋 Скопировать заявку</button>
+      <button class="btn btn-sec" onclick="orderCart=[];saveData();updateCartFab();SheetSystem.closeImmediate();renderMatrix();" style="margin-top:8px">🗑 Очистить</button>
+    `,
+    onClose: () => {
+      const scroller = app.querySelector('.screen.current');
+      if(scroller) { const st = scroller.scrollTop; requestAnimationFrame(() => scroller.scrollTop = st); }
+    }
+  });
+}
+
+/* ============================================================
+   /SPRING SHEET SYSTEM
+   ============================================================ */
 
 function renderAdminContent(){
   const c = document.getElementById('admin-content');
