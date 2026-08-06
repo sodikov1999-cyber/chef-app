@@ -1849,7 +1849,52 @@ window.CB={
   },
   toggleOrder,updateCartQty,setCartQty,deleteCartItem,clearCart,copyOrder
 };
-
+/* ============================================================
+🔧 СОВМЕСТИМОСТЬ: глобальные обработчики для onclick
+(работают с любой версией шаблонов — старой и новой)
+============================================================ */
+function setMult(m){
+  currentMult = m;
+  haptic();
+  renderRecipe();
+}
+function setTtkCat(c){
+  window._ttkCat = c;
+  haptic();
+  renderTTK();
+}
+function setClTab(t){
+  window._clTab = t;
+  haptic();
+  renderChecklist();
+}
+function openChecklist(name){
+  window._clLoc = name;
+  haptic();
+  renderChecklist();
+}
+function closeChecklist(){
+  window._clLoc = null;
+  haptic();
+  renderChecklist();
+}
+function toggleOrder(supplier, name){
+  const existing = getCartItem(supplier, name);
+  if(existing){
+    removeFromCart(supplier, name);
+  } else {
+    const sup = MATRIX_DATA.find(s => s.supplier === supplier);
+    const item = sup ? sup.items.find(i => i.name === name) : null;
+    if(item) addToCart(supplier, item);
+  }
+}
+function clearCart(){
+  orderCart = [];
+  saveData();
+  updateCartFab();
+  closeCartSheet();
+  renderMatrix();
+}
 /* ================= СТАРТ ================= */
 initSwipeBack();
 updateCartFab();
