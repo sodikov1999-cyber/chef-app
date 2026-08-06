@@ -291,6 +291,20 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
   .modal{animation:none!important;transform:none!important;opacity:0;transition:opacity .15s ease!important}
   .modal.show{opacity:1}
 }
+
+/* iOS fix: input'ы должны быть кликабельны даже с user-select:none на body */
+input, textarea, select { -webkit-user-select: auto !important; user-select: auto !important; -webkit-touch-callout: default !important; }
+.modal-bg { z-index: 300 !important; }
+.modal { position: relative; z-index: 1; }
+
+
+.modal input, .modal textarea, .modal select { pointer-events: auto !important; touch-action: manipulation !important; }
+
+
+/* iOS keyboard fix */
+.modal-body { -webkit-overflow-scrolling: touch; }
+.modal input:focus, .modal textarea:focus { outline: 2px solid var(--accent); }
+
 </style>
 <base target="_blank">
 </head>
@@ -2280,7 +2294,7 @@ window.editSupplier = function(index) {
     const bg = document.createElement('div');
     bg.className = 'modal-bg';
     bg.id = 'edit-supplier-modal';
-    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center';
+    bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -2476,7 +2490,7 @@ function editRecipe(id){
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.id = 'edit-modal';
-  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center';
+  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
   const modal = document.createElement('div');
   modal.className = 'modal';
@@ -2600,7 +2614,7 @@ function editNews(i){
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.id = 'edit-modal';
-  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center';
+  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
   const modal = document.createElement('div');
   modal.className = 'modal';
@@ -2656,7 +2670,7 @@ function editTeamMember(i){
   const bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.id = 'edit-modal';
-  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center';
+  bg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:flex-end;justify-content:center';
 
   const modal = document.createElement('div');
   modal.className = 'modal';
