@@ -1022,40 +1022,42 @@ function goBack(){
 
   const screens = app.querySelectorAll('.screen');
   console.log('goBack: screens found', screens.length);
-  if (screens.length < 2) {
-    console.log('goBack: fallback to app render');
-    currentScreen = app;
-    render();
-    return;
+
+  if (screens.length >= 2) {
+    // Анимация swipe-back
+    const curScreen = screens[screens.length - 1];
+    const prevScreen = screens[screens.length - 2];
+    if (!curScreen || !prevScreen) { console.error('goBack: missing screens'); return; }
+
+    prevScreen.style.display = '';
+    prevScreen.style.visibility = '';
+    prevScreen.classList.add('current');
+    currentScreen = prevScreen;
+
+    if(screenAnim) screenAnim.cancel();
+    screenAnim = springAnimate({
+      from: 0, to: 100, velocity: 0,
+      onUpdate: x => {
+        if (curScreen) curScreen.style.transform = `translateX(${x}%)`;
+        if (prevScreen) {
+          prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
+          prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
+        }
+      },
+      onComplete: () => {
+        if (curScreen) curScreen.remove();
+        if (prevScreen) {
+          prevScreen.style.transform = '';
+          prevScreen.style.opacity = '';
+        }
+      }
+    });
+  } else {
+    // Нет экранов для анимации — просто перерисовываем без сброса стека
+    console.log('goBack: simple navigate fallback');
+    app.innerHTML = '';
+    navigate(currentView, currentRecipeId, true);
   }
-
-  const curScreen = screens[screens.length - 1];
-  const prevScreen = screens[screens.length - 2];
-  if (!curScreen || !prevScreen) { console.error('goBack: missing screens'); return; }
-
-  prevScreen.style.display = '';
-  prevScreen.style.visibility = '';
-  prevScreen.classList.add('current');
-  currentScreen = prevScreen;
-
-  if(screenAnim) screenAnim.cancel();
-  screenAnim = springAnimate({
-    from: 0, to: 100, velocity: 0,
-    onUpdate: x => {
-      if (curScreen) curScreen.style.transform = `translateX(${x}%)`;
-      if (prevScreen) {
-        prevScreen.style.transform = `translateX(${x * 0.3 - 30}%)`;
-        prevScreen.style.opacity = Math.max(0.4, 1 - x/150);
-      }
-    },
-    onComplete: () => {
-      if (curScreen) curScreen.remove();
-      if (prevScreen) {
-        prevScreen.style.transform = '';
-        prevScreen.style.opacity = '';
-      }
-    }
-  });
 }
 
 function render(){
