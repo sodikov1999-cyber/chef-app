@@ -2303,7 +2303,7 @@ window.editSupplier = function(index) {
 
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out';
+    modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;opacity:0;transition:opacity .2s ease';
 
     let itemsHtml = s.items.map((it, idx) => `
         <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
@@ -2333,6 +2333,7 @@ window.editSupplier = function(index) {
     `;
     bg.appendChild(modal);
     document.body.appendChild(bg);
+    requestAnimationFrame(() => { modal.style.opacity = '1'; });
     ModalTrap.open(bg, modal, { label: isEdit ? 'Редактирование поставщика' : 'Новый поставщик' });
 };
 
@@ -2407,12 +2408,15 @@ const ModalTrap = {
     this.activeBg = bgEl;
     this.activeModal = modalEl;
     this.triggerEl = document.activeElement;
+    console.log('ModalTrap.open: sheetBg found?', !!document.querySelector('.sheet-bg'));
 
     // БЛОКИРУЕМ sheet-bg (админку) — она перехватывает клики
     const sheetBg = document.querySelector('.sheet-bg');
     if (sheetBg) {
       this.sheetBgState = sheetBg.style.pointerEvents;
       sheetBg.style.pointerEvents = 'none';
+      sheetBg.style.visibility = 'hidden';
+      console.log('ModalTrap: sheet-bg blocked');
     }
 
     // ARIA
@@ -2476,7 +2480,10 @@ const ModalTrap = {
     // Восстанавливаем sheet-bg
     if (this.sheetBgState !== null) {
       const sheetBg = document.querySelector('.sheet-bg');
-      if (sheetBg) sheetBg.style.pointerEvents = this.sheetBgState;
+      if (sheetBg) {
+        sheetBg.style.pointerEvents = this.sheetBgState;
+        sheetBg.style.visibility = '';
+      }
       this.sheetBgState = null;
     }
     if (this.triggerEl && typeof this.triggerEl.focus === 'function') {
@@ -2513,7 +2520,7 @@ function editRecipe(id){
 
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out';
+  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;opacity:0;transition:opacity .2s ease';
 
   modal.innerHTML = `
     <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;padding:20px 20px 0">
@@ -2547,6 +2554,7 @@ function editRecipe(id){
 
   bg.appendChild(modal);
   document.body.appendChild(bg);
+  requestAnimationFrame(() => { modal.style.opacity = '1'; });
   ModalTrap.open(bg, modal, { label: isEdit ? 'Редактирование техкарты' : 'Новая техкарта' });
 }
 
@@ -2557,19 +2565,11 @@ function ingrRow(i, idx){
     <input class="form-input" style="width:60px;pointer-events:auto !important" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||''}" onclick="this.focus()">
     <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
-}" data-f="name" value="${_chef.esc(i[0]||'')}">
-    <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
-    <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
-    <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
-  </div></div>`;
 }
 
 function stepRow(s, idx){
   return `<div class="ing-editor" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
     <textarea class="form-textarea" style="flex:1;min-height:42px;pointer-events:auto !important" data-step="${idx}" placeholder="Шаг ${idx+1}" onclick="this.focus()">${_chef.esc(s||'')}</textarea>
-    <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
-  </div>`;
-}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${_chef.esc(s||'')}</textarea>
     <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
 }
@@ -2645,7 +2645,7 @@ function editNews(i){
 
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out';
+  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;opacity:0;transition:opacity .2s ease';
 
   modal.innerHTML = `
     <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;padding:20px 20px 0">
@@ -2663,6 +2663,7 @@ function editNews(i){
 
   bg.appendChild(modal);
   document.body.appendChild(bg);
+  requestAnimationFrame(() => { modal.style.opacity = '1'; });
   ModalTrap.open(bg, modal, { label: isEdit ? 'Редактирование новости' : 'Новая новость' });
 }
 
@@ -2701,7 +2702,7 @@ function editTeamMember(i){
 
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;animation:slideUp .3s ease-out';
+  modal.style.cssText = 'background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:500px;height:90vh;display:flex;flex-direction:column;opacity:0;transition:opacity .2s ease';
 
   modal.innerHTML = `
     <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;padding:20px 20px 0">
@@ -2718,6 +2719,7 @@ function editTeamMember(i){
 
   bg.appendChild(modal);
   document.body.appendChild(bg);
+  requestAnimationFrame(() => { modal.style.opacity = '1'; });
   ModalTrap.open(bg, modal, { label: isEdit ? 'Редактирование сотрудника' : 'Новый сотрудник' });
 }
 
