@@ -292,6 +292,7 @@ h3{font-weight:700;font-size:16px;margin:18px 0 10px;color:var(--accent)}
   .modal.show{opacity:1}
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -599,12 +600,12 @@ let useLocalSchedule = false;
 let isLoading = false;
 
 function saveData() {
-    localStorage.setItem('chef_recipes', JSON.stringify(RECIPES));
-    localStorage.setItem('chef_news', JSON.stringify(NEWS));
-    localStorage.setItem('chef_team', JSON.stringify(TEAM));
-    localStorage.setItem('chef_matrix', JSON.stringify(MATRIX_DATA));
-    localStorage.setItem('chef_favorites', JSON.stringify(FAVORITES));
-    localStorage.setItem('chef_cart', JSON.stringify(orderCart));
+    _chef.db.set('recipes', RECIPES);
+    _chef.db.set('news', NEWS);
+    _chef.db.set('team', TEAM);
+    _chef.db.set('matrix', MATRIX_DATA);
+    _chef.db.set('favorites', FAVORITES);
+    _chef.db.set('cart', orderCart);
     window.dispatchEvent(new Event('local-storage-update'));
 }
 
@@ -1052,8 +1053,8 @@ function renderFavorites(){
     <div class="content" style="padding-bottom:100px">
       ${favs.length ? favs.map(r => `
         <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-          <div class="recipe-name">${r.name}</div>
-          <div class="recipe-meta">${r.cat} · ${r.time||'-'} · ${r.yield||'-'}</div>
+          <div class="recipe-name">${_chef.esc(r.name)}</div>
+          <div class="recipe-meta">${_chef.esc(r.cat)} · ${_chef.esc(r.time||'-')} · ${_chef.esc(r.yield||'-')}</div>
         </button>
       `).join('') : '<p style="color:var(--muted);text-align:center;padding:40px 0">Нет избранных блюд.<br>Нажмите ⭐ в техкарте</p>'}
     </div>
@@ -1122,9 +1123,9 @@ function renderHome(){
     <h2>Объявления</h2>
     ${NEWS.map(n => `
       <div class="news">
-        <div class="news-title">${n.tag}: ${n.title}</div>
-        <div class="news-text">${n.text}</div>
-        <div class="news-date">${n.date}</div>
+        <div class="news-title">${_chef.esc(n.tag)}: ${_chef.esc(n.title)}</div>
+        <div class="news-text">${_chef.esc(n.text)}</div>
+        <div class="news-date">${_chef.esc(n.date)}</div>
       </div>
     `).join('')}
   `;
@@ -1136,10 +1137,7 @@ function renderTTK(){
   window._ttkCat = window._ttkCat || 'Все';
   window._ttkQ = window._ttkQ || '';
   const q = window._ttkQ.toLowerCase();
-  const items = RECIPES.filter(r => 
-    (window._ttkCat === 'Все' || r.cat === window._ttkCat) &&
-    (!q || r.name.toLowerCase().includes(q))
-  );
+  const items = _chef.domain.filterRecipes(RECIPES, window._ttkCat, window._ttkQ);
 
   // Рендерим структуру один раз, но input оставляем статичным при вводе
   // Если контейнер уже существует, обновляем только список, чтобы не терять фокус
@@ -1181,8 +1179,8 @@ function renderTTK(){
     <div id="ttk-list-container">
     ${items.length ? items.map(r => `
       <button class="recipe" onclick="navigate('recipe',${r.id});haptic()">
-        <div class="recipe-name">${r.name}</div>
-        <div class="recipe-meta">${r.cat} · ${r.time} · ${r.yield}</div>
+        <div class="recipe-name">${_chef.esc(r.name)}</div>
+        <div class="recipe-meta">${_chef.esc(r.cat)} · ${_chef.esc(r.time)} · ${_chef.esc(r.yield)}</div>
       </button>
     `).join('') : '<div class="card" style="text-align:center;color:var(--muted)">Ничего не найдено 🔍</div>'}
     </div>
@@ -1215,7 +1213,7 @@ function renderRecipe(){
   currentScreen.innerHTML = `
     <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="display:flex;align-items:center;gap:12px">
-        <h1 style="flex:1">${r.name}</h1>
+        <h1 style="flex:1">${_chef.esc(r.name)}</h1>
         <button onclick="event.stopPropagation();toggleFavorite(${r.id})" style="background:none;border:none;font-size:28px;cursor:pointer;padding:4px;color:${FAVORITES.includes(r.id)?'var(--accent)':'var(--muted)'};transition:transform .15s">
           ${FAVORITES.includes(r.id)?'⭐':'☆'}
         </button>
@@ -1235,7 +1233,7 @@ function renderRecipe(){
         <div class="card">
           ${(r.ingr || []).map(i => `
             <div class="ingredient">
-              <span>${i[0]}</span>
+              <span>${_chef.esc(i[0])}</span>
               <b>${Math.round(i[2]*currentMult)} г</b>
             </div>
           `).join('')}
@@ -1243,10 +1241,10 @@ function renderRecipe(){
 
         <h2>Приготовление</h2>
         ${(r.steps || []).map((s,i) => `
-          <div class="step"><span class="step-num">${i+1}</span><span>${s}</span></div>
+          <div class="step"><span class="step-num">${i+1}</span><span>${_chef.esc(s)}</span></div>
         `).join('')}
 
-        ${r.note ? `<div class="note">📝 <b>Важно:</b> ${r.note}</div>` : ''}
+        ${r.note ? `<div class="note">📝 <b>Важно:</b> ${_chef.esc(r.note)}</div>` : ''}
     </div>
   `;
 }
@@ -1366,8 +1364,8 @@ async function showDayStaff(locName, dayIndex){
           <div class="team-card" style="margin-bottom:8px">
             <div class="team-avatar">${p.name.split(' ').map(n=>n[0]).join('').toUpperCase()}</div>
             <div>
-              <div style="font-weight:700">${p.name}</div>
-              <div style="font-size:13px;color:var(--muted)">${p.role}</div>
+              <div style="font-weight:700">${_chef.esc(p.name)}</div>
+              <div style="font-size:13px;color:var(--muted)">${_chef.esc(p.role)}</div>
             </div>
           </div>
         `).join('')}
@@ -1458,7 +1456,7 @@ function renderScheduleContent() {
     let html = `
     <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h1 style="margin:0">${source.month || 'Август 2026'}</h1>
+        <h1 style="margin:0">${_chef.esc(source.month || 'Август 2026')}</h1>
         <button class="refresh-btn" onclick="handleRefresh();haptic('hard')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
@@ -1496,7 +1494,7 @@ function renderScheduleContent() {
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:12px">
           <button onclick="toggleLoc('${loc.name}');haptic()" style="width:100%;padding:16px;background:transparent;border:none;color:inherit;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px">
             <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${loc.name}</div>
+              <div style="font-weight:700;font-size:16px;margin-bottom:4px">${_chef.esc(loc.name)}</div>
               <div style="font-size:12px;color:var(--muted)">
                 👥 На смене: <span style="color:var(--accent);font-weight:700">${workingToday.length}</span> из ${loc.staff.length}
               </div>
@@ -1512,8 +1510,8 @@ function renderScheduleContent() {
                 <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                   <div class="avatar" style="width:36px;height:36px;font-size:12px">${p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
                   <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
-                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.role} · ${p.shifts[activeDayIndex]} см</div>
+                    <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_chef.esc(p.name)}</div>
+                    <div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_chef.esc(p.role)} · ${p.shifts[activeDayIndex]} см</div>
                   </div>
                 </div>
               `).join('') : '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">🎉 Все отдыхают</div>'}
@@ -1525,8 +1523,8 @@ function renderScheduleContent() {
                 return `
                   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                     <div style="flex:1;min-width:0">
-                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</div>
-                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.role} · ${workDays} дн</div>
+                      <div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_chef.esc(s.name)}</div>
+                      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_chef.esc(s.role)} · ${workDays} дн</div>
                     </div>
                     <div style="text-align:right;margin-left:10px">
                       <div style="font-weight:800;font-size:16px;color:var(--accent)">${s.total}</div>
@@ -1627,9 +1625,9 @@ function renderChecklist(){
       <div class="form-label">Ответственный сегодня</div>
       <select class="form-select" onchange="saveManager('${locName}', this.value);haptic()">
         <option value="">-- Не выбран --</option>
-        ${managers.map(m => `<option value="${m.name}" ${manager===m.name?'selected':''}>${m.name} (${m.role})</option>`).join('')}
+        ${managers.map(m => `<option value="${_chef.esc(m.name)}" ${manager===m.name?'selected':''}>${_chef.esc(m.name)} (${_chef.esc(m.role)})</option>`).join('')}
       </select>
-      ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${manager}</b></div>` : ''}
+      ${manager ? `<div style="margin-top:8px;font-size:13px;color:var(--green)">✅ Ответственный: <b>${_chef.esc(manager)}</b></div>` : ''}
     </div>
 
     <div class="mults">
@@ -1644,7 +1642,7 @@ function renderChecklist(){
         return `
         <div class="check-item ${isDone?'done':''}" onclick="toggleCheckItem('${locName}', '${key}', ${i});haptic()">
           <div class="check-box">✓</div>
-          <span>${item}</span>
+          <span>${_chef.esc(item)}</span>
         </div>
       `}).join('')}
     </div>
@@ -1705,7 +1703,7 @@ function renderTeam(){
     ${user ? `
       <div class="user" style="background:var(--accent-soft);border:1px solid var(--accent)">
         <div class="avatar">${user.first_name[0]}${(user.last_name||'')[0]||''}</div>
-        <div class="user-info"><b>${user.first_name} ${user.last_name||''}</b><span>Это вы</span></div>
+        <div class="user-info"><b>${_chef.esc(user.first_name)} ${_chef.esc(user.last_name||'')}</b><span>Это вы</span></div>
       </div>
     ` : ''}
   `;
@@ -1716,7 +1714,7 @@ function renderTeam(){
           html += `
           <div class="user">
             <div class="avatar">${u.init || u.name.split(' ').map(n=>n[0]).join('').substring(0,2)}</div>
-            <div class="user-info"><b>${u.name}</b><span>${u.role}</span></div>
+            <div class="user-info"><b>${_chef.esc(u.name)}</b><span>${_chef.esc(u.role)}</span></div>
           </div>`;
       });
   });
@@ -1729,17 +1727,7 @@ function getCartItem(supplier, name){
 }
 
 function addToCart(supplier, item){
-  const existing = getCartItem(supplier, item.name);
-  if(existing){
-    existing.qty = item.limit !== null ? item.limit : 1;
-  } else {
-    orderCart.push({
-      supplier: supplier,
-      name: item.name,
-      unit: item.unit,
-      qty: item.limit !== null ? item.limit : 1
-    });
-  }
+  orderCart = _chef.domain.cartAdd(orderCart, supplier, item, null);
   saveData();
   updateCartFab();
   haptic('hard');
@@ -1748,7 +1736,7 @@ function addToCart(supplier, item){
 }
 
 function removeFromCart(supplier, name){
-  orderCart = orderCart.filter(c => !(c.supplier === supplier && c.name === name));
+  orderCart = _chef.domain.cartRemove(orderCart, supplier, name);
   saveData();
   updateCartFab();
   haptic();
@@ -1855,8 +1843,8 @@ function renderCartSheet(){
       ${items.map(it => `
         <div class="cart-item">
           <div class="cart-name">
-            <div>${it.name}</div>
-            <span class="cart-supplier">${it.unit}</span>
+            <div>${_chef.esc(it.name)}</div>
+            <span class="cart-supplier">${_chef.esc(it.unit)}</span>
           </div>
           <div class="cart-qty-wrap">
             <button class="cart-qty-btn" onclick="updateCartQty(${it.idx}, -1)">−</button>
@@ -1911,13 +1899,13 @@ function renderMatrix(){
   const listHtml = filteredSuppliers.length > 0 ? filteredSuppliers.map(sup => `
       <div class="supplier-block">
         <div class="supplier-header">
-          <div class="supplier-name">${sup.supplier}</div>
+          <div class="supplier-name">${_chef.esc(sup.supplier)}</div>
           <div class="supplier-schedule">🕒 ${sup.schedule}</div>
         </div>
         <div class="card" style="padding:10px 14px">
           ${sup.items.map(it => `
             <div class="matrix-item">
-              <div class="matrix-name">${it.name}</div>
+              <div class="matrix-name">${_chef.esc(it.name)}</div>
               <div class="matrix-meta" style="display:flex;align-items:center;gap:10px">
                 <span class="matrix-unit">${it.unit}</span>
                 ${it.limit !== null ? `<span class="matrix-limit">Макс: ${it.limit}</span>` : '<span class="matrix-unit" style="color:var(--muted)">-</span>'}
@@ -2142,8 +2130,8 @@ function renderAdminContent(){
         <div class="item-card">
           <div class="item-card-head">
             <div>
-              <div class="item-card-title">${r.name}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${r.cat} · ${r.time}</div>
+              <div class="item-card-title">${_chef.esc(r.name)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">${_chef.esc(r.cat)} · ${_chef.esc(r.time)}</div>
             </div>
             <div>
               <button class="icon-btn" onclick="editRecipe(${r.id})">✏️</button>
@@ -2160,8 +2148,8 @@ function renderAdminContent(){
         <div class="item-card">
           <div class="item-card-head">
             <div>
-              <div class="item-card-title">${n.tag}: ${n.title}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${n.date}</div>
+              <div class="item-card-title">${_chef.esc(n.tag)}: ${_chef.esc(n.title)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">${_chef.esc(n.date)}</div>
             </div>
             <div>
               <button class="icon-btn" onclick="editNews(${i})">✏️</button>
@@ -2178,8 +2166,8 @@ function renderAdminContent(){
         <div class="item-card">
           <div class="item-card-head">
             <div>
-              <div class="item-card-title">${u.name}</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:3px">${u.role}</div>
+              <div class="item-card-title">${_chef.esc(u.name)}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:3px">${_chef.esc(u.role)}</div>
             </div>
             <div>
               <button class="icon-btn" onclick="editTeamMember(${i})">✏️</button>
@@ -2196,7 +2184,7 @@ function renderAdminContent(){
             <div class="item-card">
                 <div class="item-card-head">
                     <div>
-                        <div class="item-card-title">${s.supplier}</div>
+                        <div class="item-card-title">${_chef.esc(s.supplier)}</div>
                         <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.items.length} товаров</div>
                     </div>
                     <div>
@@ -2221,8 +2209,8 @@ window.editSupplier = function(index) {
     let itemsHtml = s.items.map((it, idx) => `
         <div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px">
             <div style="display:grid;grid-template-columns:2fr 1fr 1fr 32px;gap:6px">
-                <input class="form-input" placeholder="Продукт" value="${it.name}" data-midx="${idx}" data-f="name">
-                <input class="form-input" placeholder="Ед." value="${it.unit}" data-midx="${idx}" data-f="unit">
+                <input class="form-input" placeholder="Продукт" value="${_chef.esc(it.name)}" data-midx="${idx}" data-f="name">
+                <input class="form-input" placeholder="Ед." value="${_chef.esc(it.unit)}" data-midx="${idx}" data-f="unit">
                 <input class="form-input" placeholder="Лимит" type="number" value="${it.limit !== null ? it.limit : ''}" data-midx="${idx}" data-f="limit">
                 <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
             </div>
@@ -2236,8 +2224,8 @@ window.editSupplier = function(index) {
                 <button class="modal-close" onclick="document.getElementById('edit-supplier-modal').remove();"></button>
             </div>
             <div class="modal-body" style="padding:0 20px">
-                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${s.supplier}"></div>
-                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="m-schedule" value="${s.schedule}"></div>
+                <div class="form-field"><label class="form-label">Название поставщика</label><input class="form-input" id="m-supplier" value="${_chef.esc(s.supplier)}"></div>
+                <div class="form-field"><label class="form-label">График доставки</label><input class="form-input" id="m-schedule" value="${_chef.esc(s.schedule)}"></div>
                 
                 <div class="form-field">
                     <label class="form-label">Товары <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addMatrixItem()">+ Добавить</button></label>
@@ -2324,7 +2312,7 @@ function editRecipe(id){
         <button class="modal-close" onclick="document.getElementById('edit-modal').remove();"></button>
       </div>
       <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${r.name}"></div>
+        <div class="form-field"><label class="form-label">Название</label><input class="form-input" id="r-name" value="${_chef.esc(r.name)}"></div>
         <div class="form-field"><label class="form-label">Категория</label>
           <select class="form-select" id="r-cat">
             ${['Горячее','Салаты','Десерты','Напитки','Заготовки'].map(c=>`<option ${r.cat===c?'selected':''}>${c}</option>`).join('')}
@@ -2343,7 +2331,7 @@ function editRecipe(id){
           <label class="form-label">Шаги <button class="btn btn-sm btn-sec" style="margin-left:8px" onclick="addStep()">+ Добавить</button></label>
           <div id="steps-list">${r.steps.map((s,idx)=>stepRow(s,idx)).join('')}</div>
         </div>
-        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${r.note||''}</textarea></div>
+        <div class="form-field"><label class="form-label">Примечание</label><textarea class="form-textarea" id="r-note">${_chef.esc(r.note||'')}</textarea></div>
         <button class="btn" onclick="saveRecipe(${isEdit?r.id:'null'})">💾 Сохранить</button>
       </div>
     </div>
@@ -2353,7 +2341,7 @@ function editRecipe(id){
 
 function ingrRow(i, idx){
   return `<div class="ing-editor" style="background:rgba(255,255,255,.03);padding:12px;border-radius:10px;margin-bottom:8px"><div style="display:grid;grid-template-columns:1fr 70px 70px 32px;gap:6px">
-    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${i[0]||''}">
+    <input class="form-input" placeholder="Продукт" data-ing="${idx}" data-f="name" value="${_chef.esc(i[0]||'')}">
     <input class="form-input" placeholder="Брутто" type="number" data-ing="${idx}" data-f="brutto" value="${i[1]||0}">
     <input class="form-input" placeholder="Нетто" type="number" data-ing="${idx}" data-f="netto" value="${i[2]||0}">
     <button class="icon-btn danger" onclick="this.closest('.ing-editor').remove()">✕</button>
@@ -2362,7 +2350,7 @@ function ingrRow(i, idx){
 
 function stepRow(s, idx){
   return `<div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-start">
-    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${s||''}</textarea>
+    <textarea class="form-textarea" data-step="${idx}" placeholder="Шаг ${idx+1}" style="flex:1;min-height:42px">${_chef.esc(s||'')}</textarea>
     <button class="icon-btn danger" onclick="this.parentElement.remove()">✕</button>
   </div>`;
 }
@@ -2442,10 +2430,10 @@ function editNews(i){
         <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
       </div>
       <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${n.tag}"></div>
-        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${n.title}"></div>
-        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${n.text}</textarea></div>
-        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${n.date}"></div>
+        <div class="form-field"><label class="form-label">Тег</label><input class="form-input" id="n-tag" value="${_chef.esc(n.tag)}"></div>
+        <div class="form-field"><label class="form-label">Заголовок</label><input class="form-input" id="n-title" value="${_chef.esc(n.title)}"></div>
+        <div class="form-field"><label class="form-label">Текст</label><textarea class="form-textarea" id="n-text">${_chef.esc(n.text)}</textarea></div>
+        <div class="form-field"><label class="form-label">Дата</label><input class="form-input" id="n-date" value="${_chef.esc(n.date)}"></div>
         <button class="btn" onclick="saveNews(${isEdit?i:'null'})">💾 Сохранить</button>
       </div>
     </div>
@@ -2492,8 +2480,8 @@ function editTeamMember(i){
         <button class="modal-close" onclick="event.stopPropagation();document.getElementById('edit-modal').remove();">✕</button>
       </div>
       <div class="modal-body" style="padding:0 20px">
-        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${u.name}"></div>
-        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${u.role}"></div>
+        <div class="form-field"><label class="form-label">Имя</label><input class="form-input" id="u-name" value="${_chef.esc(u.name)}"></div>
+        <div class="form-field"><label class="form-label">Должность</label><input class="form-input" id="u-role" value="${_chef.esc(u.role)}"></div>
         <div class="form-field"><label class="form-label">Инициалы</label><input class="form-input" id="u-init" value="${u.init}" maxlength="2"></div>
         <button class="btn" onclick="saveTeamMember(${isEdit?i:'null'})">💾 Сохранить</button>
       </div>
@@ -2563,6 +2551,105 @@ updateCartFab();
   startFirebaseSync();
 })();
 </script>
-  <script type="module" src="bridge.js"></script>
+
+<!-- ====== НОВАЯ АРХИТЕКТУРА (встроено) ====== -->
+<script type="module">
+// === UTILS ===
+const bus = new EventTarget();
+function emit(name, detail = null) { bus.dispatchEvent(new CustomEvent(name, { detail })); }
+
+const MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function esc(raw) { if (raw == null) return ''; return String(raw).replace(/[&<>"']/g, ch => MAP[ch] || ch); }
+
+const PREF = 'chef_';
+const db = {
+  get(name, fallback = null) { try { const r = localStorage.getItem(PREF + name); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; } },
+  set(name, value) { try { localStorage.setItem(PREF + name, JSON.stringify(value)); return true; } catch (e) { alert('Память переполнена!'); return false; } }
+};
+
+function spring({ from, to, velocity = 0, onUpdate, onComplete, stiffness = 520, damping = 28 }) {
+  let cur = from, vel = velocity, raf, last = performance.now(), run = true;
+  function tick(now) {
+    if (!run) return;
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    const disp = cur - to;
+    const acc = (-stiffness * disp - damping * vel);
+    vel += acc * dt; cur += vel * dt;
+    onUpdate(cur);
+    if (Math.abs(disp) < 0.5 && Math.abs(vel) < 0.5) { onUpdate(to); if (onComplete) onComplete(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  raf = requestAnimationFrame(tick);
+  return { cancel() { run = false; cancelAnimationFrame(raf); } };
+}
+
+// === DOMAIN ===
+function filterRecipes(list, cat, query) {
+  const q = (query || '').toLowerCase().trim();
+  return list.filter(r => (cat === 'Все' || r.cat === cat) && (!q || r.name.toLowerCase().includes(q)));
+}
+function scaleIngr(ingr, mult) {
+  const m = Math.max(0.01, parseFloat(mult) || 1);
+  return ingr.map(([n, b, net]) => [n, Math.round((b || 0) * m), Math.round((net || 0) * m)]);
+}
+function cartAdd(cart, supplier, item, qty) {
+  const exists = cart.find(c => c.supplier === supplier && c.name === item.name);
+  if (exists) { exists.qty = qty !== null ? qty : (item.limit || 1); return [...cart]; }
+  return [...cart, { supplier, name: item.name, unit: item.unit || 'шт', qty: qty !== null ? qty : (item.limit || 1) }];
+}
+function cartRemove(cart, supplier, name) {
+  return cart.filter(c => !(c.supplier === supplier && c.name === name));
+}
+function cartHas(cart, supplier, name) {
+  return cart.some(c => c.supplier === supplier && c.name === name);
+}
+function cartGroup(cart) {
+  const g = {};
+  for (const it of cart) { (g[it.supplier] ||= []).push(it); }
+  return g;
+}
+function cartText(cart) {
+  if (!cart.length) return '';
+  const date = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  const g = cartGroup(cart);
+  let t = `📋 ЗАЯВКА НА ПОСТАВКУ\n${date}\n\n`;
+  for (const [sup, items] of Object.entries(g)) {
+    t += `📦 ${sup}\n`;
+    items.forEach(i => t += `• ${i.name} — ${i.qty} ${i.unit}\n`);
+    t += `\n`;
+  }
+  return t + `—\nОтправлено из ШефБук`;
+}
+function parseCSV(text) {
+  const rows = text.split('\n').map(row => {
+    const res = []; let cell = '', q = false;
+    for (const ch of row) {
+      if (ch === '"') q = !q;
+      else if (ch === ',' && !q) { res.push(cell.trim()); cell = ''; }
+      else cell += ch;
+    }
+    res.push(cell.trim()); return res;
+  }).filter(r => r.length > 2);
+  const locs = []; let cur = null;
+  for (const row of rows) {
+    const f = (row[0] || '').trim().toLowerCase();
+    if (f.includes('итого') || f.includes('дата') || f === '') continue;
+    if ((row[1] || '').trim() === 'Должность') {
+      if (row[0]) { cur = { name: row[0].trim(), staff: [] }; locs.push(cur); }
+    } else if (cur) {
+      const shifts = row.slice(2, 33).map(v => { const n = parseFloat((v || '').replace(',', '.')); return isNaN(n) ? 0 : n; });
+      cur.staff.push({ name: row[0].trim(), role: row[1].trim(), shifts, total: shifts.reduce((a, b) => a + b, 0) });
+    }
+  }
+  return locs.length ? { month: 'Август 2026', locations: locs } : null;
+}
+
+// === BRIDGE ===
+window._chef = { bus, emit, esc, db, spring, domain: { filterRecipes, scaleIngr, cartAdd, cartRemove, cartHas, cartGroup, cartText, parseCSV } };
+bus.addEventListener('toast', e => { if (typeof toast === 'function') toast(e.detail.msg, e.detail.type); });
+console.log('✅ Архитектура v2 активна');
+</script>
+<!-- ====== /НОВАЯ АРХИТЕКТУРА ====== -->
+
 </body>
 </html>
