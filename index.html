@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ШефБук</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#0F0D0B;--card:#1B1613;--text:#F5ECE2;--muted:#9C8D7E;--accent:#FF8A3D;--accent-soft:rgba(255,138,61,.14);--green:#5FD38A;--blue:#6FA8FF;--red:#FF6B5E;--glass:rgba(27,22,19,0.85);--glass-border:rgba(255,255,255,0.1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -349,35 +346,6 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
    ============================================================ */
 const FIREBASE_URL = 'https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app'; // ← ЗАМЕНИ ЭТО
 const FB_PATH = '/chefbook';
-
-/* ============================================================
-   🔥 FIREBASE AUTH + ROLES CONFIG
-   ============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyBsPy_5lQBAwuSgpH0pjPmO2YlYsj_pH5k",
-  authDomain: "cheffbook-420c0.firebaseapp.com",
-  databaseURL: "https://cheffbook-420c0-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "cheffbook-420c0",
-  storageBucket: "cheffbook-420c0.firebasestorage.app",
-  messagingSenderId: "626332592351",
-  appId: "1:626332592351:web:448279ec00527cf1a5616a",
-  measurementId: "G-HGCN5JE381"
-};
-firebase.initializeApp(firebaseConfig);
-const firebaseAuth = firebase.auth();
-const firebaseDb = firebase.database();
-
-const ROLES = ['cook','waiter','cashier','sous_chef','io','head_chef'];
-const ROLE_LABELS = {
-  cook: 'Повар', waiter: 'Официант', cashier: 'Кассир',
-  sous_chef: 'Су-шеф', io: 'ИО', head_chef: 'Верховный шеф'
-};
-function canManageStaff(role){ return ['sous_chef','io','head_chef'].includes(role); }
-function canEditContent(role){ return ['sous_chef','io','head_chef'].includes(role); }
-
-let currentUser = null;
-let currentRole = null;
-let currentLocation = null;
 
 /* ============================================================
    📦 ДАННЫЕ
@@ -997,7 +965,6 @@ function getCurrentScreen() {
 }
 
 function navigate(view, data){
-  if(view === 'staff' && !canManageStaff(currentRole)){ toast('Нет доступа','error'); haptic(); return; }
   haptic();
   if(data !== undefined) currentRecipeId = data;
 
@@ -1101,8 +1068,7 @@ function render(){
   else if(currentView === 'checklist') renderChecklist();
   else if(currentView === 'team') renderTeam();
   else if(currentView === 'matrix') renderMatrix();
-  else if(currentView === 'profile') renderProfile();
-  else if(currentView === 'staff') renderStaffManager();
+
 }
 
 function renderFavorites(){
@@ -1124,9 +1090,8 @@ function renderFavorites(){
 }
 
 function renderHome(){
-  const user = currentUser;
-  const greet = user ? 'Привет, ' + (user.displayName || 'шеф') + '!' : 'ШефБук 👨‍🍳';
-  const roleBadge = currentRole ? `<span style="display:inline-block;margin-left:8px;padding:3px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:700;vertical-align:middle">${ROLE_LABELS[currentRole] || currentRole}</span>` : '';
+  const user = tg?.initDataUnsafe?.user;
+  const greet = user ? 'Привет, ' + user.first_name + '!' : 'ШефБук 👨‍🍳';
   
   const today = new Date();
   const currentDay = today.getDate();
@@ -1146,10 +1111,7 @@ function renderHome(){
   }
 
   currentScreen.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h1 style="margin:0">${greet}${roleBadge}</h1>
-      ${currentUser ? `<button onclick="navigate('profile');haptic()" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#FFB067,var(--accent));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#000;overflow:hidden;flex-shrink:0">${currentUser.photoURL ? `<img src="${_chef.esc(currentUser.photoURL)}" style="width:100%;height:100%;object-fit:cover">` : (currentUser.displayName ? currentUser.displayName[0].toUpperCase() : '👤')}</button>` : ''}
-    </div>
+    <h1>${greet}</h1>
     
     <div class="card">
       <span class="pulse"></span>Сегодня ${currentDay} августа
@@ -1184,13 +1146,6 @@ function renderHome(){
         <div class="tile-title">Команда</div>
         <div class="tile-desc">${TEAM.length} чел</div>
       </button>
-      ${canManageStaff(currentRole) ? `
-      <button class="tile" onclick="navigate('staff');haptic()">
-        <div class="tile-emoji">🛡️</div>
-        <div class="tile-title">Сотрудники</div>
-        <div class="tile-desc">Управление</div>
-      </button>
-      ` : ''}
     </div>
 
     <h2>Объявления</h2>
@@ -1965,182 +1920,6 @@ function renderMatrix(){
       });
   }
 }
-
-/* ============================================================
-   🔐 AUTH + ROLES + PROFILE
-   ============================================================ */
-const Auth = {
-  init(){
-    firebaseAuth.onAuthStateChanged(user => {
-      if(user){
-        this.loadUserProfile(user.uid).then(profile => {
-          currentUser = { uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL };
-          currentRole = profile?.role || 'cook';
-          currentLocation = profile?.location || 'Галактика';
-          this.updateUI();
-          // Если на экране логина — убираем
-          const loginScreen = app.querySelector('.login-screen');
-          if(loginScreen) loginScreen.remove();
-          // Если нет текущего экрана — рендерим home
-          if(!app.querySelector('.screen')){
-            const homeEl = document.createElement('div'); homeEl.className = 'screen current';
-            app.appendChild(homeEl); currentScreen = homeEl;
-            viewStack = [{view:'home', data: null}]; currentView = 'home';
-            render(); updateCartFab();
-          } else {
-            render();
-          }
-        });
-      } else {
-        currentUser = null; currentRole = null; currentLocation = null;
-        app.innerHTML = '';
-        viewStack = [];
-        this.showLogin();
-      }
-    });
-  },
-
-  async loadUserProfile(uid){
-    try{
-      const snap = await firebaseDb.ref('users/' + uid).once('value');
-      return snap.val() || null;
-    }catch(e){ return null; }
-  },
-
-  async createUserProfile(user, role='cook', location='Галактика'){
-    const profile = {
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || 'Пользователь',
-      photoURL: user.photoURL || '',
-      role: role,
-      location: location,
-      createdAt: Date.now()
-    };
-    await firebaseDb.ref('users/' + user.uid).set(profile);
-    return profile;
-  },
-
-  async signInWithGoogle(){
-    haptic('hard');
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    try{
-      const result = await firebaseAuth.signInWithPopup(provider);
-      const user = result.user;
-      // Проверяем, есть ли профиль
-      const existing = await this.loadUserProfile(user.uid);
-      if(!existing){
-        await this.createUserProfile(user, 'cook', 'Галактика');
-      }
-      toast('Вход выполнен', 'success');
-    }catch(e){
-      console.error('Auth error:', e);
-      toast('Ошибка входа: ' + (e.message || ''), 'error');
-    }
-  },
-
-  signOut(){
-    firebaseAuth.signOut().then(() => {
-      toast('Вы вышли', 'success');
-    });
-  },
-
-  updateUI(){
-    // Обновляем FAB админа
-    const adminBtn = document.getElementById('admin-btn');
-    if(adminBtn) adminBtn.style.display = canEditContent(currentRole) ? 'flex' : 'none';
-  },
-
-  showLogin(){
-    app.innerHTML = '';
-    const el = document.createElement('div');
-    el.className = 'screen login-screen';
-    el.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;padding:20px';
-    el.innerHTML = `
-      <div style="font-size:64px;margin-bottom:20px">👨‍🍳</div>
-      <h1 style="margin-bottom:8px">ШефБук</h1>
-      <p style="color:var(--muted);margin-bottom:40px;font-size:15px">Вход для сотрудников</p>
-      <button onclick="Auth.signInWithGoogle()" style="display:flex;align-items:center;gap:12px;padding:14px 24px;background:#fff;color:#333;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)">
-        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Войти через Google
-      </button>
-      <p style="color:var(--muted);margin-top:24px;font-size:12px">Только для авторизованных сотрудников</p>
-    `;
-    app.appendChild(el);
-  }
-};
-
-function renderProfile(){
-  if(!currentUser){ navigate('home'); return; }
-  const roleLabel = ROLE_LABELS[currentRole] || currentRole || '—';
-  currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h1>Профиль</h1>
-    <div class="card" style="text-align:center;padding:30px 20px">
-      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FFB067,var(--accent));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;overflow:hidden">
-        ${currentUser.photoURL ? `<img src="${_chef.esc(currentUser.photoURL)}" style="width:100%;height:100%;object-fit:cover">` : (currentUser.displayName ? currentUser.displayName[0].toUpperCase() : '👤')}
-      </div>
-      <div style="font-weight:700;font-size:18px;margin-bottom:4px">${_chef.esc(currentUser.displayName || 'Пользователь')}</div>
-      <div style="color:var(--muted);font-size:14px;margin-bottom:12px">${_chef.esc(currentUser.email || '')}</div>
-      <span style="display:inline-block;padding:6px 14px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:13px;font-weight:700">${roleLabel}</span>
-      ${currentLocation ? `<div style="margin-top:8px;font-size:13px;color:var(--muted)">📍 ${_chef.esc(currentLocation)}</div>` : ''}
-    </div>
-    ${canManageStaff(currentRole) ? `
-    <button class="btn" onclick="navigate('staff');haptic()">👥 Управление сотрудниками</button>
-    ` : ''}
-    <button class="btn btn-sec" onclick="Auth.signOut();haptic()">🚪 Выйти</button>
-  `;
-}
-
-async function renderStaffManager(){
-  if(!canManageStaff(currentRole)){ toast('Нет доступа','error'); goBack(); return; }
-  currentScreen.innerHTML = `
-    <button class="back" onclick="goBack();haptic()" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <h1>Сотрудники</h1>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Управление ролями и локациями</p>
-    <div id="staff-list"><div class="card" style="text-align:center;padding:30px"><div class="loader-inline"></div></div></div>
-  `;
-  try{
-    const snap = await firebaseDb.ref('users').once('value');
-    const users = snap.val() || {};
-    const list = Object.values(users);
-    const container = document.getElementById('staff-list');
-    if(!container) return;
-    container.innerHTML = list.map(u => `
-      <div class="card" style="margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-          <div class="avatar" style="width:40px;height:40px;font-size:14px">${u.name ? u.name[0].toUpperCase() : '?'}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:15px">${_chef.esc(u.name || '—')}</div>
-            <div style="font-size:12px;color:var(--muted)">${_chef.esc(u.email || '')}</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <select class="form-select" onchange="Auth.updateRole('${u.uid}', this.value)" style="font-size:13px">
-            ${Object.entries(ROLE_LABELS).map(([k,v]) => `<option value="${k}" ${u.role===k?'selected':''}>${v}</option>`).join('')}
-          </select>
-          <select class="form-select" onchange="Auth.updateLocation('${u.uid}', this.value)" style="font-size:13px">
-            ${['Галактика','Сибирь','Пионер','Европа','Лазурная'].map(loc => `<option value="${loc}" ${u.location===loc?'selected':''}>${loc}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-    `).join('') || '<div class="card" style="text-align:center;color:var(--muted);padding:30px">Нет сотрудников</div>';
-  }catch(e){
-    toast('Ошибка загрузки','error');
-  }
-}
-
-Auth.updateRole = async function(uid, role){
-  if(!canManageStaff(currentRole)){ toast('Нет прав','error'); return; }
-  try{ await firebaseDb.ref('users/' + uid + '/role').set(role); toast('Роль обновлена','success'); haptic(); }
-  catch(e){ toast('Ошибка','error'); }
-};
-Auth.updateLocation = async function(uid, loc){
-  if(!canManageStaff(currentRole)){ toast('Нет прав','error'); return; }
-  try{ await firebaseDb.ref('users/' + uid + '/location').set(loc); toast('Локация обновлена','success'); haptic(); }
-  catch(e){ toast('Ошибка','error'); }
-};
 
 /* ============================================================
    🔐 АДМИНКА
@@ -2996,7 +2775,16 @@ document.addEventListener('touchend', e => {
 }, {passive: true});
 
 updateCartFab();
-Auth.init();
+
+(async function init(){
+  const loaded = await loadFromFirebase();
+  if(!loaded){
+    // Если Firebase не настроен — используем локальные данные (уже загружены выше)
+    console.log('📱 Работаем в offline-режиме');
+  }
+  render();
+  startFirebaseSync();
+})();
 </script>
 
 <!-- ====== НОВАЯ АРХИТЕКТУРА (встроено) ====== -->
